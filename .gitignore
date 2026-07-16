@@ -1,0 +1,49 @@
+# ============================================================
+# WHITELIST: mac dinh BO QUA tat ca, chi track thu can len GitHub
+#   -> code moi (bsc_*.py), notebook ket qua, report, config, test
+# Moi artifact (data, checkpoint, ray DB, ket qua chay) song tren Drive:
+#   /content/drive/MyDrive/bsc/
+# ============================================================
+*
+
+# --- Code loi cua Stage 1 ---
+!bsc_*.py
+!configs/
+!configs/**
+!tests/
+!tests/**
+
+# --- Notebook moi (Stage 1) ---
+!notebooks/
+!notebooks/**
+
+# --- Report / ke hoach ---
+!*.md
+!.gitignore
+
+# --- Notebook cu: chi giu source, output nang da bi strip ---
+!convert_*.ipynb
+!merge_s*.ipynb
+
+# --- Luon loai, ke ca khi khop rule tren ---
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+.pytest_cache/
+*.zip
+*.pth
+*.pt
+*.npz
+*.npy
+*.nii
+*.nii.gz
+*.mat
+*.h5
+*.html
+*.docx
+
+# Secrets: token lay tu Colab Secrets (userdata.get), khong bao gio hardcode
+.env
+*.secret
+secrets.json
+credentials.json
