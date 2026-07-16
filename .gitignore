@@ -13,6 +13,10 @@
 !tests/
 !tests/**
 
+# --- Splits DA GHIM (§2.2): nho, phai versioned, immutable ---
+!splits/
+!splits/*.json
+
 # --- Notebook moi (Stage 1) ---
 !notebooks/
 !notebooks/**
