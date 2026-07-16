@@ -1,35 +1,28 @@
 # ============================================================
 # WHITELIST: mac dinh BO QUA tat ca, chi track thu can len GitHub
-#   -> code moi (bsc_*.py), notebook ket qua, report, config, test
-# Moi artifact (data, checkpoint, ray DB, ket qua chay) song tren Drive:
-#   /content/drive/MyDrive/bsc/
 # ============================================================
 *
 
-# --- Code loi cua Stage 1 ---
-!bsc_*.py
-!configs/
-!configs/**
-!tests/
-!tests/**
+# --- bsc/ : toan bo Stage 1 (bone-surface coordinate), BIET LAP voi phan con lai ---
+!bsc/
+!bsc/**/
+!bsc/**/*.py
+!bsc/**/*.ipynb
+!bsc/**/*.json
+!bsc/**/*.md
+!bsc/**/*.txt
 
-# --- Splits DA GHIM (§2.2): nho, phai versioned, immutable ---
-!splits/
-!splits/*.json
-
-# --- Notebook moi (Stage 1) ---
-!notebooks/
-!notebooks/**
-
-# --- Report / ke hoach ---
+# --- Report / ke hoach o goc ---
 !*.md
 !.gitignore
 
-# --- Notebook cu: chi giu source, output nang da bi strip ---
+# --- Notebook cu (legacy, khong sua): giu de tham chieu ket qua baseline ---
 !convert_*.ipynb
 !merge_s*.ipynb
 
 # --- Luon loai, ke ca khi khop rule tren ---
+# Moi artifact (data, checkpoint, ray DB, ket qua chay) song tren Drive:
+#   /content/drive/MyDrive/bsc/     -- KHONG BAO GIO ghi vao /content/
 __pycache__/
 *.py[cod]
 .ipynb_checkpoints/
