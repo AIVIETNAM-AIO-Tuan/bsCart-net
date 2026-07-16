@@ -43,9 +43,29 @@ phai o Dice tong the.
 **Cong chan chinh = M0 (do headroom) truoc khi xay bat cu thu gi.** Day la cau hoi ROI
 cascade da quen hoi. Neu `dASSD_prize < 0.04mm` => DUNG, cong bo ket qua am tinh.
 
-Da do bang phantom (dung spacing that): round-trip ASSD **0.011mm** => M2 la thu tuc,
-khong phai cong chan. Remesh dong deu (Step 2 cua doc) **PHA reconstruction** (h=1.0mm =>
-Dice 0.811) => da bac bo.
+### Da do bang phantom o dung spacing that (`bsc/tests/test_core.py`, 16/16 dau)
+
+**Tran round-trip SUP o vung sun mong** - dung vung ma gia thuyet nham toi:
+
+| do day sun | M2 Dice | M2 ASSD |
+|---|---|---|
+| 1.6mm | 0.9995 | 0.001mm |
+| 0.5mm | 0.925 | 0.030mm |
+| 0.4mm | **0.848** | 0.065mm |
+
+Voi sun 0.4mm, phep doi toa do TU NO mat 15% Dice du du doan hoan hao.
+=> **Cong M2 cua plan doc (Dice >= 0.97) se TRUOT o sun cuc mong. DAT CONG TREN ASSD**
+(0.001-0.065mm, duoi xa muc tieu 0.1mm). Dieu nay CUNG CO quyet dinh cua ke hoach:
+**metric BIEN la chinh, khong phai Dice** - Dice tren cau truc day ~1 voxel nhay den
+muc tan nhan.
+
+**Remesh dong deu (Step 2 cua doc) PHA reconstruction** => da bac bo:
+full MC bo sot 0.0% voxel sun | thua 4x mat 14.2% | thua 8x mat 39.3%.
+=> subsample tu do khi TRAIN; FULL marching-cubes density khi INFERENCE.
+
+**KHONG tai lap:** "sigma=1.0mm lam M3 truot". Phantom cau tron cho M3=100% o moi
+sigma. Doi mm->voxel VAN dung (co test khoa), nhung sigma chua chung minh la knob
+quyet dinh - kiem lai tren xuong that o Phase 2.
 
 ## Quy tac lam viec
 
