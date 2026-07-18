@@ -53,7 +53,7 @@ def gt_thickness_per_node(bone_mask, cart_mask, spacing=SPACING, cfg=RayConfig()
 
 
 def error_mass_by_thickness(gt_cart, pred_cart, bone_mask, spacing=SPACING,
-                            cfg=RayConfig()) -> dict:
+                            cfg=RayConfig(), thickness=None) -> dict:
     """Phan ra khoi luong loi be mat cua ResEnc theo bin do day GT.
 
     Hai chieu (doi xung, giong ASSD):
@@ -62,11 +62,17 @@ def error_mass_by_thickness(gt_cart, pred_cart, bone_mask, spacing=SPACING,
       - voxel be mat PRED -> khoang cach toi be mat GT, bin theo do day cua node GT
         GAN NHAT (khoi luong thua / false-positive; day la cach bin `absent` co du lieu)
 
+    `thickness`: tuple (verts, normals, thick_node) tu gt_thickness_per_node. Neu None,
+    tu tinh. Truyen vao de KHONG dung marching-cubes hai lan khi goi kem prize (M0 loop).
+
     Tra dict: per_bin[name] = {n, mean_dist_mm, error_mass_mm, frac_error_mass},
     kem tong.
     """
-    verts, _, thick_node = gt_thickness_per_node(bone_mask, cart_mask=gt_cart,
-                                                 spacing=spacing, cfg=cfg)
+    if thickness is None:
+        verts, _, thick_node = gt_thickness_per_node(bone_mask, cart_mask=gt_cart,
+                                                     spacing=spacing, cfg=cfg)
+    else:
+        verts, _, thick_node = thickness
 
     sg = metrics.surface_mask(gt_cart)
     sp_ = metrics.surface_mask(pred_cart)
@@ -110,17 +116,23 @@ def error_mass_by_thickness(gt_cart, pred_cart, bone_mask, spacing=SPACING,
 
 
 def prize_counterfactual(gt_cart, pred_cart, bone_mask, spacing=SPACING, cfg=RayConfig(),
-                         prize_bins=("absent", "<=0.5mm", "<=1.0mm")) -> dict:
+                         prize_bins=("absent", "<=0.5mm", "<=1.0mm"), thickness=None) -> dict:
     """Neu triet tieu loi o cac bin `prize_bins`, ASSD/surface-Dice cai thien bao nhieu?
 
     Day la TRAN TREN cua thu bieu dien theo tia co the dat - vi no chi giup o cac bin
     mong/vang. Tinh ca-level de vao paired bootstrap.
 
+    `thickness`: tuple (verts, normals, thick_node) tu gt_thickness_per_node. Neu None,
+    tu tinh. Truyen vao de KHONG dung marching-cubes hai lan khi goi kem error_mass.
+
     Cach: bo cac voxel be mat thuoc bin phan thuong ra khoi tinh ASSD (coi nhu da
     dat hoan hao o do), roi tinh lai ASSD tren phan con lai.
     """
-    verts, _, thick_node = gt_thickness_per_node(bone_mask, cart_mask=gt_cart,
-                                                 spacing=spacing, cfg=cfg)
+    if thickness is None:
+        verts, _, thick_node = gt_thickness_per_node(bone_mask, cart_mask=gt_cart,
+                                                     spacing=spacing, cfg=cfg)
+    else:
+        verts, _, thick_node = thickness
     sg = metrics.surface_mask(gt_cart)
     sp_ = metrics.surface_mask(pred_cart)
     if not sg.any() or not sp_.any():
