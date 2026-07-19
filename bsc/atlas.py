@@ -119,6 +119,23 @@ def to_normalized(verts: np.ndarray, frame: SurfaceFrame) -> np.ndarray:
     return (np.asarray(verts, np.float32) - frame.centroid) / frame.scale
 
 
+def grid_index(u: np.ndarray, n_bins: int, lo: float, hi: float) -> np.ndarray:
+    """Toa do chuan hoa -> chi so o luoi, LUON trong [0, n_bins-1].
+
+    PHAI KEP CHI SO, KHONG KEP PHAN SO. Ban truoc kep phan so bang
+    `np.clip(t, 0.0, 1.0 - 1e-9)` va vo o float32: eps cua float32 ~1.19e-7 nen
+    `1.0 - 1e-9` lam tron thanh dung 1.0 => t*n_bins = n_bins => chi so tran ra ngoai
+    => `ValueError: invalid entry in coordinates array`. Kep truc tiep chi so thi mien
+    nhiem voi do chinh xac dau phay dong.
+
+    Diem khong huu han (NaN/inf) bi day ve o 0 - an toan, va `min_count` se loai o do
+    neu no khong co du bang chung that.
+    """
+    u = np.nan_to_num(np.asarray(u, np.float64), nan=lo, posinf=hi, neginf=lo)
+    t = (u - lo) / (hi - lo)
+    return np.clip((t * n_bins).astype(np.int64), 0, n_bins - 1)
+
+
 # ---------------------------------------------------------------- xay atlas
 
 @dataclass
@@ -133,9 +150,7 @@ class ArticularAtlas:
     side_key: "str | None" = None
 
     def _idx(self, u: np.ndarray) -> np.ndarray:
-        t = (u - self.lo) / (self.hi - self.lo)
-        i = np.floor(t * self.n_bins).astype(np.int64)
-        return np.clip(i, 0, self.n_bins - 1)
+        return grid_index(u, self.n_bins, self.lo, self.hi)
 
     def query(self, verts: np.ndarray, frame: SurfaceFrame) -> np.ndarray:
         """Xac suat vung khop tai moi node cua mot ca MOI. NaN -> 0."""
@@ -186,8 +201,7 @@ def build_articular_atlas(case_ids, loader, spacing=SPACING, cfg: RayConfig = Ra
         artic = core.oracle_domain(verts, occ, cfg)      # node co sun bam (+ vanh)
 
         u = to_normalized(verts, fit_frame(verts))
-        t = np.clip((u - lo) / (hi - lo), 0.0, 1.0 - 1e-9)
-        i = (t * n_bins).astype(np.int64)
+        i = grid_index(u, n_bins, lo, hi)          # dung CHUNG ham voi query()
         flat = np.ravel_multi_index((i[:, 0], i[:, 1], i[:, 2]), (n_bins,) * 3)
 
         cnt += np.bincount(flat, minlength=cnt.size).reshape(cnt.shape)

@@ -4,9 +4,21 @@ Giu module nay mong: notebook chi nen goi vao code da test, khong chua logic.
 Cac ham day KHONG co unit test vi phu thuoc nibabel + du lieu that; chung duoc
 kiem gian tiep qua Gate 0 (doi chieu bang da cong bo).
 
-Quy uoc truc: nibabel tra (X, Y, Z) theo affine; nnUNet/SimpleITK lam viec o (Z, Y, X).
-load_nii() tra ve mang o thu tu (Z, Y, X) khop SPACING = (0.70, 0.3646, 0.3646) va
-khop moi thu trong bsc/core.py. Doc ky get_spacing() truoc khi tin spacing.
+TRUC & SPACING - DOC KY, DAY LA CHO DE SAI IM LANG
+---------------------------------------------------
+load_nii() dao truc mang (transpose 2,1,0) VA dao spacing tuong ung, nen mang va
+spacing no tra ve LUON KHOP NHAU. Do la dam bao duy nhat.
+
+NO KHONG dam bao ket qua khop `core.SPACING = (0.70, 0.3646, 0.3646)`.
+Do bang du lieu that (Dataset001_KneeOA, 2026-07-19): load_nii tra ve
+`(0.3646, 0.3646, 0.70)` - truc 0.70mm nam CUOI, khong phai dau. Ban docstring cu
+khang dinh nguoc lai va da SAI.
+
+=> LUON dung `spacing` do load_nii tra ve. KHONG BAO GIO dua vao mac dinh
+   `spacing=SPACING` cua cac ham trong core/metrics/headroom khi lam viec voi du lieu
+   that: neu spacing that lat truc, ban se ap anisotropy vao SAI TRUC. EDT, gaussian
+   sigma va marching_cubes deu nhan spacing => sai lan ra toan bo hinh hoc, ma khong
+   ham nao bao loi.
 """
 
 from __future__ import annotations
