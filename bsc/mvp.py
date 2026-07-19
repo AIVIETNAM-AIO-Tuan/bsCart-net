@@ -164,6 +164,64 @@ def build_dataset(run: RunConfig, src: CaseSource, case_ids, cfg: RayConfig = Ra
     return np.concatenate(Xs), np.concatenate(os_), np.concatenate(ps)
 
 
+# ------------------------------------------------------- QC hinh hoc (§6 b3/5/6)
+
+#: Khoa cua ban ghi QC. LA MOT HOP DONG BEN VUNG - checkpoint tren Drive dung ten nay.
+#: DOI TEN = pha resume cua nguoi dung (da xay ra mot lan: KeyError 'm3'). Neu buoc phai
+#: doi, phai viet ham di tru, khong duoc doi lang le.
+QC_KEYS = ("m3_normals_ok", "m4_single_interval", "m2_dice", "m2_assd_mm",
+           "frame_degenerate")
+
+
+def geometry_qc_case(src: CaseSource, cid, cls_name: str, bone_mask, cart_mask,
+                     cfg: RayConfig = RayConfig()) -> dict:
+    """M3 + M4 + M2 cho MOT (ca, lop). Spacing lay theo ca."""
+    sp = src.spacing(cid)
+    sdf, verts, normals = core.bone_geometry(bone_mask, sp, cfg)
+    occ = core.occupancy_target(cart_mask, verts, normals, cfg, sp)
+    rec = core.splat_rays(occ.astype(np.float32), verts, normals, cart_mask.shape, cfg, sp)
+    pr = rec > 0.5
+    return {
+        "case": cid, "cls": cls_name,
+        "m3_normals_ok": float(core.check_normals(sdf, verts, normals, sp)[0]),
+        "m4_single_interval": float(core.single_interval_ratio(occ)),
+        "m2_dice": float(2 * (pr & cart_mask).sum() / (pr.sum() + cart_mask.sum() + 1e-8)),
+        "m2_assd_mm": float(metrics.assd(cart_mask, pr, sp)),
+        "frame_degenerate": bool(atlas_mod.fit_frame(verts).is_degenerate),
+    }
+
+
+def summarize_geometry_qc(rows, cls_name: str) -> "dict | None":
+    """Trung binh cac chi so QC cho mot lop. Tra None neu khong co ban ghi hop le.
+
+    Ban ghi thieu khoa (checkpoint tu phien ban cu) bi BO QUA co bao, thay vi lam vo
+    ca cell bang KeyError.
+    """
+    r = [x for x in rows if x.get("cls") == cls_name]
+    good = [x for x in r if all(k in x for k in QC_KEYS)]
+    if len(good) < len(r):
+        print(f"  canh bao: bo qua {len(r)-len(good)}/{len(r)} ban ghi {cls_name} "
+              f"thieu khoa (checkpoint tu ban cu?)")
+    if not good:
+        return None
+    out = {k: float(np.mean([x[k] for x in good])) for k in QC_KEYS}
+    out["n"] = len(good)
+    return out
+
+
+def geometry_qc_gate(summary: dict, m3_min: float = 0.995, m4_min: float = 0.90,
+                     m2_assd_max: float = 0.1) -> dict:
+    """Cong §3.5 cho QC hinh hoc. Tra dict cac tieu chi + `pass`."""
+    g = {
+        "m3_pass": summary["m3_normals_ok"] >= m3_min,
+        "m4_pass": summary["m4_single_interval"] >= m4_min,
+        "m2_pass": summary["m2_assd_mm"] <= m2_assd_max,
+        "frame_ok": summary["frame_degenerate"] == 0.0,
+    }
+    g["pass"] = all(g.values())
+    return g
+
+
 # -------------------------------------------------------------- train + danh gia
 
 @dataclass
