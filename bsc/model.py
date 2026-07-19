@@ -85,18 +85,26 @@ class RayEncoder1D(nn.Module):
     """
 
     def __init__(self, in_channels: int = 3, width: int = 64, kernel_size: int = 5,
-                 dilations: tuple = (1, 2, 4)):
+                 dilations: tuple = (1, 2, 4), with_presence: bool = True):
+        """`with_presence` = truc H cua ma tran: False => H0 (chi occupancy), True => H1.
+
+        H0 phai KHONG dung presence head that su - khong chi la bo qua dau ra cua no.
+        Neu van dung head do, gradient cua no van chay vao than mang => H0 khong con la
+        H0, va cap so sanh H0-vs-H1 (§10.2) tro nen vo nghia.
+        """
         super().__init__()
         self.in_channels = in_channels
+        self.with_presence = with_presence
         self.stem = _ConvBlock(in_channels, width, kernel_size, dilation=dilations[0])
         self.blocks = nn.ModuleList(
             [_ConvBlock(width, width, kernel_size, dilation=d) for d in dilations[1:]]
         )
-        # Depth-wise attention: hoc xem do sau nao quyet dinh "co sun hay khong".
-        # Pooling co trong so thay vi mean - mean bi loang boi phan nen chiem da so.
-        self.attn = nn.Conv1d(width, 1, 1)
         self.occ_head = nn.Conv1d(width, 1, 1)      # K x 1
-        self.pres_head = nn.Linear(width, 1)        # 1 x 1
+        if with_presence:
+            # Depth-wise attention: hoc xem do sau nao quyet dinh "co sun hay khong".
+            # Pooling co trong so thay vi mean - mean bi loang boi phan nen chiem da so.
+            self.attn = nn.Conv1d(width, 1, 1)
+            self.pres_head = nn.Linear(width, 1)    # 1 x 1
 
     def forward(self, x: torch.Tensor):
         if x.dim() != 3:
@@ -112,6 +120,8 @@ class RayEncoder1D(nn.Module):
             h = blk(h)
 
         occ_logits = self.occ_head(h).squeeze(1)    # [B, K]
+        if not self.with_presence:
+            return occ_logits, None                 # H0
 
         w = torch.softmax(self.attn(h), dim=-1)     # [B, 1, K]
         z = (h * w).sum(dim=-1)                     # [B, width]
@@ -162,17 +172,27 @@ def ray_loss(occ_logits, pres_logits, occ_target, pres_target,
     boundary head nen khong vuong.
     """
     occ_target = occ_target.float()
-    pres_target = pres_target.float()
 
-    pw_occ = pw_pres = None
+    pw_occ = None
     if w.auto_pos_weight:
         # pos_weight = n_neg / n_pos, chan tren de khong no khi lop duong qua hiem
         pos = occ_target.mean().clamp(1e-4, 1 - 1e-4)
         pw_occ = ((1 - pos) / pos).clamp(max=50.0).to(occ_logits.device)
+
+    l_occ = focal_bce_with_logits(occ_logits, occ_target, w.focal_gamma, pw_occ)
+
+    # H0 (truc H = "occupancy only"): KHONG co so hang presence. `pres_logits=None` la
+    # tin hieu tuong minh tu RayEncoder1D(with_presence=False).
+    if pres_logits is None:
+        return l_occ, {"loss": l_occ.detach().item(), "occ": l_occ.detach().item(),
+                       "pres": float("nan")}
+
+    pres_target = pres_target.float()
+    pw_pres = None
+    if w.auto_pos_weight:
         pos_p = pres_target.mean().clamp(1e-4, 1 - 1e-4)
         pw_pres = ((1 - pos_p) / pos_p).clamp(max=50.0).to(pres_logits.device)
 
-    l_occ = focal_bce_with_logits(occ_logits, occ_target, w.focal_gamma, pw_occ)
     l_pres = focal_bce_with_logits(pres_logits, pres_target, w.focal_gamma, pw_pres)
     total = l_occ + w.lambda_presence * l_pres
     # detach truoc khi doi sang float: dict nay chi de LOG, khong duoc giu graph
@@ -374,15 +394,16 @@ def fit(model: nn.Module, X, occ, presence, epochs: int = 30, batch_size: int = 
 
 @torch.no_grad()
 def predict_rays(model: nn.Module, X, batch_size: int = 8192, device: str = "cpu"):
-    """Tra (occ_prob [N,K], pres_prob [N]) dang numpy."""
+    """Tra (occ_prob [N,K], pres_prob [N] hoac None neu H0)."""
     model = model.to(device).eval()
     Xt = torch.as_tensor(np.asarray(X, np.float32), device=device)
     occ, pres = [], []
     for i in range(0, Xt.shape[0], batch_size):
         o, p = model(Xt[i:i + batch_size])
         occ.append(torch.sigmoid(o).cpu().numpy())
-        pres.append(torch.sigmoid(p).cpu().numpy())
-    return np.concatenate(occ, 0), np.concatenate(pres, 0)
+        if p is not None:
+            pres.append(torch.sigmoid(p).cpu().numpy())
+    return np.concatenate(occ, 0), (np.concatenate(pres, 0) if pres else None)
 
 
 def reconstruct_volume(occ_prob, verts, normals, shape, cfg: RayConfig = RayConfig(),
