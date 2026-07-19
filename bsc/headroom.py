@@ -177,6 +177,33 @@ def prize_counterfactual(gt_cart, pred_cart, bone_mask, spacing=SPACING, cfg=Ray
     }
 
 
+def thin_region_boundary_error(gt_cart, pred_cart, bone_mask, spacing=SPACING,
+                               cfg=RayConfig(), thickness=None,
+                               thin_bins=("absent", "<=0.5mm", "<=1.0mm")) -> dict:
+    """Loi bien trung binh TRONG VUNG MONG - mau so DUNG cua plan §3.7 dieu 1.
+
+    VI SAO TON TAI: §3.7 doi "cai thien outer-boundary error TRONG VUNG SUN MONG ~10%
+    tuong doi". ASSD TONG la mau so KHAC va KHONG dung duoc: muc tieu quy ve ASSD tong
+    chi 0.0058mm (femoral), nho ngang sai khac giua hai implementation metric
+    (eps = 0.0033mm). Xem M0_gate1_results_and_decision.md §6.
+
+    => Day la ham dung de so B0 vs mo hinh tia. KHONG dung ASSD tong cho viec do.
+
+    Tra: thin_mean_err_mm (con so cua §3.7), thin_n, thin_mass_mm, all_mean_err_mm.
+    """
+    m = error_mass_by_thickness(gt_cart, pred_cart, bone_mask, spacing, cfg, thickness)
+    pb = m["per_bin"]
+    n = sum(pb[b]["n"] for b in thin_bins)
+    mass = sum(pb[b]["error_mass_mm"] for b in thin_bins)
+    tot_n = sum(pb[b]["n"] for b in pb)
+    return {
+        "thin_mean_err_mm": float(mass / n) if n else np.nan,
+        "thin_n": int(n),
+        "thin_mass_mm": float(mass),
+        "all_mean_err_mm": float(m["total_error_mass_mm"] / tot_n) if tot_n else np.nan,
+    }
+
+
 def gt_staircase_z_vs_inplane(gt_cart, spacing=SPACING) -> dict:
     """M0c - do "bac thang" bien sun GT theo z vs in-plane.
 

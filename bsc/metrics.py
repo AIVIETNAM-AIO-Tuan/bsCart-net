@@ -215,6 +215,48 @@ def all_metrics(gt: np.ndarray, pred: np.ndarray, spacing=SPACING,
     return m
 
 
+# ------------------------------------------- metric hinh thai tren tia (§2.3)
+
+def presence_f1(pres_true, pres_pred) -> dict:
+    """Presence/absence F1 tren be mat khop (§2.3 morphological).
+
+    Quy uoc: lop DUONG = "CO sun". Nhung con so dang quan tam nhat la recall cua lop
+    AM (phat hien dung sun MAT) - do la thu M0 chi ra ResEnc yeu nhat (bin `absent`
+    sai gap ~4 lan cac bin khac). Nen tra ca `absent_recall`.
+    """
+    t = np.asarray(pres_true).astype(bool)
+    p = np.asarray(pres_pred).astype(bool)
+    tp = float((t & p).sum()); fp = float((~t & p).sum()); fn = float((t & ~p).sum())
+    tn = float((~t & ~p).sum())
+    prec = tp / (tp + fp) if (tp + fp) else (1.0 if not t.any() else 0.0)
+    rec = tp / (tp + fn) if (tp + fn) else (1.0 if not p.any() else 0.0)
+    f1 = 2 * prec * rec / (prec + rec) if (prec + rec) else 0.0
+    return {
+        "precision": float(prec), "recall": float(rec), "f1": float(f1),
+        "absent_recall": float(tn / (tn + fp)) if (tn + fp) else np.nan,
+        "n_present": int(t.sum()), "n_absent": int((~t).sum()),
+    }
+
+
+def thickness_mae(thick_true, thick_pred, only_present: bool = False) -> dict:
+    """MAE do day sun (mm) tren tung tia (§2.3 morphological).
+
+    only_present=False (mac dinh): tinh tren MOI tia, ke ca tia absent (do day thuc = 0).
+    Doan thua sun o cho khong co sun LA loi do day - bo qua se giau dung cai lop
+    `absent` ma gia thuyet nham toi.
+    """
+    a = np.asarray(thick_true, float)
+    b = np.asarray(thick_pred, float)
+    ok = np.isfinite(a) & np.isfinite(b)
+    if only_present:
+        ok &= a > 0
+    if not ok.any():
+        return {"mae_mm": np.nan, "bias_mm": np.nan, "n": 0}
+    d = b[ok] - a[ok]
+    return {"mae_mm": float(np.abs(d).mean()), "bias_mm": float(d.mean()),
+            "n": int(ok.sum())}
+
+
 # ------------------------------------------------- thong ke (§2.4)
 
 def paired_bootstrap(a: np.ndarray, b: np.ndarray, n_boot: int = 10000,

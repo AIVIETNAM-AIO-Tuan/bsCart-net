@@ -387,6 +387,93 @@ def joint_facing_domain(verts: np.ndarray, normals: np.ndarray, sdf_opposing: np
     return (closest < along[:, 0]) & (closest < march_mm)
 
 
+# ------------------------------------- Nhieu loan huong tia (M6) & be mat (M7)
+
+def tangent_frame(normals: np.ndarray):
+    """Hai vector tiep tuyen truc chuan cho moi phap tuyen -> (t1 [N,3], t2 [N,3]).
+
+    Chon vector mo dau KHONG song song voi n (lay truc it trung nhat) roi Gram-Schmidt.
+    Dung cho M6 (tia tiep tuyen) va M7 (xoay phap tuyen trong mat phang tiep tuyen).
+    """
+    n = np.asarray(normals, np.float32)
+    n = n / (np.linalg.norm(n, axis=1, keepdims=True) + 1e-8)
+    # Truc nao it song song voi n nhat thi lam vector mo dau
+    seed = np.zeros_like(n)
+    seed[np.arange(len(n)), np.argmin(np.abs(n), axis=1)] = 1.0
+    t1 = np.cross(n, seed)
+    t1 /= np.linalg.norm(t1, axis=1, keepdims=True) + 1e-8
+    t2 = np.cross(n, t1)
+    t2 /= np.linalg.norm(t2, axis=1, keepdims=True) + 1e-8
+    return t1.astype(np.float32), t2.astype(np.float32)
+
+
+def direction_field(normals: np.ndarray, mode: str = "normal", seed: int = 0) -> np.ndarray:
+    """Test M6 (plan doc §3.5) - sinh truong huong tia DOI CHUNG.
+
+    mode:
+      "normal"  - phap tuyen be mat (nhanh that su cua gia thuyet)
+      "axial"   - mot huong co dinh theo truc z (mo phong "cat lat" thuan tuy)
+      "random"  - huong ngau nhien tung node
+      "tangent" - tiep tuyen be mat (vuong goc phap tuyen)
+
+    VI SAO CAN: neu mo hinh doc theo huong tuy y cung tot ngang phap tuyen, thi loi ich
+    den tu "them mot mang nua", KHONG phai tu he toa do. M6 la test phan bac chinh cua
+    Stage 1 - thieu no, moi ket qua duong tinh deu khong quy duoc cho gia thuyet.
+    """
+    n = np.asarray(normals, np.float32)
+    n = n / (np.linalg.norm(n, axis=1, keepdims=True) + 1e-8)
+    rng = np.random.default_rng(seed)
+
+    if mode == "normal":
+        return n
+    if mode == "axial":
+        # Huong z co dinh; giu dau theo phap tuyen de tia khong ban thang vao xuong
+        ax = np.zeros_like(n)
+        ax[:, 0] = np.where(n[:, 0] >= 0, 1.0, -1.0)
+        return ax
+    if mode == "random":
+        v = rng.normal(size=n.shape).astype(np.float32)
+        return v / (np.linalg.norm(v, axis=1, keepdims=True) + 1e-8)
+    if mode == "tangent":
+        t1, t2 = tangent_frame(n)
+        phi = rng.uniform(0, 2 * np.pi, len(n)).astype(np.float32)[:, None]
+        t = np.cos(phi) * t1 + np.sin(phi) * t2
+        return (t / (np.linalg.norm(t, axis=1, keepdims=True) + 1e-8)).astype(np.float32)
+    raise ValueError(f"mode khong hop le: {mode!r} "
+                     f"(chon normal/axial/random/tangent)")
+
+
+def jitter_surface(verts: np.ndarray, normals: np.ndarray, delta_s_mm: float = 0.0,
+                   delta_theta_deg: float = 0.0, seed: int = 0):
+    """Test M7 (plan doc §3.5) - nhieu loan be mat + phap tuyen -> (verts', normals').
+
+    delta_s_mm      : do lech vi tri DOC PHAP TUYEN, Gaussian std = delta_s_mm.
+                      Chon doc phap tuyen vi sai so phan doan xuong chu yeu theo huong do
+                      (day/mong vo xuong), khong phai truot doc be mat.
+    delta_theta_deg : goc xoay phap tuyen trong mat phang tiep tuyen, Gaussian std.
+
+    Muc dich: do do nhay TRUOC khi chuyen sang be mat xuong DU DOAN (P5). Neu mo hinh
+    sup o 0.5mm jitter thi khong the ky vong no song sot voi xuong du doan that.
+    """
+    v = np.asarray(verts, np.float32)
+    n = np.asarray(normals, np.float32)
+    n = n / (np.linalg.norm(n, axis=1, keepdims=True) + 1e-8)
+    rng = np.random.default_rng(seed)
+
+    if delta_s_mm > 0:
+        v = v + n * rng.normal(0.0, delta_s_mm, len(v)).astype(np.float32)[:, None]
+
+    if delta_theta_deg > 0:
+        t1, t2 = tangent_frame(n)
+        th = np.deg2rad(rng.normal(0.0, delta_theta_deg, len(n))).astype(np.float32)[:, None]
+        phi = rng.uniform(0, 2 * np.pi, len(n)).astype(np.float32)[:, None]
+        t = np.cos(phi) * t1 + np.sin(phi) * t2      # truc xoay ngau nhien trong mat tiep tuyen
+        n = np.cos(th) * n + np.sin(th) * t
+        n /= np.linalg.norm(n, axis=1, keepdims=True) + 1e-8
+
+    return v.astype(np.float32), n.astype(np.float32)
+
+
 def assign_thickness_bin(thickness_mm: np.ndarray) -> np.ndarray:
     """Do day (mm) -> chi so bin. 0=absent, 1=<=0.5, 2=<=1.0, 3=<=2.0, 4=>2.0.
 
