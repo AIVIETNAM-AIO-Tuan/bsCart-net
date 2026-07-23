@@ -15,6 +15,10 @@ Truc cau hinh S/D/I/H xem `bsc/experiment.py`.
 
 from __future__ import annotations
 
+import hashlib
+import json
+import os
+import subprocess
 from dataclasses import dataclass, field
 
 import numpy as np
@@ -23,6 +27,116 @@ from . import atlas as atlas_mod
 from . import core, headroom, metrics, model
 from .core import SPACING, RayConfig
 from .experiment import RunConfig
+
+
+# ------------------------------------------- provenance & checkpoint (Step 0)
+#
+# VI SAO: review phuong phap chi ra bug bookkeeping - khong luu checkpoint (tron 2
+# instance P2), eval jsonl chi khoa case_id (dung ket qua model CU), khong khoa git
+# commit. Cac ham duoi day sua tan goc: MOI run luu checkpoint + hash + manifest, va
+# eval PHAI reload tu dia (khong dung `net` con trong RAM). Xem
+# `mapping_split_canonical_p2_decisions_vi.md` §4, §7.
+#
+# RANG BUOC (§4.3): Step 0 chi THEM bookkeeping, KHONG doi numerics. Test round-trip
+# duoi day chung minh reload cho ket qua Y HET train.
+
+def git_commit(cwd: str = ".") -> str:
+    """SHA commit hien tai, hoac 'unknown' neu khong trong git repo."""
+    try:
+        return subprocess.check_output(
+            ["git", "rev-parse", "HEAD"], cwd=cwd,
+            stderr=subprocess.DEVNULL).decode().strip()
+    except Exception:
+        return "unknown"
+
+
+def _hash_json(obj) -> str:
+    return hashlib.sha256(
+        json.dumps(obj, sort_keys=True, default=str).encode("utf-8")).hexdigest()
+
+
+def _hash_file(path: str) -> str:
+    h = hashlib.sha256()
+    with open(path, "rb") as f:
+        for chunk in iter(lambda: f.read(1 << 20), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def config_hash(run: RunConfig, cfg: RayConfig, *, epochs: int, lr: float,
+                rays_per_case: int, batch_size: int, extra: "dict | None" = None) -> str:
+    """Hash MOI thu anh huong numerics cua mot run. Doi bat ky cai nao => hash khac.
+
+    Dung de phat hien 'cung experiment_id nhung config that su khac' (vd doi epoch/lr).
+    """
+    payload = {
+        "surface": run.surface, "domain": run.domain, "inputs": run.inputs,
+        "heads": run.heads, "cls": run.cls, "seed": run.seed, "version": run.version,
+        "channels": list(run.channels), "with_presence": run.with_presence,
+        "prob_source": run.prob_source,
+        "ray": {"k": cfg.k, "d_min": cfg.d_min, "d_max": cfg.d_max,
+                "smooth_mm": cfg.smooth_mm},
+        "train": {"epochs": epochs, "lr": lr, "rays_per_case": rays_per_case,
+                  "batch_size": batch_size},
+    }
+    if extra:
+        payload["extra"] = extra
+    return _hash_json(payload)[:16]
+
+
+def save_run(result: "RunResult", bsc_root: str, cfg: RayConfig, *, epochs: int,
+             lr: float, rays_per_case: int, batch_size: int = 4096,
+             atlas_hash: str = "", split_hash: str = "", dataset_revision: str = "",
+             git_cwd: str = ".", extra_metrics: "dict | None" = None) -> str:
+    """Luu checkpoint + manifest, tra ve `run_dir = runs/<experiment_id>/<ckpt_hash>/`.
+
+    Duong dan CHUA ckpt_hash => checkpoint moi -> thu muc moi -> khong the reuse eval cu
+    (sua bug 'stale eval'). Mo hinh luu du state_dict + in_channels + with_presence de
+    load lai dung kien truc.
+    """
+    import torch
+    run = result.run
+    tmp = f"{bsc_root}/runs/_tmp_{run.experiment_id}.pt"
+    os.makedirs(os.path.dirname(tmp), exist_ok=True)
+    torch.save({"state_dict": result.net.state_dict(),
+                "in_channels": len(run.channels),
+                "with_presence": run.with_presence,
+                "experiment_id": run.experiment_id}, tmp)
+    ckpt_hash = _hash_file(tmp)[:16]
+    run_dir = f"{bsc_root}/runs/{run.experiment_id}/{ckpt_hash}"
+    os.makedirs(run_dir, exist_ok=True)
+    os.replace(tmp, f"{run_dir}/model.pt")
+
+    manifest = run.to_registry(dataset_revision=dataset_revision, extra={
+        "checkpoint_sha256": ckpt_hash,
+        "git_commit": git_commit(git_cwd),
+        "config_hash": config_hash(run, cfg, epochs=epochs, lr=lr,
+                                   rays_per_case=rays_per_case, batch_size=batch_size),
+        "atlas_hash": atlas_hash, "split_manifest_hash": split_hash,
+        "epochs": epochs, "lr": lr, "rays_per_case": rays_per_case,
+        "batch_size": batch_size,
+        "ray_k": cfg.k, "ray_d_min": cfg.d_min, "ray_d_max": cfg.d_max,
+        "smooth_mm": cfg.smooth_mm,
+        "val_occ_dice": result.val_occ_dice, "presence": result.presence,
+        "n_train_rays": result.n_train_rays, **(extra_metrics or {})})
+    with open(f"{run_dir}/manifest.json", "w", encoding="utf-8") as f:
+        json.dump(manifest, f, indent=2, ensure_ascii=False)
+    return run_dir
+
+
+def load_run_model(run_dir: str, device: str = "cpu"):
+    """Reload model tu checkpoint tren dia. MOI eval phai qua day, khong dung `net` RAM."""
+    import torch
+    ck = torch.load(f"{run_dir}/model.pt", map_location=device)
+    net = model.RayEncoder1D(in_channels=ck["in_channels"],
+                             with_presence=ck["with_presence"])
+    net.load_state_dict(ck["state_dict"])
+    return net.to(device).eval()
+
+
+def run_manifest(run_dir: str) -> dict:
+    with open(f"{run_dir}/manifest.json", encoding="utf-8") as f:
+        return json.load(f)
 
 
 # ------------------------------------------------------------ nguon du lieu
@@ -284,6 +398,92 @@ def evaluate_case(run: RunConfig, net, src: CaseSource, cid,
     if pp is not None:
         row["presence"] = metrics.presence_f1(pres.astype(bool), pp > 0.5)
     return row
+
+
+# ------------------------------------------ Mapping audit (Phase A step 8)
+#
+# Review §6 phat hien 1123 voxel sun GT bi gan vao bin `absent` -> phep gan
+# nearest-bone-node (Euclidean) khong phai anh xa giai phau chinh xac. Decision
+# (`mapping_split_canonical_p2_decisions_vi.md` §2): so Mapping A (nearest node) voi
+# Mapping B (nearest sampled-ray proxy) tren 10 ca de xem ket luan §3.7 co nhay voi
+# cach mapping khong. B KHONG phai full provenance (splat_rays dung bincount, mat source
+# ray) - do la Mapping C danh cho final Gate.
+
+def _nearest_ray_thickness(query_mm, verts, dirs, thick_node, cfg: RayConfig,
+                           max_dist_mm: float, depth_stride: int = 2):
+    """Mapping B: thickness cua RAY co sample gan query nhat. NaN neu xa hon max_dist.
+
+    Dung ca vi tri node, huong ray va depth (gan tinh than 'ray ownership' hon nearest
+    node). `depth_stride` giam so diem cay KDTree (K=64 -> 32) cho nhe bo nho.
+    """
+    from scipy.spatial import cKDTree
+    depths = cfg.depths[::depth_stride]
+    pts = (verts[:, None, :] + depths[None, :, None] * dirs[:, None, :]).reshape(-1, 3)
+    ray_of = np.repeat(np.arange(len(verts)), len(depths))
+    d, i = cKDTree(pts.astype(np.float64)).query(np.asarray(query_mm, np.float64))
+    th = thick_node[ray_of[i]].astype(np.float32)
+    th[d > max_dist_mm] = np.nan
+    return th, d.astype(np.float32)
+
+
+def default_max_dist_mm(cfg: RayConfig, spacing=SPACING) -> float:
+    """Nua duong cheo voxel + nua buoc ray (§2.5). Query xa hon => `unassigned`."""
+    return 0.5 * float(np.linalg.norm(spacing)) + 0.5 * cfg.step
+
+
+def mapping_audit_case(gt_cart, pred_cart, bone_mask, spacing, cfg: RayConfig,
+                       max_dist_mm: "float | None" = None,
+                       thin_bins=("absent", "<=0.5mm", "<=1.0mm")) -> "dict | None":
+    """So lỗi vùng mỏng + mis-binning giua Mapping A (node) va B (ray) cho MOT ca."""
+    from scipy.ndimage import distance_transform_edt
+    if max_dist_mm is None:
+        max_dist_mm = default_max_dist_mm(cfg, spacing)
+
+    verts, normals, thick_node = headroom.gt_thickness_per_node(bone_mask, gt_cart, spacing, cfg)
+    sg, sp_ = metrics.surface_mask(gt_cart), metrics.surface_mask(pred_cart)
+    if not sg.any() or not sp_.any():
+        return None
+    dist_gt = distance_transform_edt(~sp_, sampling=spacing)[sg]   # GT surf -> PRED
+    dist_pr = distance_transform_edt(~sg, sampling=spacing)[sp_]   # PRED surf -> GT
+    gt_pts = core.voxel_centers_mm(sg, spacing)
+    pr_pts = core.voxel_centers_mm(sp_, spacing)
+    thin_idx = [core.THICKNESS_NAMES.index(b) for b in thin_bins]
+
+    def thin_err(th_gt, th_pr):
+        d = np.concatenate([dist_gt, dist_pr])
+        t = np.concatenate([th_gt, th_pr])
+        ok = np.isfinite(d) & np.isfinite(t)
+        sel = np.isin(core.assign_thickness_bin(t[ok]), thin_idx)
+        dd = d[ok][sel]
+        return (float(dd.mean()) if dd.size else np.nan), int(sel.sum())
+
+    # Mapping A - nearest node
+    errA, nA = thin_err(core.nearest_surface_value(verts, thick_node, gt_pts),
+                        core.nearest_surface_value(verts, thick_node, pr_pts))
+    # Mapping B - nearest sampled-ray
+    tgB, dgB = _nearest_ray_thickness(gt_pts, verts, normals, thick_node, cfg, max_dist_mm)
+    tpB, dpB = _nearest_ray_thickness(pr_pts, verts, normals, thick_node, cfg, max_dist_mm)
+    errB, nB = thin_err(tgB, tpB)
+
+    # Voxel sun GT bi gan vao bin `absent` (red flag §6) duoi moi mapping
+    gt_vox = core.voxel_centers_mm(gt_cart, spacing)
+    absent = core.THICKNESS_NAMES.index("absent")
+    binA = core.assign_thickness_bin(core.nearest_surface_value(verts, thick_node, gt_vox))
+    tvB, _ = _nearest_ray_thickness(gt_vox, verts, normals, thick_node, cfg, max_dist_mm)
+    binB = core.assign_thickness_bin(np.nan_to_num(tvB, nan=1.0))   # unassigned -> khong absent
+
+    dB = np.concatenate([dgB, dpB])
+    return {
+        "thin_err_A_mm": errA, "thin_err_B_mm": errB,
+        "n_thin_surf_A": nA, "n_thin_surf_B": nB,
+        "gt_vox_absent_A": int((binA == absent).sum()),
+        "gt_vox_absent_B": int((binB == absent).sum()),
+        "n_gt_vox": int(gt_cart.sum()),
+        "unassigned_frac_B": float(np.mean(~np.isfinite(np.concatenate([tgB, tpB])))),
+        "distB_median_mm": float(np.median(dB)),
+        "distB_p95_mm": float(np.percentile(dB, 95)),
+        "max_dist_mm": float(max_dist_mm),
+    }
 
 
 def summarize_gate37(rows) -> dict:
