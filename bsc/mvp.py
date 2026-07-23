@@ -253,11 +253,39 @@ def build_case(run: RunConfig, src: CaseSource, cid, cfg: RayConfig = RayConfig(
         jitter_theta_deg=jitter_theta_deg, seed=seed)
 
 
+def _stratified_ray_indices(occ, cfg: RayConfig, n: int, rng) -> np.ndarray:
+    """Lay mau con CAN BANG theo bin do day (Phase B, review §8).
+
+    Uniform sampling lam tia sun MONG (hiem) it duoc dai dien => recall 37% o vung mong.
+    Ham nay cap phat DEU cho moi bin do day co mat (ke ca `absent`), roi lap day phan
+    con lai. Nho vay tia mong/absent duoc oversample so voi uniform.
+    """
+    th = core.ray_stats(occ, cfg)["thickness"]
+    b = core.assign_thickness_bin(th)
+    groups = [np.flatnonzero(b == k) for k in range(len(core.THICKNESS_NAMES))]
+    nonempty = [g for g in groups if len(g)]
+    per = max(1, n // len(nonempty))
+    picked = [rng.choice(g, min(len(g), per), replace=False) for g in nonempty]
+    idx = np.concatenate(picked)
+    if len(idx) < n:                                   # lap day tu phan chua chon
+        rest = np.setdiff1d(np.arange(len(occ)), idx, assume_unique=False)
+        if len(rest):
+            idx = np.concatenate([idx, rng.choice(rest, min(len(rest), n - len(idx)),
+                                                  replace=False)])
+    rng.shuffle(idx)
+    return idx[:n]
+
+
 def build_dataset(run: RunConfig, src: CaseSource, case_ids, cfg: RayConfig = RayConfig(),
                   atlas=None, rays_per_case: int = 20000, seed: int = 0,
                   direction: str = "normal", jitter_s_mm: float = 0.0,
-                  jitter_theta_deg: float = 0.0, verbose: bool = False):
-    """Nhieu ca -> (X, occ, presence) da ghep, co lay mau con khi TRAIN."""
+                  jitter_theta_deg: float = 0.0, stratify: bool = False,
+                  verbose: bool = False):
+    """Nhieu ca -> (X, occ, presence) da ghep, co lay mau con khi TRAIN.
+
+    `stratify=False` (mac dinh) = uniform, GIU nguyen hanh vi canonical. `stratify=True`
+    = can bang theo bin do day (Phase B) - KHONG dung cho canonical.
+    """
     Xs, os_, ps = [], [], []
     for i, cid in enumerate(case_ids):
         out = build_case(run, src, cid, cfg, atlas, direction, jitter_s_mm,
@@ -268,7 +296,9 @@ def build_dataset(run: RunConfig, src: CaseSource, case_ids, cfg: RayConfig = Ra
         if len(X) == 0:
             continue
         if rays_per_case and len(X) > rays_per_case:
-            k = np.random.default_rng(seed + i).choice(len(X), rays_per_case, replace=False)
+            rng = np.random.default_rng(seed + i)
+            k = (_stratified_ray_indices(occ, cfg, rays_per_case, rng) if stratify
+                 else rng.choice(len(X), rays_per_case, replace=False))
             X, occ, pres = X[k], occ[k], pres[k]
         Xs.append(X); os_.append(occ); ps.append(pres)
         if verbose:
@@ -276,6 +306,43 @@ def build_dataset(run: RunConfig, src: CaseSource, case_ids, cfg: RayConfig = Ra
     if not Xs:
         raise ValueError(f"{run.experiment_id}: khong dung duoc tia nao.")
     return np.concatenate(Xs), np.concatenate(os_), np.concatenate(ps)
+
+
+def micro_overfit(run: RunConfig, src: CaseSource, cid, cfg: RayConfig = RayConfig(),
+                  atlas=None, *, rays: int = 1200, epochs: int = 150, lr: float = 3e-3,
+                  stratify: bool = True, device: str = "cpu", seed: int = 0) -> dict:
+    """Phase B step 1 (review §11): overfit 1 ca cau hinh S0-D1-H1, bao cao THIN/ABSENT rieng.
+
+    Muc dich: xac nhan cau hinh dang HONG (S0-D1-H1) CO THE thuoc long tia. Neu khong dat
+    ~0.97-0.99 => bug o input/target/kien truc/loss, KHONG phai chuyen scale. Bao cao rieng
+    thin-ray recall va absent presence-acc vi do la cho §3.7 that bai.
+    """
+    X, occ, pres = build_dataset(run, src, [cid], cfg, atlas=atlas, rays_per_case=rays,
+                                 stratify=stratify, seed=seed)
+    net = model.RayEncoder1D(in_channels=len(run.channels),
+                             with_presence=run.with_presence)
+    hist = model.fit(net, X, occ, pres, epochs=epochs, batch_size=256, lr=lr,
+                     seed=seed, device=device)
+    op, pp = model.predict_rays(net, X, device=device)
+
+    tgt = occ.astype(bool)
+    thr, dice = 0.5, 0.0
+    for t in np.arange(0.3, 0.81, 0.05):
+        d = 2 * ((op > t) & tgt).sum() / ((op > t).sum() + tgt.sum() + 1e-8)
+        if d > dice:
+            dice, thr = float(d), float(t)
+
+    th_ray = core.ray_stats(occ, cfg)["thickness"]
+    thin = (th_ray > 0) & (th_ray <= 1.0)
+    thin_recall = (float(((op > thr) & tgt)[thin].sum() / max(tgt[thin].sum(), 1))
+                   if thin.any() else float("nan"))
+    absent = pres == 0
+    absent_acc = (float((pp[absent] <= 0.5).mean())
+                  if (pp is not None and absent.any()) else float("nan"))
+    return {"occ_dice": dice, "best_thr": thr, "thin_ray_recall": thin_recall,
+            "absent_pres_acc": absent_acc, "n_rays": int(len(X)),
+            "absent_frac": float(absent.mean()),
+            "loss0": hist[0]["loss"], "lossN": hist[-1]["loss"], "net": net}
 
 
 # ------------------------------------------------------- QC hinh hoc (§6 b3/5/6)
