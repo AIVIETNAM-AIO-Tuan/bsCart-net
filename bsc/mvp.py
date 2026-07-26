@@ -419,17 +419,22 @@ def train_run(run: RunConfig, src: CaseSource, train_ids, val_ids,
               cfg: RayConfig = RayConfig(), atlas=None, rays_per_case: int = 20000,
               epochs: int = 30, lr: float = 3e-4, batch_size: int = 4096,
               direction: str = "normal", device: str = "cpu",
+              stratify: bool = False, loss: "model.LossWeights | None" = None,
               verbose: bool = False) -> RunResult:
-    """Train + danh gia tren tap val. Truc H quyet dinh co presence head hay khong."""
+    """Train + danh gia tren tap val. Truc H quyet dinh co presence head hay khong.
+
+    PHASE B: `stratify` va `loss` mac dinh = hanh vi canonical (test khoa lai).
+    """
     Xa, oa, pa = build_dataset(run, src, train_ids, cfg, atlas, rays_per_case,
-                               seed=0, direction=direction, verbose=verbose)
+                               seed=0, direction=direction, stratify=stratify,
+                               verbose=verbose)
     Xb, ob, pb = build_dataset(run, src, val_ids, cfg, atlas, rays_per_case,
-                               seed=1000, direction=direction)
+                               seed=1000, direction=direction)   # val KHONG stratify
 
     net = model.RayEncoder1D(in_channels=len(run.channels),
                              with_presence=run.with_presence)
     hist = model.fit(net, Xa, oa, pa, epochs=epochs, batch_size=batch_size, lr=lr,
-                     seed=run.seed, device=device)
+                     seed=run.seed, device=device, w=loss or model.LossWeights())
     op, pp = model.predict_rays(net, Xb, device=device)
     dice = float(2 * ((op > 0.5) & ob.astype(bool)).sum()
                  / ((op > 0.5).sum() + ob.sum() + 1e-8))
@@ -438,7 +443,8 @@ def train_run(run: RunConfig, src: CaseSource, train_ids, val_ids,
 
 
 def evaluate_case(run: RunConfig, net, src: CaseSource, cid,
-                  cfg: RayConfig = RayConfig(), atlas=None, device: str = "cpu") -> dict:
+                  cfg: RayConfig = RayConfig(), atlas=None, device: str = "cpu",
+                  presence_gate: str = "hard", presence_thr: float = 0.5) -> dict:
     """Danh gia MOT ca o MAU SO VUNG MONG (§3.7), so voi baseline.
 
     Dung FULL marching-cubes density khi inference - KHONG lay mau con (core.py: o mat
@@ -452,7 +458,8 @@ def evaluate_case(run: RunConfig, net, src: CaseSource, cid,
     X, occ, pres, verts, dirs = out
     op, pp = model.predict_rays(net, X, device=device)
     vol = model.reconstruct_volume(op, verts, dirs, cart.shape, cfg, sp,
-                                   presence_prob=pp)
+                                   presence_prob=pp, presence_thr=presence_thr,
+                                   presence_gate=presence_gate)
 
     tf = headroom.gt_thickness_per_node(bone, cart, sp, cfg)
     row = {

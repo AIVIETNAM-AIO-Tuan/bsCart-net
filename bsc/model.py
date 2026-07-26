@@ -153,10 +153,23 @@ def focal_bce_with_logits(logits, target, gamma: float = 1.0, pos_weight=None,
 
 @dataclass
 class LossWeights:
-    """Plan doc §3.4 Step 7: L = L_occupancy + lambda_p * L_presence. CHI hai so hang."""
+    """Plan doc §3.4 Step 7: L = L_occupancy + lambda_p * L_presence.
+
+    PHASE B (review §8): mac dinh GIU NGUYEN hanh vi canonical. Cac lever duoi day mac
+    dinh = 0/False nen `LossWeights()` cho ket qua Y HET truoc khi them - co test khoa.
+
+    absent_fp_weight : nhan them cho occupancy loss tren TIA ABSENT. M0 §8.3 do duoc 82%
+                       khoi luong loi vung mong la FP o bin absent => day la lever nham
+                       THANG vao thu pham. 0 = tat.
+    per_ray_norm     : chuan hoa occupancy loss theo TUNG TIA truoc khi trung binh. Khong
+                       co no, tia sun DAY (nhieu o duong) chi phoi gradient => recall 81%
+                       day vs 37% mong (review §8).
+    """
     lambda_presence: float = 0.5
     focal_gamma: float = 1.0
     auto_pos_weight: bool = True     # can bang theo ty le duong thuc te trong batch
+    absent_fp_weight: float = 0.0    # >0 => phat them FP tren tia absent
+    per_ray_norm: bool = False       # True => moi tia dong gop nhu nhau
 
 
 def ray_loss(occ_logits, pres_logits, occ_target, pres_target,
@@ -179,7 +192,17 @@ def ray_loss(occ_logits, pres_logits, occ_target, pres_target,
         pos = occ_target.mean().clamp(1e-4, 1 - 1e-4)
         pw_occ = ((1 - pos) / pos).clamp(max=50.0).to(occ_logits.device)
 
-    l_occ = focal_bce_with_logits(occ_logits, occ_target, w.focal_gamma, pw_occ)
+    if w.absent_fp_weight > 0 or w.per_ray_norm:
+        # Duong di PHASE B: giu loss theo tung o de con trong so hoa duoc
+        cell = focal_bce_with_logits(occ_logits, occ_target, w.focal_gamma, pw_occ,
+                                     reduction="none")                    # [B, K]
+        if w.absent_fp_weight > 0:
+            # Tia ABSENT (target toan 0): moi o duong doan ra deu la FP - phat manh hon.
+            is_absent = (occ_target.sum(dim=1) == 0).float().unsqueeze(1)  # [B, 1]
+            cell = cell * (1.0 + w.absent_fp_weight * is_absent)
+        l_occ = cell.mean(dim=1).mean() if w.per_ray_norm else cell.mean()
+    else:
+        l_occ = focal_bce_with_logits(occ_logits, occ_target, w.focal_gamma, pw_occ)
 
     # H0 (truc H = "occupancy only"): KHONG co so hang presence. `pres_logits=None` la
     # tin hieu tuong minh tu RayEncoder1D(with_presence=False).
@@ -407,17 +430,30 @@ def predict_rays(model: nn.Module, X, batch_size: int = 8192, device: str = "cpu
 
 
 def reconstruct_volume(occ_prob, verts, normals, shape, cfg: RayConfig = RayConfig(),
-                       spacing=SPACING, presence_prob=None, presence_thr: float = 0.5):
+                       spacing=SPACING, presence_prob=None, presence_thr: float = 0.5,
+                       presence_gate: str = "hard"):
     """Tia -> the tich xac suat (plan doc Step 8), qua core.splat_rays.
 
-    Neu truyen `presence_prob`, tia duoi nguong bi ep ve 0 TRUOC khi splat: day la
-    cach presence head thuc su tac dong len ket qua the tich, thay vi chi la mot so
-    de bao cao.
+    presence_gate (PHASE B, review §8):
+      "hard" - tia duoi nguong bi ep ve 0 (mac dinh, = hanh vi canonical)
+      "soft" - nhan occupancy voi xac suat presence (khong cat cung)
+      "none" - bo qua presence hoan toan
+
+    VI SAO CAN "soft"/"none": sweep nguong (§8.5) cho thay hard-gate nang nguong lam loi
+    TANG - vi no vua chan FP absent vua chan luon tia sun MONG that (bien FP thanh FN).
+    Gate mem cho phep tia khong chac chan dong gop MOT PHAN thay vi mat trang.
 
     LUU Y (core.py): dung FULL marching-cubes density khi inference. Subsample chi
     danh cho train - o mat do thua (h=1.0mm) round-trip mat 20% voxel sun.
     """
     occ_prob = np.asarray(occ_prob, np.float32)
-    if presence_prob is not None:
-        occ_prob = occ_prob * (np.asarray(presence_prob, np.float32) >= presence_thr)[:, None]
+    if presence_prob is not None and presence_gate != "none":
+        p = np.asarray(presence_prob, np.float32)
+        if presence_gate == "hard":
+            occ_prob = occ_prob * (p >= presence_thr)[:, None]
+        elif presence_gate == "soft":
+            occ_prob = occ_prob * p[:, None]
+        else:
+            raise ValueError(f"presence_gate khong hop le: {presence_gate!r} "
+                             f"(chon 'hard'|'soft'|'none')")
     return core.splat_rays(occ_prob, verts, normals, shape, cfg, spacing)
