@@ -377,7 +377,7 @@ def build_dataset(case_ids, loader, spacing=SPACING, cfg: RayConfig = RayConfig(
 
 def fit(model: nn.Module, X, occ, presence, epochs: int = 30, batch_size: int = 4096,
         lr: float = 3e-4, w: LossWeights = LossWeights(), device: str = "cpu",
-        seed: int = 0, verbose: bool = False):
+        seed: int = 0, verbose: bool = False, progress: bool = True):
     """Vong train toi gian. Tra list dict lich su moi epoch.
 
     Co tinh giu don gian: khong scheduler, khong augment, khong early stop. MVP can
@@ -394,7 +394,14 @@ def fit(model: nn.Module, X, occ, presence, epochs: int = 30, batch_size: int = 
     n = Xt.shape[0]
     g = torch.Generator().manual_seed(seed)
     history = []
-    for ep in range(epochs):
+    epoch_iter = range(epochs)
+    if progress:
+        try:
+            from tqdm.auto import tqdm
+            epoch_iter = tqdm(epoch_iter, desc="fit", leave=False)
+        except Exception:
+            pass
+    for ep in epoch_iter:
         perm = torch.randperm(n, generator=g).to(device)
         agg, nb = {"loss": 0.0, "occ": 0.0, "pres": 0.0}, 0
         for i in range(0, n, batch_size):

@@ -276,18 +276,33 @@ def _stratified_ray_indices(occ, cfg: RayConfig, n: int, rng) -> np.ndarray:
     return idx[:n]
 
 
+def _progress(it, desc: str, total: int, enabled: bool):
+    """tqdm neu co, khong thi im lang. Tach ra de module khong phu thuoc cung tqdm."""
+    if not enabled:
+        return it
+    try:
+        from tqdm.auto import tqdm
+        return tqdm(it, desc=desc, total=total, leave=False)
+    except Exception:
+        return it
+
+
 def build_dataset(run: RunConfig, src: CaseSource, case_ids, cfg: RayConfig = RayConfig(),
                   atlas=None, rays_per_case: int = 20000, seed: int = 0,
                   direction: str = "normal", jitter_s_mm: float = 0.0,
                   jitter_theta_deg: float = 0.0, stratify: bool = False,
-                  verbose: bool = False):
+                  verbose: bool = False, progress: bool = True, desc: str = "build"):
     """Nhieu ca -> (X, occ, presence) da ghep, co lay mau con khi TRAIN.
 
     `stratify=False` (mac dinh) = uniform, GIU nguyen hanh vi canonical. `stratify=True`
     = can bang theo bin do day (Phase B) - KHONG dung cho canonical.
+
+    `progress=True`: hien tqdm. Buoc nay doc 2 file/ca qua Drive + marching cubes nen
+    voi 170 ca no im lang ~1 tieng - da tung lam nguoi dung tuong treo. Bai hoc tu Gate 0.
     """
+    case_ids = list(case_ids)
     Xs, os_, ps = [], [], []
-    for i, cid in enumerate(case_ids):
+    for i, cid in enumerate(_progress(case_ids, desc, len(case_ids), progress)):
         out = build_case(run, src, cid, cfg, atlas, direction, jitter_s_mm,
                          jitter_theta_deg, seed + i)
         if out is None:
@@ -427,9 +442,12 @@ def train_run(run: RunConfig, src: CaseSource, train_ids, val_ids,
     """
     Xa, oa, pa = build_dataset(run, src, train_ids, cfg, atlas, rays_per_case,
                                seed=0, direction=direction, stratify=stratify,
-                               verbose=verbose)
+                               verbose=verbose, desc="build train")
     Xb, ob, pb = build_dataset(run, src, val_ids, cfg, atlas, rays_per_case,
-                               seed=1000, direction=direction)   # val KHONG stratify
+                               seed=1000, direction=direction,   # val KHONG stratify
+                               desc="build val")
+    if verbose:
+        print(f"  train {Xa.shape} | val {Xb.shape} -> bat dau fit {epochs} epoch")
 
     net = model.RayEncoder1D(in_channels=len(run.channels),
                              with_presence=run.with_presence)
