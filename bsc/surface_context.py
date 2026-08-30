@@ -170,19 +170,39 @@ def surface_context_case(run, net, src, cid, cfg: RayConfig = RayConfig(), atlas
 # k-NN la baseline manh nhat co the (no "thuoc long" toan bo tap train), nen neu no khong
 # tach duoc thi kien truc nao cung kho.
 
-def _knn_presence(Xtr, ytr, Xte, k: int = 15):
-    """Bo phieu k-NN tren dac trung da chuan hoa. Tra (pred, acc-ready arrays)."""
-    from scipy.spatial import cKDTree
-    mu, sd = Xtr.mean(0, keepdims=True), Xtr.std(0, keepdims=True) + 1e-6
-    tree = cKDTree(((Xtr - mu) / sd).astype(np.float64))
-    _, idx = tree.query(((Xte - mu) / sd).astype(np.float64), k=k)
-    return ytr[idx].mean(axis=1) >= 0.5
+def _knn_presence(Xtr, ytr, Xte, k: int = 15, chunk: int = 512):
+    """Bo phieu k-NN tren dac trung da chuan hoa, BRUTE-FORCE theo khoi.
+
+    KHONG dung cKDTree: dac trung o day co ~640 chieu (tia + 4 lang gieng), ma KD-tree
+    suy bien thanh duyet tuyen tinh khi >~20 chieu => cham hang GIO. Brute-force qua
+    matmul (BLAS) vua CHINH XAC vua nhanh hon nhieu lan o so chieu nay:
+        ||a-b||^2 = ||a||^2 + ||b||^2 - 2 a.b
+    Chi can ||b||^2 va tich vo huong vi ||a||^2 khong doi thu tu trong moi hang.
+    """
+    mu = Xtr.mean(0, keepdims=True)
+    sd = Xtr.std(0, keepdims=True) + 1e-6
+    A = ((Xtr - mu) / sd).astype(np.float32)
+    B = ((Xte - mu) / sd).astype(np.float32)
+    a2 = (A * A).sum(1)                                    # [Ntr]
+    out = np.empty(len(B), bool)
+    for i in range(0, len(B), chunk):
+        blk = B[i:i + chunk]
+        d2 = a2[None, :] - 2.0 * (blk @ A.T)               # bo ||b||^2 (hang so moi hang)
+        idx = np.argpartition(d2, k, axis=1)[:, :k]
+        out[i:i + chunk] = ytr[idx].mean(axis=1) >= 0.5
+    return out
 
 
-def _with_neighbors(X, nb, n_use: int = 4):
-    """Ghep dac trung cua node voi n_use lang gieng -> [N, (1+n_use)*D]."""
+def _with_neighbors(X, nb, n_use: int = 4, sel=None):
+    """Ghep dac trung node voi n_use lang gieng -> [N, (1+n_use)*D].
+
+    `sel`: chi dung dac trung cho cac chi so nay (van lay lang gieng tu TOAN BO X).
+    Khong co no, ham dung mang 140k x 640 float32 (~358 MB/ca) roi vut gan het di.
+    """
     flat = X.reshape(len(X), -1)
-    return np.concatenate([flat] + [flat[nb[:, i]] for i in range(n_use)], axis=1)
+    if sel is None:
+        sel = np.arange(len(X))
+    return np.concatenate([flat[sel]] + [flat[nb[sel, i]] for i in range(n_use)], axis=1)
 
 
 def raw_context_knn(run, src, train_ids, val_ids, cfg: RayConfig = RayConfig(),
@@ -211,7 +231,6 @@ def raw_context_knn(run, src, train_ids, val_ids, cfg: RayConfig = RayConfig(),
             if len(X) == 0:
                 continue
             nb = surface_neighbors(verts, k_nb)
-            Xn = _with_neighbors(X, nb, n_use)
             th = core.ray_stats(occ, cfg)["thickness"]
             hard = (th <= 1.0)                       # absent + cuc mong + mong
             rng = np.random.default_rng(sd + i)
@@ -220,7 +239,9 @@ def raw_context_knn(run, src, train_ids, val_ids, cfg: RayConfig = RayConfig(),
                 sel = rng.choice(sel, rays_per_case, replace=False)
             if len(sel) == 0:
                 continue
-            Xs.append(Xn[sel]); ys.append(pres[sel].astype(np.int8))
+            # Lay mau con TRUOC roi moi ghep dac trung (tiet kiem ~350MB/ca)
+            Xs.append(_with_neighbors(X, nb, n_use, sel))
+            ys.append(pres[sel].astype(np.int8))
             hs.append(X.reshape(len(X), -1)[sel])
         if not Xs:
             raise ValueError("khong thu duoc tia nao")
