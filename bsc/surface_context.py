@@ -154,6 +154,101 @@ def surface_context_case(run, net, src, cid, cfg: RayConfig = RayConfig(), atlas
     return res
 
 
+# ------------------------- Ngu canh THO co them thong tin khong? (k-NN test)
+#
+# bsc_03 phep 1-4 do viec tong hop DU DOAN cua lang gieng (lam muot) - that bai vi model
+# da sai theo mang. Nhung do KHONG tra loi: neu cho model nhin DAC TRUNG THO cua tia lan
+# can thi sao? Do la thu ma 3D CNN tren slab neo phap tuyen (plan §5.2 Extension B) lam,
+# va no khac han lam muot dau ra.
+#
+# Phep do duoi day tra loi bang k-NN PHI THAM SO - khong train gi:
+#   A = doan presence tu dac trung MOT tia
+#   B = doan presence tu dac trung tia + K lang gieng ghep lai
+# B >> A  => ngu canh THO co them thong tin  => slab + 3D CNN dang xay
+# B ~= A  => lang gieng khong them gi o muc dac trung => xay cung vo ich
+#
+# k-NN la baseline manh nhat co the (no "thuoc long" toan bo tap train), nen neu no khong
+# tach duoc thi kien truc nao cung kho.
+
+def _knn_presence(Xtr, ytr, Xte, k: int = 15):
+    """Bo phieu k-NN tren dac trung da chuan hoa. Tra (pred, acc-ready arrays)."""
+    from scipy.spatial import cKDTree
+    mu, sd = Xtr.mean(0, keepdims=True), Xtr.std(0, keepdims=True) + 1e-6
+    tree = cKDTree(((Xtr - mu) / sd).astype(np.float64))
+    _, idx = tree.query(((Xte - mu) / sd).astype(np.float64), k=k)
+    return ytr[idx].mean(axis=1) >= 0.5
+
+
+def _with_neighbors(X, nb, n_use: int = 4):
+    """Ghep dac trung cua node voi n_use lang gieng -> [N, (1+n_use)*D]."""
+    flat = X.reshape(len(X), -1)
+    return np.concatenate([flat] + [flat[nb[:, i]] for i in range(n_use)], axis=1)
+
+
+def raw_context_knn(run, src, train_ids, val_ids, cfg: RayConfig = RayConfig(),
+                    atlas=None, k_nb: int = 8, n_use: int = 4, k_knn: int = 15,
+                    rays_per_case: int = 4000, hard_only: bool = True,
+                    seed: int = 0, verbose: bool = True) -> dict:
+    """Ngu canh THO co them thong tin khong? So k-NN mot-tia vs tia+lang-gieng.
+
+    hard_only=True: chi xet tia KHO (absent hoac do day <=1mm) - do la cho §3.7 that bai.
+    Do tren tia val, hoc tu tia train - KHONG dung nhan cua val.
+    """
+    def collect(ids, sd):
+        Xs, ys, hs = [], [], []
+        it = ids
+        if verbose:
+            try:
+                from tqdm.auto import tqdm
+                it = tqdm(ids, desc="knn build", leave=False)
+            except Exception:
+                pass
+        for i, cid in enumerate(it):
+            out = mvp.build_case(run, src, cid, cfg, atlas)
+            if out is None:
+                continue
+            X, occ, pres, verts, _ = out
+            if len(X) == 0:
+                continue
+            nb = surface_neighbors(verts, k_nb)
+            Xn = _with_neighbors(X, nb, n_use)
+            th = core.ray_stats(occ, cfg)["thickness"]
+            hard = (th <= 1.0)                       # absent + cuc mong + mong
+            rng = np.random.default_rng(sd + i)
+            sel = np.flatnonzero(hard) if hard_only else np.arange(len(X))
+            if len(sel) > rays_per_case:
+                sel = rng.choice(sel, rays_per_case, replace=False)
+            if len(sel) == 0:
+                continue
+            Xs.append(Xn[sel]); ys.append(pres[sel].astype(np.int8))
+            hs.append(X.reshape(len(X), -1)[sel])
+        if not Xs:
+            raise ValueError("khong thu duoc tia nao")
+        return np.concatenate(hs), np.concatenate(Xs), np.concatenate(ys)
+
+    Xa1, Xan, ya = collect(train_ids, seed)          # 1 = mot tia, n = tia + lang gieng
+    Xb1, Xbn, yb = collect(val_ids, seed + 500)
+
+    pa = _knn_presence(Xa1, ya, Xb1, k_knn)
+    pn = _knn_presence(Xan, ya, Xbn, k_knn)
+    fa, fn = metrics.presence_f1(yb.astype(bool), pa), metrics.presence_f1(yb.astype(bool), pn)
+    acc_a = float((pa == yb.astype(bool)).mean())
+    acc_n = float((pn == yb.astype(bool)).mean())
+    base = float(max(yb.mean(), 1 - yb.mean()))      # doan lop da so
+
+    return {
+        "n_train_rays": int(len(ya)), "n_val_rays": int(len(yb)),
+        "present_rate_val": float(yb.mean()), "majority_baseline": base,
+        "single_ray": {"acc": acc_a, "f1": fa["f1"], "absent_recall": fa["absent_recall"]},
+        "with_neighbors": {"acc": acc_n, "f1": fn["f1"], "absent_recall": fn["absent_recall"]},
+        "gain_acc": acc_n - acc_a, "gain_f1": fn["f1"] - fa["f1"],
+        "single_beats_majority": bool(acc_a > base + 0.02),
+        # Luat quyet dinh - ghi TRUOC khi chay
+        "context_adds_info": bool(acc_n - acc_a > 0.03),
+        "features_informative": bool(acc_a > base + 0.05),
+    }
+
+
 def summarize_surface_context(rows, baseline_thin_mm: float = None) -> dict:
     """Tong hop nhieu ca + ap luat quyet dinh (ghi TRUOC khi chay)."""
     rows = [r for r in rows if r]

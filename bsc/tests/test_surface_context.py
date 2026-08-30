@@ -127,6 +127,45 @@ def test_h0_run_raises_clear_error(src, atlas_fold):
         SC.surface_context_case(run, res.net, src, src.ids()[3], RayConfig(), atlas=None)
 
 
+def test_with_neighbors_concatenates_correctly():
+    """Ghep dac trung: [N, K, C] + n lang gieng -> [N, (1+n)*K*C], dung thu tu."""
+    X = np.arange(4 * 3 * 2, dtype=np.float32).reshape(4, 3, 2)
+    nb = np.array([[1, 2], [0, 2], [0, 1], [0, 1]])
+    out = SC._with_neighbors(X, nb, n_use=2)
+    assert out.shape == (4, 3 * 2 * 3)
+    flat = X.reshape(4, -1)
+    assert np.array_equal(out[:, :6], flat)                 # phan dau = chinh node
+    assert np.array_equal(out[0, 6:12], flat[1])            # lang gieng 1 cua node 0
+    assert np.array_equal(out[0, 12:], flat[2])             # lang gieng 2
+
+
+def test_knn_presence_recovers_separable_classes():
+    """k-NN phai tach duoc hai cum ro rang - kiem ham hoat dong dung."""
+    rng = np.random.default_rng(0)
+    Xtr = np.concatenate([rng.normal(0, 0.3, (60, 4)), rng.normal(5, 0.3, (60, 4))])
+    ytr = np.array([0] * 60 + [1] * 60, np.int8)
+    Xte = np.concatenate([rng.normal(0, 0.3, (20, 4)), rng.normal(5, 0.3, (20, 4))])
+    yte = np.array([0] * 20 + [1] * 20, bool)
+    pred = SC._knn_presence(Xtr, ytr, Xte, k=5)
+    assert (pred == yte).mean() > 0.95
+
+
+def test_raw_context_knn_end_to_end(src, atlas_fold):
+    """raw_context_knn chay tron ven va tra du truong quyet dinh."""
+    from bsc import mvp
+    run = X.from_plan("P2", "femoral_cart", seed=1)
+    r = SC.raw_context_knn(run, src, src.ids()[:3], src.ids()[3:], RayConfig(),
+                           atlas=atlas_fold, k_nb=6, n_use=2, k_knn=5,
+                           rays_per_case=200, verbose=False)
+    for key in ("single_ray", "with_neighbors", "gain_acc", "gain_f1",
+                "majority_baseline", "context_adds_info", "features_informative",
+                "n_train_rays", "n_val_rays"):
+        assert key in r, f"thieu {key}"
+    for side in ("single_ray", "with_neighbors"):
+        assert 0.0 <= r[side]["acc"] <= 1.0
+    assert r["n_train_rays"] > 0 and r["n_val_rays"] > 0
+
+
 def test_summarize_empty():
     assert SC.summarize_surface_context([])["n"] == 0
     assert SC.summarize_surface_context([None])["n"] == 0
