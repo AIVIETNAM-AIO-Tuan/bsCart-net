@@ -45,6 +45,9 @@ INPUT = {
     "I3": ("mri", "prob"),
     "I4": ("mri", "feat"),
     "I5": ("mri", "prob", "feat"),
+    # I6 = hop cua I1 va I2. KHONG nam trong ma tran §7 - chi dung cho CHAN DOAN
+    # (do gioi han thong tin: dung du kenh hinh hoc de khong bo sot tin hieu nao).
+    "I6": ("mri", "grad", "sdf"),
 }
 
 #: H - dau ra

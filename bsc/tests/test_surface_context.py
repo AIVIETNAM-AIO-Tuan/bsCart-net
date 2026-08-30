@@ -166,6 +166,31 @@ def test_raw_context_knn_end_to_end(src, atlas_fold):
     assert r["n_train_rays"] > 0 and r["n_val_rays"] > 0
 
 
+def test_channel_information_knn_compares_subsets(src, atlas_fold):
+    """So nhieu bo kenh trong MOT luot build; tra du truong quyet dinh."""
+    r = SC.channel_information_knn(
+        src, src.ids()[:3], src.ids()[3:], "femoral_cart", RayConfig(), atlas=atlas_fold,
+        subsets={"mri": ("mri",), "mri+grad": ("mri", "grad")},
+        k_nb=4, n_use=2, k_knn=5, rays_per_case=150, verbose=False)
+    assert set(r["by_channels"]) == {"mri", "mri+grad"}
+    for name, v in r["by_channels"].items():
+        for tag in ("single", "with_nb"):
+            assert 0.0 <= v[tag]["acc"] <= 1.0, f"{name}/{tag} acc bat thuong"
+        assert "lift_vs_majority" in v and "gain_from_neighbors" in v
+    for key in ("majority_baseline", "best_subset", "best_lift", "best_gain_nb",
+                "any_features_informative", "neighbors_add_info"):
+        assert key in r, f"thieu {key}"
+    assert r["best_subset"] in r["by_channels"]
+
+
+def test_i6_channels_are_union_of_i1_i2():
+    """I6 (chan doan) phai la hop cua I1 va I2, thu tu mri,grad,sdf."""
+    assert X.INPUT["I6"] == ("mri", "grad", "sdf")
+    assert set(X.INPUT["I6"]) == set(X.INPUT["I1"]) | set(X.INPUT["I2"])
+    # I6 KHONG duoc nam trong ma tran ke hoach (chi la chan doan)
+    assert all(v[2] != "I6" for v in X.PLAN_MATRIX.values() if v[2])
+
+
 def test_summarize_empty():
     assert SC.summarize_surface_context([])["n"] == 0
     assert SC.summarize_surface_context([None])["n"] == 0

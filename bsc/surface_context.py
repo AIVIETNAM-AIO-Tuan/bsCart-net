@@ -270,6 +270,101 @@ def raw_context_knn(run, src, train_ids, val_ids, cfg: RayConfig = RayConfig(),
     }
 
 
+def channel_information_knn(src, train_ids, val_ids, cls: str,
+                            cfg: RayConfig = RayConfig(), atlas=None,
+                            subsets=None, k_nb: int = 8, n_use: int = 4,
+                            k_knn: int = 15, rays_per_case: int = 4000,
+                            seed: int = 0, verbose: bool = True) -> dict:
+    """So NHIEU bo kenh cung luc - dung hinh hoc MOT LAN roi cat kenh.
+
+    VI SAO CAN: ban `raw_context_knn` dau tien chay tren run P2 = I2 = (mri, sdf), tuc
+    BO SOT `grad` - ma M8 do duoc grad dong gop +0.018 occ-Dice, gap 4.5 lan sdf (+0.004).
+    Ket luan "dac trung tia khong tach duoc" khi do chi dung cho (mri, sdf), khong dung
+    cho dac trung tia NOI CHUNG. Ham nay sua lo hong do.
+
+    Dung hinh hoc mot lan voi du 3 kenh (mri, grad, sdf) roi CAT theo chi so kenh =>
+    4 bo kenh chi ton 1 luot build thay vi 4.
+    """
+    from .experiment import RunConfig
+    run = RunConfig(cls=cls, surface="S0", domain="D1", inputs="I6", heads="H1")
+    CH = {"mri": 0, "grad": 1, "sdf": 2}
+    if subsets is None:
+        subsets = {"mri": ("mri",), "mri+grad": ("mri", "grad"),
+                   "mri+sdf": ("mri", "sdf"), "mri+grad+sdf": ("mri", "grad", "sdf")}
+
+    def collect(ids, sd):
+        Xs, Xn, ys = [], [], []
+        it = ids
+        if verbose:
+            try:
+                from tqdm.auto import tqdm
+                it = tqdm(ids, desc="build", leave=False)
+            except Exception:
+                pass
+        for i, cid in enumerate(it):
+            out = mvp.build_case(run, src, cid, cfg, atlas)
+            if out is None:
+                continue
+            X, occ, pres, verts, _ = out
+            if len(X) == 0:
+                continue
+            th = core.ray_stats(occ, cfg)["thickness"]
+            sel = np.flatnonzero(th <= 1.0)             # chi tia KHO
+            if len(sel) == 0:
+                continue
+            rng = np.random.default_rng(sd + i)
+            if len(sel) > rays_per_case:
+                sel = rng.choice(sel, rays_per_case, replace=False)
+            nb = surface_neighbors(verts, k_nb)
+            Xs.append(X[sel])                            # [n, K, 3]
+            Xn.append(X[nb[sel, :n_use]])                # [n, n_use, K, 3]
+            ys.append(pres[sel].astype(np.int8))
+        if not Xs:
+            raise ValueError("khong thu duoc tia nao")
+        return np.concatenate(Xs), np.concatenate(Xn), np.concatenate(ys)
+
+    Xa, Xa_nb, ya = collect(train_ids, seed)
+    Xb, Xb_nb, yb = collect(val_ids, seed + 500)
+    yb_b = yb.astype(bool)
+    base = float(max(yb.mean(), 1 - yb.mean()))
+
+    def flat(Xc, Xc_nb, idx, with_nb):
+        s = Xc[..., idx].reshape(len(Xc), -1)
+        if not with_nb:
+            return s
+        return np.concatenate(
+            [s] + [Xc_nb[:, i][..., idx].reshape(len(Xc), -1) for i in range(n_use)], axis=1)
+
+    res = {}
+    for name, chans in subsets.items():
+        idx = [CH[c] for c in chans]
+        row = {}
+        for tag, with_nb in (("single", False), ("with_nb", True)):
+            p = _knn_presence(flat(Xa, Xa_nb, idx, with_nb), ya,
+                              flat(Xb, Xb_nb, idx, with_nb), k_knn)
+            f1 = metrics.presence_f1(yb_b, p)
+            row[tag] = {"acc": float((p == yb_b).mean()), "f1": f1["f1"],
+                        "recall_present": f1["recall"], "precision": f1["precision"],
+                        "absent_recall": f1["absent_recall"]}
+        row["lift_vs_majority"] = row["single"]["acc"] - base
+        row["gain_from_neighbors"] = row["with_nb"]["acc"] - row["single"]["acc"]
+        res[name] = row
+
+    best = max(res, key=lambda n: res[n]["single"]["acc"])
+    return {
+        "n_train_rays": int(len(ya)), "n_val_rays": int(len(yb)),
+        "present_rate_val": float(yb.mean()), "majority_baseline": base,
+        "by_channels": res, "best_subset": best,
+        "best_lift": res[best]["lift_vs_majority"],
+        "best_gain_nb": max(v["gain_from_neighbors"] for v in res.values()),
+        # Luat quyet dinh - ghi TRUOC khi chay
+        "any_features_informative": bool(
+            max(v["lift_vs_majority"] for v in res.values()) > 0.05),
+        "neighbors_add_info": bool(
+            max(v["gain_from_neighbors"] for v in res.values()) > 0.03),
+    }
+
+
 def summarize_surface_context(rows, baseline_thin_mm: float = None) -> dict:
     """Tong hop nhieu ca + ap luat quyet dinh (ghi TRUOC khi chay)."""
     rows = [r for r in rows if r]
