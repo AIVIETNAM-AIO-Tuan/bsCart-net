@@ -303,6 +303,138 @@ def test_config_hash_sensitive_and_deterministic():
     assert h0 != mvp.config_hash(X.from_plan("P1", "femoral_cart", seed=1), cfg, **base)
 
 
+def test_stratified_balances_across_bins(src, atlas_fold):
+    """Phase B: stratify phai CAN BANG bin do day - phu du bin, giam bin ap dao.
+
+    Tren du lieu THAT (day chi phoi) dieu nay boost bin mong; tren phantom (mong chi phoi)
+    no boost bin day. Bat bien dung ca hai: phu >= so bin cua uniform, va bin ap dao giam.
+    """
+    run = X.from_plan("P2", "femoral_cart")
+    _, ou, _ = mvp.build_dataset(run, src, src.ids()[:2], RayConfig(), atlas=atlas_fold,
+                                 rays_per_case=300, stratify=False, seed=0)
+    _, os_, _ = mvp.build_dataset(run, src, src.ids()[:2], RayConfig(), atlas=atlas_fold,
+                                  rays_per_case=300, stratify=True, seed=0)
+
+    def bin_counts(occ):
+        b = core.assign_thickness_bin(core.ray_stats(occ, RayConfig())["thickness"])
+        return np.array([(b == k).sum() for k in range(len(core.THICKNESS_NAMES))], float)
+
+    cu, cs = bin_counts(ou), bin_counts(os_)
+    # stratify khong duoc phu it bin hon uniform
+    assert set(np.flatnonzero(cs)) >= set(np.flatnonzero(cu)), "stratify phu it bin hon"
+    # bin ap dao cua uniform phai giam ty trong duoi stratify (can bang hon)
+    dom = cu.argmax()
+    assert cs[dom] / cs.sum() <= cu[dom] / cu.sum() + 1e-9, "stratify khong giam bin ap dao"
+
+
+def test_stratified_default_off_preserves_canonical(src, atlas_fold):
+    """Mac dinh stratify=False => y het build cu (khong doi canonical numerics)."""
+    run = X.from_plan("P2", "femoral_cart")
+    a = mvp.build_dataset(run, src, src.ids()[:2], RayConfig(), atlas=atlas_fold,
+                          rays_per_case=300, seed=0)
+    b = mvp.build_dataset(run, src, src.ids()[:2], RayConfig(), atlas=atlas_fold,
+                          rays_per_case=300, seed=0, stratify=False)
+    assert np.array_equal(a[0], b[0]) and np.array_equal(a[1], b[1])
+
+
+def test_phaseb_levers_default_to_canonical():
+    """Mac dinh MOI lever Phase B = hanh vi canonical (khong doi numerics da khoa)."""
+    w = model.LossWeights()
+    assert w.absent_fp_weight == 0.0 and w.per_ray_norm is False
+
+    torch.manual_seed(0)
+    occ_l = torch.randn(16, 64, requires_grad=True)
+    pres_l = torch.randn(16)                       # DUNG CHUNG cho ca hai loi goi
+    occ_t = (torch.rand(16, 64) > 0.7).float()
+    pres_t = (torch.rand(16) > 0.5).float()
+    l_def, _ = model.ray_loss(occ_l, pres_l, occ_t, pres_t)
+    l_expl, _ = model.ray_loss(occ_l, pres_l, occ_t, pres_t,
+                               model.LossWeights(absent_fp_weight=0.0, per_ray_norm=False))
+    assert torch.allclose(l_def, l_expl)
+
+
+def test_absent_fp_weight_penalises_absent_rays():
+    """absent_fp_weight > 0 phai TANG loss khi co tia absent bi doan duong."""
+    torch.manual_seed(0)
+    occ_t = torch.zeros(8, 64)
+    occ_t[:4, 20:30] = 1.0                       # 4 tia co sun, 4 tia ABSENT
+    occ_l = torch.full((8, 64), -3.0)
+    occ_l[4:, 25:35] = 3.0                       # tia absent bi doan CO sun => FP
+    pres_t = torch.tensor([1.0] * 4 + [0.0] * 4)
+    pres_l = torch.zeros(8)
+
+    l0, _ = model.ray_loss(occ_l, pres_l, occ_t, pres_t, model.LossWeights())
+    l1, _ = model.ray_loss(occ_l, pres_l, occ_t, pres_t,
+                           model.LossWeights(absent_fp_weight=3.0))
+    assert l1 > l0, "phat FP absent khong lam tang loss"
+
+
+def test_per_ray_norm_equalises_ray_contribution():
+    """per_ray_norm: moi tia dong gop nhu nhau bat ke so o duong."""
+    torch.manual_seed(0)
+    occ_l = torch.randn(6, 64, requires_grad=True)
+    occ_t = torch.zeros(6, 64)
+    occ_t[0, :40] = 1.0        # tia "day"
+    occ_t[1, :2] = 1.0         # tia "mong"
+    pres_t = torch.tensor([1.0, 1.0, 0, 0, 0, 0])
+    a, _ = model.ray_loss(occ_l, torch.randn(6), occ_t, pres_t, model.LossWeights())
+    b, _ = model.ray_loss(occ_l, torch.randn(6), occ_t, pres_t,
+                          model.LossWeights(per_ray_norm=True))
+    assert torch.isfinite(a) and torch.isfinite(b)
+    b.backward()               # phai backward duoc
+
+
+def test_presence_gate_modes():
+    """hard/soft/none phai cho ket qua KHAC nhau; ten sai phai bao loi."""
+    rng = np.random.default_rng(0)
+    n, k = 40, RayConfig().k
+    occ = rng.random((n, k)).astype(np.float32)
+    pres = rng.random(n).astype(np.float32)
+    verts = rng.random((n, 3)).astype(np.float32) * 10
+    dirs = np.tile(np.array([[1, 0, 0]], np.float32), (n, 1))
+    shape = (30, 30, 30)
+
+    vh = model.reconstruct_volume(occ, verts, dirs, shape, RayConfig(), SP_REAL,
+                                  presence_prob=pres, presence_gate="hard")
+    vs = model.reconstruct_volume(occ, verts, dirs, shape, RayConfig(), SP_REAL,
+                                  presence_prob=pres, presence_gate="soft")
+    vn = model.reconstruct_volume(occ, verts, dirs, shape, RayConfig(), SP_REAL,
+                                  presence_prob=pres, presence_gate="none")
+    assert not np.allclose(vh, vs) and not np.allclose(vs, vn)
+    # "none" phai bang khi khong truyen presence
+    v0 = model.reconstruct_volume(occ, verts, dirs, shape, RayConfig(), SP_REAL)
+    assert np.allclose(vn, v0)
+    with pytest.raises(ValueError, match="presence_gate"):
+        model.reconstruct_volume(occ, verts, dirs, shape, RayConfig(), SP_REAL,
+                                 presence_prob=pres, presence_gate="sai")
+
+
+def test_train_run_accepts_phaseb_levers(src, atlas_fold):
+    """train_run nhan stratify + loss; evaluate_case nhan presence_gate."""
+    run = X.from_plan("P2", "femoral_cart", seed=1)
+    res = mvp.train_run(run, src, src.ids()[:3], src.ids()[3:], RayConfig(),
+                        atlas=atlas_fold, rays_per_case=300, epochs=2,
+                        stratify=True,
+                        loss=model.LossWeights(absent_fp_weight=2.0, per_ray_norm=True))
+    assert res.n_train_rays > 0
+    for gate in ("hard", "soft", "none"):
+        r = mvp.evaluate_case(run, res.net, src, src.ids()[3], RayConfig(), atlas_fold,
+                              presence_gate=gate)
+        assert "thin_ray" in r
+
+
+def test_micro_overfit_runs_and_reports_thin_absent(src, atlas_fold):
+    """micro_overfit chay tron ven va bao cao rieng thin/absent (Phase B step 1)."""
+    run = X.from_plan("P2", "femoral_cart", seed=1)
+    r = mvp.micro_overfit(run, src, "c0", RayConfig(), atlas=atlas_fold,
+                          rays=400, epochs=20)
+    for k in ("occ_dice", "best_thr", "thin_ray_recall", "absent_pres_acc",
+              "n_rays", "loss0", "lossN"):
+        assert k in r, f"thieu {k}"
+    assert r["lossN"] < r["loss0"], "khong hoc duoc gi"
+    assert 0.0 <= r["occ_dice"] <= 1.0
+
+
 def test_mapping_audit_returns_both_mappings(src):
     """Mapping audit: tra du so cho ca A (node) va B (ray) + QC khoang cach."""
     mri, bone, cart = src.cases["c0"]["mri"], src.bone_gt("c0"), src.cart_gt("c0")
