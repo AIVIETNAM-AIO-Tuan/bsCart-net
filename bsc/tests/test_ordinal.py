@@ -177,6 +177,39 @@ def test_mlp_slide_multitask_all_heads_trained(data):
     assert np.corrcoef(out["p_oa"], out["p_thr"][:, 1])[0, 1] > 0.9
 
 
+def test_softmax_only_isolates_loss_from_architecture(data):
+    """Doi chung: cung than MLP, chi doi loss sang softmax CE.
+
+    Day la thu duy nhat cho phep noi "loss ordinal dong gop bao nhieu" ma khong tron voi
+    "mang khac cay". Neu thieu no, chenh lech D tru A chi noi duoc rang hai HE THONG khac
+    nhau, khong noi duoc vi sao.
+    """
+    Xtr, ytr, Xte, yte = data
+    ctrl, info = ORD.train_ordinal_mlp(Xtr, ytr, K, lambdas=ORD.SOFTMAX_ONLY_LAMBDAS,
+                                       epochs=300, seed=0)
+    h = info["history"]
+    assert h[-1]["cls"] < 0.6 * h[0]["cls"], "head softmax khong hoc duoc"
+    assert info["lambdas"]["ord"] == 0.0
+
+    out = ORD.predict_ordinal_mlp(ctrl, info, Xte)
+    assert ORD.qwk(yte, out["y_softmax"], K) > 0.65
+
+    # MOI MODEL PHAI DUOC GIAI MA BANG HEAD CUA CHINH NO.
+    # Head nguong o day khong nhan gradient nao tu l_ord, nen p_thr KHONG sup ve hon loan
+    # ma DET quanh 0.5: mot lop tuyen tinh ngau nhien dat tren mot than DA hoc duoc thu tu
+    # van cho ra thu tu mo nhat, nhung bien do gan nhu bang khong. Do duoc: 0.48-0.51.
+    tab = ORD.mean_p_by_class(out["p_thr"], yte, K)
+    spread = float(tab.max() - tab.min())
+    assert spread < 0.15, f"head nguong khong duoc huan luyen ma bien do toi {spread:.2f}"
+    assert ORD.qwk(yte, out["y_count"], K) < ORD.qwk(yte, out["y_softmax"], K) - 0.05
+
+    # Chieu nguoc lai cung phai dung: ordinal_only thi head SOFTMAX moi la cai khong hoc.
+    m2, i2 = ORD.train_ordinal_mlp(Xtr, ytr, K, lambdas=ORD.ORDINAL_ONLY_LAMBDAS,
+                                   epochs=300, seed=0)
+    o2 = ORD.predict_ordinal_mlp(m2, i2, Xte)
+    assert ORD.qwk(yte, o2["y_softmax"], K) < ORD.qwk(yte, o2["y_count"], K) - 0.2
+
+
 def test_mlp_is_deterministic_given_seed(data):
     Xtr, ytr, Xte, _ = data
     a = ORD.predict_ordinal_mlp(*ORD.train_ordinal_mlp(Xtr, ytr, K, epochs=50, seed=3), Xte)

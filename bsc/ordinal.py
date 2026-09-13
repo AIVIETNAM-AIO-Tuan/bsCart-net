@@ -51,6 +51,13 @@ import torch.nn.functional as F
 SLIDE_LAMBDAS = dict(ord=1.0, mono=1.0, cls=1.0, oa=1.0)
 ORDINAL_ONLY_LAMBDAS = dict(ord=1.0, mono=1.0, cls=0.0, oa=0.0)
 
+#: DOI CHUNG BAT BUOC cho ORDINAL_ONLY_LAMBDAS - cung than MLP, cung so epoch, cung seed,
+#: chi doi loss sang softmax CE. Thieu no thi chenh lech giua "MLP + loss nguong" va
+#: "XGBoost + softmax" TRON hai thu: doi loss VA doi ho mo hinh (mang vs cay). Voi doi chung
+#: nay, chenh lech D tru A2 la dong gop RIENG cua loss ordinal.
+#: Giai ma bang argmax head softmax; head nguong khong duoc huan luyen nen p_thr vo nghia.
+SOFTMAX_ONLY_LAMBDAS = dict(ord=0.0, mono=0.0, cls=1.0, oa=0.0)
+
 
 # ------------------------------------------------------------ nhan nguong & giai ma
 
