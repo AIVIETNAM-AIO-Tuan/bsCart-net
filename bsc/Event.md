@@ -483,3 +483,129 @@ Về S6: **giữ nguyên cột, chưa đầu tư vùng con / atlas** cho tới k
    kiểm nhận dạng `alpha` của I (gate khởi tạo −2/+2); ensemble điểm liên tục
    C + Σp(B) + Σp(D) rồi một bộ điểm cắt, dùng lại chính `inner_oof`; CORAL/CORN nếu tỉ lệ vi phạm
    đơn điệu của E (16.6%) hóa ra quan trọng.
+
+## 2026-09-13 — S8 v2: dò ngưỡng hậu kiểm làm ĐÚNG việc nó sinh ra, nhưng mức lợi tổng không tái lập
+
+### Context
+Chạy S8 v2 (`s8_holdout_v2`, 3.8 phút, 11 model × 5 feature set, 95 dòng quyết định) để đo tầng
+quyết định trên dữ liệu thật. Ba chốt an toàn đều qua: phép chia trùng khít bản đã ghim, A/B/C tái
+lập **bit-đối-bit** (|Δqwk| = 0.0000), và quy tắc mặc định trùng khít dòng gốc. Dòng MLP lệch
+0.0008–0.0077 do khác bản dựng torch, đúng như dự kiến nên chỉ in.
+
+### Change
+Không sửa gì thêm. Đây là bản ghi kết quả của thay đổi đã mô tả ở mục 13/9 trước đó.
+
+### Evidence / Result
+
+**1. C2 (trọng số theo lớp) là kết quả rỗng, nghiêng âm trên đặc trưng giàu.** Δqwk so với C:
+
+| feature set | C | C2 | hiệu |
+|---|---|---|---|
+| legacy_s3 | 0.604 | 0.626 | **+0.022** |
+| s6_surface_only | 0.663 | 0.622 | **−0.041** |
+| s6_all | 0.702 | 0.711 | +0.009 |
+| s5_radiomics | 0.793 | 0.786 | −0.007 |
+| s6_all_plus_radiomics | 0.803 | 0.785 | **−0.018** |
+
+Trung bình −0.007, mọi hiệu số dưới ngưỡng nhiễu ±0.055. **Nguyên nhân là dư thừa, không phải sai.**
+Bước đặt điểm cắt vốn đã thích nghi với phân bố điểm: đổi trọng số làm điểm dịch đi, rồi
+`fit_cutpoints` fit lại trên chính điểm đã dịch và bù trừ phần lớn. Cái còn lại là **giá phải trả về
+phương sai**: `w_i = N/(K·n_i)` khiến ca KL4 nặng gấp **3.16 lần** ca KL3, và cỡ mẫu hiệu dụng tụt
+**983 → 820, mất 16.6%**. Nên trên đặc trưng giàu, nơi bộ hồi quy vốn đã tốt và phương sai mới là
+thứ chi phối, C2 thua.
+
+**2. Dò ngưỡng nâng recall KL4 ở 12/12 phép so — hoàn toàn tái lập.**
+
+| | recall KL4 | precision KL4 |
+|---|---|---|
+| `fixed0.5`, trung bình 6 cặp model × feature set | 0.487 | 0.872 |
+| `tuned_qwk`, cùng 6 cặp | **0.744** | 0.704 |
+
+Không một cặp nào đi ngược chiều. Cơ chế hoạt động **chính xác như thiết kế**: nó đổi precision KL4
+lấy recall KL4. Đây là câu trả lời trực tiếp cho triệu chứng đã đo ở S7 (ca KL4 thật chỉ đạt
+P(KL>3) 0.46–0.57 so với vạch 0.5 dù AUC ngưỡng đó là 0.952).
+
+**3. Nhưng mức lợi TỔNG không tái lập — và dấu hiệu nhiễu thì không thể rõ hơn.**
+`E@tuned_mr_slack0.02` trên `s6_all_plus_radiomics` cho **QWK 0.814 và macro-recall 0.614, cả hai đều
+cao nhất trong toàn bộ bảng S8** (vượt C mặc định 0.803). Nó qua **cả 5 cổng**. Nhưng trên
+`s5_radiomics` cùng quy tắc đó cho 0.783 / 0.524, tức macro-recall **thấp hơn** cả `fixed0.5` (0.545).
+
+Và `B@tuned_mr_slack0.02` là ảnh soi gương: qua đủ 5 cổng trên `s5_radiomics`, trượt trên
+`s6_all_plus_radiomics`. **Hai model, hai feature set, mỗi cái đạt đúng một, và ở hai phía ngược
+nhau.** Không quy tắc nào đạt trên cả hai, nên theo luật đã đăng ký trước, **không quy tắc nào được
+đem sang S7 từ S8 một mình**.
+
+**4. Giải thích được vì sao H từng là kết quả rỗng.** Đặt `tau` học được cạnh ngưỡng mà tìm kiếm hậu
+kiểm ra, trên cùng bài toán:
+
+| feature set | `tau` của H quy ra ngưỡng | ngưỡng tìm kiếm ra trên E |
+|---|---|---|
+| s6_all_plus_radiomics | [0.523, 0.514, 0.509, …] | **[0.40, 0.95, 0.15, 0.15]** |
+| s5_radiomics | [0.516, 0.506, 0.505, …] | [0.40, 0.40, 0.65, 0.10] |
+| s6_all | [0.525, 0.518, 0.509, …] | [0.70, 0.80, 0.55, 0.15] |
+
+`tau` **gần như không nhúc nhích khỏi 0.5** ở mọi feature set, trong khi tìm kiếm hậu kiểm đẩy ngưỡng
+cuối xuống tận 0.10–0.15. Thành phần loss `exp` tạo áp lực gradient quá yếu so với ba thành phần còn
+lại. Đây là bằng chứng trực tiếp rằng **tìm kiếm hậu kiểm làm được thứ mà gradient descent không làm
+được**, với chi phí huấn luyện bằng 0.
+
+**5. `minrec0.40` phần lớn là lệnh rỗng.** In `CANH BAO` bảy lần trên mười lần gọi, tức bất khả thi
+và lùi về kết quả không ràng buộc. Ví dụ C2 trên `s5_radiomics`: dòng `minrec0.4` trùng khít dòng
+`qwk` tới từng chữ số.
+
+**6. `optimism` KHÔNG lọc được gì — lỗi thiết kế của chính cổng đó.** Gần như mọi giá trị đều **âm**
+(−0.001 tới −0.064), nghĩa là test tốt hơn inner. Lý do có hệ thống: model inner-OOF chỉ được huấn
+luyện trên 3/4 tập train (737 so với 983 ca) nên yếu hơn model cuối, khiến ước lượng inner **bi quan
+một cách hệ thống**. Cổng `optimism ≤ 0.05` vì thế đạt gần 100% và không phân biệt được gì. Mặt tích
+cực: nó cho biết **overfit vị trí cắt KHÔNG phải là chế độ hỏng ở đây** — nhiễu lấy mẫu mới là.
+
+**7. Chẩn đoán S6 — cột bề mặt THẬT SỰ được dùng.** Trên `s6_all_plus_radiomics`:
+
+| họ | LASSO bỏ | giữ, có gain | tỉ trọng gain | gain / cột |
+|---|---|---|---|---|
+| S6_surface | 42 | **13** | **15.5%** | 1.19% |
+| legacy | 10 | 5 | 6.2% | 1.24% |
+| radiomics | 767 | 89 | 78.4% | 0.88% |
+
+**Không cột S6 nào rơi vào trạng thái "giữ nhưng gain 0".** Mười ba cột sống sót thì cả mười ba đều
+được XGB tách trên chúng, và **cột S6 mạnh nhất đứng hạng 2 trên tổng 926 cột**. Đó là
+`fcl_fem_maxdef_mm2`, kế đến là `fcl_mt_ndef` — đúng hai cột đã được chọn thay cho `fcl_*_mm2` thô vì
+có ngưỡng 5 mm². Tính theo từng cột, S6 hữu ích hơn radiomics (1.19% so với 0.88%).
+
+### Significance
+- **Câu hỏi "S6 có cần không" giờ có câu trả lời tốt hơn nhiều so với hiệu số QWK.** QWK gần như
+  không nhúc nhích vì radiomics đã bão hoà, nhưng model **thực sự dùng** cột FCL và xếp một cột FCL
+  ở hạng 2 toàn bảng. Không phải "dư thừa rồi bị loại" mà là "được giữ và được dùng".
+- **Dò ngưỡng là công cụ đúng cho bài toán KL4**, cơ chế đã tái lập 12/12. Chỉ có mức lợi trên metric
+  tổng là chưa chứng minh được bằng một lần chia.
+- **Trọng số theo lớp là ngõ cụt cho họ model có bước đặt điểm cắt**, vì hai thứ dư thừa với nhau.
+- **Học `tau` trong lúc train thua tìm kiếm hậu kiểm** một cách rõ ràng và giải thích được.
+
+### Risks / Open Questions
+- **Cổng `optimism` cần sửa hoặc bỏ.** Nó đang so hai thứ khác cỡ mẫu huấn luyện. Cách sửa: so
+  `optimism` của quy tắc với `optimism` của quy tắc tham chiếu (hiệu tương đối), hoặc bỏ hẳn và dựa
+  vào S7 làm trọng tài.
+- **`minrec0.40` quá chặt cho cohort này** — bảy trên mười lần bất khả thi. Nếu giữ thì hạ sàn xuống
+  0.30, hoặc bỏ vì `mr_slack` đã phục vụ cùng mục đích mà luôn khả thi.
+- **Chưa loại trừ được khả năng mức lợi của E là thật nhưng phụ thuộc feature set.** Một lần chia
+  n_test = 246 không tách được điều đó khỏi nhiễu. Chỉ 15 fold của S7 mới trả lời được.
+- `alpha` của I vẫn chưa kiểm nhận dạng: 0.395 và 0.403, dịch −0.105 và −0.097 khỏi khởi tạo 0.5.
+
+### Decision
+**Theo đúng luật đã đăng ký trước khi chạy: không quy tắc nào được thăng hạng từ S8.** Không bẻ luật
+để lấy `E@tuned_mr_slack0.02` dù nó đang giữ con số cao nhất bảng — đúng vì đó là con số cao nhất
+bảng trên **một** feature set và thất bại trên feature set còn lại.
+
+**C2 bị loại**, ghi lại làm kết quả âm tính có giải thích. **Giữ cột S6 trong classifier** và từ nay
+trích dẫn con số chẩn đoán (15.5% gain, hạng 2 toàn bảng) thay vì hiệu số QWK, vì nó trả lời đúng
+câu hỏi hơn.
+
+### Consequence
+1. **Chạy dò ngưỡng dưới CV 15 fold của S7** cho B, D, E. Đây là phép kiểm duy nhất tách được
+   "mức lợi thật" khỏi "nhiễu một lần chia". Không cần train lại scorer, chỉ thêm `inner_oof`
+   trong từng fold.
+2. Ở S7, **báo cáo recall và precision KL4 tách riêng**, vì đó mới là chỗ hiệu ứng tái lập được,
+   chứ không chỉ QWK gộp.
+3. Sửa cổng `optimism` thành hiệu tương đối so với quy tắc tham chiếu, hoặc bỏ.
+4. Bỏ `minrec0.40` khỏi bộ quy tắc, giữ `mr_slack0.02`.
+5. **Không** theo tiếp hướng trọng số lớp cho C, và **không** theo tiếp hướng học `tau` cho H.
