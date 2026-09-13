@@ -174,7 +174,34 @@ về không gian DESS, dùng mask xương làm ROI. Cần nhãn BML để train 
 
 ## F. Phần ordinal (S7)
 
-### F0. [MỞ, ƯU TIÊN] Chạy lại S7 để có A2 dưới cross-validation
+### F-1. [MỞ] Phép kiểm sensitivity đang TRỘN chất lượng nhãn với cỡ mẫu
+Mục 6 của S7 so QWK trên toàn cohort (1229) với chỉ case tin cậy cao (447). Kết quả 13/9 trên
+`s6_all_plus_radiomics`: A 0.758→0.710, B 0.773→0.731, E 0.777→0.746. Lệch đều khoảng −0.04,
+dưới ngưỡng cảnh báo 0.1 nên không báo động.
+
+**Nhưng phép so này không công bằng.** Tập con chỉ bằng 36% cohort, nên tập huấn luyện tụt từ
+~980 xuống ~358 ca. Riêng việc mất 63% dữ liệu đã đủ giải thích mức giảm đó. Không tách được
+"nhãn AI làm hỏng kết quả" khỏi "ít dữ liệu hơn".
+
+**Cách sửa:** thêm một nhánh đối chứng lấy NGẪU NHIÊN 447 ca từ toàn cohort, lặp vài lần, rồi
+so ba nhóm. Nếu tập tin cậy cao ngang với tập ngẫu nhiên cùng cỡ thì nhãn AI vô hại.
+
+### F0. [XONG 13/9] Chạy lại S7 để có A2 dưới cross-validation
+Đã chạy, 540 tổ hợp, 41.3 phút, 6 feature set. Kết quả **xác nhận và làm sắc nét** phát hiện từ
+S8, đóng góp của kiến trúc sụp đơn điệu khi đặc trưng tốt lên còn đóng góp của loss thì không:
+
+| Feature set | cột | A→A2 (đổi sang mạng) | A2→D (thêm loss ordinal) |
+|---|---|---|---|
+| legacy_s3 | 15 | **+0.068** | +0.018 |
+| s6_surface_only | 55 | +0.060 | +0.042 |
+| s6_all | 70 | +0.033 | +0.048 |
+| s5_radiomics | 871 | +0.005 | +0.027 |
+| s6_all_plus_radiomics | 926 | **−0.011** | +0.035 |
+
+**Kết luận:** loss ordinal đóng góp ổn định +0.02 tới +0.05 bất kể chất lượng đặc trưng, còn lợi
+thế của mạng so với cây CHỈ tồn tại khi đặc trưng nghèo, và đảo dấu ở bộ giàu nhất.
+
+### F0b. [cũ, giữ để đối chiếu] Chạy lại S7 để có A2 dưới cross-validation
 S8 (holdout, 2026-09-13) cho phép tách đóng góp của **kiến trúc** khỏi đóng góp của **loss ordinal**,
 nhờ đối chứng A2 (MLP + softmax, cùng thân với D/E). Kết quả rất đáng chú ý và **đảo chiều theo chất
 lượng đặc trưng**:
