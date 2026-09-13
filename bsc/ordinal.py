@@ -114,7 +114,12 @@ def select_features(X, y, max_corr: float = 0.9, min_keep: int = 10,
     Xs = StandardScaler().fit_transform(X[:, keep])
     # Luoi alpha truyen TUONG MINH: `n_alphas` da deprecated o sklearn moi con `alphas=int`
     # chua co o ban cu, nen truyen mang la cach duy nhat chay duoc o ca hai.
-    las = LassoCV(cv=3, alphas=np.logspace(-3, 0, 20), max_iter=3000,
+    # max_iter 10000 chu khong 3000: tren radiomics that, nhieu cot tuong quan quanh 0.85
+    # lot qua duoc bo loc 0.9, va ma tran nhu vay lam coordinate descent bo rat cham =>
+    # ConvergenceWarning o cac alpha nho. Do duoc tren ca that: duality gap dung o 1.1-3.0
+    # lan tolerance, tuc gan hoi tu. Noi them vong lap KHONG doi hanh vi, chi cho no toi
+    # dung nguong cu. (Thu hep luoi alpha cung het canh bao nhung do la doi MO HINH.)
+    las = LassoCV(cv=3, alphas=np.logspace(-3, 0, 20), max_iter=10000,
                   random_state=seed, n_jobs=1)
     las.fit(Xs, np.asarray(y, np.float64))
     coef = np.abs(las.coef_)
