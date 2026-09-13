@@ -245,3 +245,133 @@ vì KL4 hiếm. Cân nhắc tinh chỉnh ngưỡng từng `k` trên validation t
   `subject` nên phần ordinal không dính, nhưng mọi so sánh với baseline cũ thì phải cẩn thận.
 - **Non-destructive:** thí nghiệm mới = thư mục mới. Bảng S3 và S4/S5 giữ nguyên.
 - **Drive-first:** mọi artifact dưới Drive, không bao giờ ghi vào `/content/`.
+
+---
+---
+
+# Nhật ký sự kiện theo thời gian
+
+Từ đây trở xuống dùng đúng format của `CLAUDE.md` mục 8. Phần A–G ở trên là bản ghi theo
+chủ đề, giữ nguyên, không viết lại.
+
+## 2026-09-13 — S8: ASL thất bại đồng loạt, fusion bio/radiomics có tín hiệu nhưng n=2
+
+### Context
+S7 (15 fold) cho thấy ngưỡng cuối `P(KL>3)` là mắt xích yếu duy nhất của cái thang ordinal:
+ca KL4 thật chỉ đạt trung bình 0.46 (B) tới 0.57 (D) ở ngưỡng đó, trong khi AUC của chính
+ngưỡng đó lại **cao nhất** trong bốn ngưỡng (0.952). Tức mô hình phân biệt được KL4 nhưng
+không vượt nổi vạch cố định 0.5. Ba kiến trúc được thêm vào S8 để tấn công đúng chỗ đó:
+G dùng Asymmetric Loss, H học ngưỡng `tau`, I tách hai nhánh bio/radiomics gộp bằng `alpha`.
+
+### Change
+Thêm G/H/I vào `bsc/ordinal.py` và `notebooks/biomarker_s8_holdout.ipynb`. Mỗi cái khác E
+đúng một thành phần (xem Risks về ngoại lệ của H). Chạy holdout một lần
+`GroupShuffleSplit(test_size=0.2, random_state=42)`, n_test=246, 10 model × 5 feature set,
+3.6 phút.
+
+### Evidence / Result
+**G (ASL) thất bại đồng loạt và rõ ràng.** G là model **tệ nhất trong 10 model, trên cả 5
+feature set, theo cả QWK lẫn off-by≥2**. Không một ô nào G không đội sổ.
+
+| feature set | QWK của E | QWK của G | hiệu | off-by≥2 của G | off-by≥2 tốt nhất của set |
+|---|---|---|---|---|---|
+| legacy_s3 | 0.611 | **0.442** | −0.169 | **27.6%** | 13.8% (D) |
+| s6_surface_only | 0.651 | **0.473** | −0.178 | **24.0%** | 12.2% (E) |
+| s6_all | 0.698 | **0.555** | −0.143 | **19.1%** | 10.6% (B, D) |
+| s5_radiomics | 0.770 | **0.727** | −0.042 | **10.2%** | 6.1% (B) |
+| s6_all_plus_radiomics | 0.796 | **0.745** | −0.051 | **11.4%** | 5.3% (D) |
+
+Trên `legacy_s3`, off-by≥2 của G là 27.6% — **tệ hơn cả baseline nominal A (22.0%)**. Tức
+ASL làm loại lỗi lâm sàng nặng nhất **phổ biến hơn** so với không làm gì cả.
+
+**Nguyên nhân đã định lượng được, không phải đoán.** `asymmetric_loss` áp **một** `gamma_neg`
+cho **cả bốn** cột ngưỡng, nhưng chiều lệch của bốn ngưỡng **đảo dấu**:
+
+| ngưỡng | dương / 1229 | tỉ lệ dương | thiểu số là |
+|---|---|---|---|
+| t₀ = KL>0 | 945 | 76.9% | **ÂM** |
+| t₁ = KL>1 | 712 | 57.9% | ÂM |
+| t₂ = KL>2 | 417 | 33.9% | dương |
+| t₃ = KL>3 | 106 | 8.6% | **DƯƠNG** |
+
+ASL với `gamma_neg > gamma_pos` hạ trọng số **âm dễ**, giả định âm là đa số. Đúng cho t₃,
+**sai ngược** cho t₀ và t₁. Mức hạ rất mạnh: với `gamma_neg=4, clip=0.05`, một mẫu âm ở
+p=0.5 chỉ còn trọng số 0.041, tức **hạ 24 lần** so với BCE; ở p=0.3 là hạ 256 lần.
+
+Hệ quả đo được đúng như dự đoán — mọi thứ bị đẩy LÊN (recall %, `s6_all_plus_radiomics`):
+
+| | KL0 | KL1 | KL2 | KL3 | KL4 |
+|---|---|---|---|---|---|
+| E | 58.2 | 40.0 | 52.6 | 79.3 | 50.0 |
+| G | **43.6** | 34.0 | **43.9** | 77.6 | **69.2** |
+
+G **đạt đúng mục tiêu thiết kế** (KL4 recall 50.0 → 69.2) nhưng trả giá bằng KL0 và KL2, và
+precision KL4 tụt 86.7 → 72.0, tức nó gọi bừa KL4.
+
+**I (fusion bio/radiomics) có tín hiệu, nhưng chỉ n=2.**
+
+| feature set | QWK E | QWK I | hiệu | acc I | MAE I |
+|---|---|---|---|---|---|
+| s5_radiomics | 0.770 | **0.794** | +0.025 | **60.6%** | **0.480** |
+| s6_all_plus_radiomics | 0.796 | 0.788 | −0.009 | 56.1% | 0.516 |
+
+Trên `s5_radiomics`, I cho **accuracy cao nhất (60.6%) và MAE thấp nhất (0.480) trong toàn
+bộ 50 ô của S8**, QWK đứng nhì (chỉ sau C trên set khác, 0.803). Nhưng trên set còn lại nó
+hơi thua E. Cả hai hiệu số đều **nằm trong dao động ±0.055 của một lần chia**.
+
+`alpha` (trọng số nhánh biomarker) = **0.395** và **0.403** trên hai feature set — lệch nhau
+chỉ 0.008, dù số cột bio sau khi chọn rất khác nhau (5/95 so với 18/107).
+
+**F (head MLP) và H (tau học được) đều là kết quả rỗng.** F: −0.006 tới +0.019. H: −0.028
+tới −0.007, âm ở cả 5 set nhưng đều dưới ngưỡng nhiễu.
+
+**Đối chiếu với báo cáo 13/9 — khớp.** A trên `legacy_s3`: acc 41.1%, QWK 0.532,
+off-by≥2 22.0%. Báo cáo ghi đúng 22.0% cho S4.
+
+### Significance
+- **ASL không bị loại vì ý tưởng sai, mà vì cấu hình sai.** Phân rã ngưỡng sinh ra bốn bài
+  toán nhị phân có chiều lệch ngược nhau; áp một `gamma_neg` chung cho cả bốn là sai theo
+  cấu trúc. Bản sửa được là `gamma_neg` **theo từng ngưỡng**, hoặc chỉ bật ASL ở t₂/t₃.
+- **Mức hỏng tỉ lệ nghịch với chất lượng đặc trưng** (−0.17 trên hình học thuần, −0.04 tới
+  −0.05 khi có radiomics). Đặc trưng mạnh che bớt được loss hỏng; đừng dùng điều đó để kết
+  luận ASL "chỉ hơi kém".
+- **I là biến thể duy nhất có mặt tích cực**, và `alpha` ổn định qua hai feature set là dấu
+  hiệu đáng theo đuổi, vì nó cho một con số **đọc được** thay vì suy từ chênh lệch hai model.
+
+### Risks / Open Questions
+- **`alpha` chưa chắc đã được nhận dạng.** Nó khởi tạo ở 0.5 và chỉ dịch ~0.10. Chưa loại
+  trừ được khả năng gate gần như đứng yên. **Phép kiểm rẻ:** chạy lại I với gate khởi tạo ở
+  −2 và +2 (α ≈ 0.12 và 0.88). Nếu cả hai hội tụ về ~0.40 thì α có nghĩa; nếu bám gần giá
+  trị khởi tạo thì α vô nghĩa và mọi diễn giải phải bỏ.
+- **`alpha` là trọng số trên BIỂU DIỄN ĐÃ HỌC, không phải tỉ lệ thông tin.** Một nhánh có
+  thể cho vector biên độ lớn hơn rồi bù bằng α nhỏ. Không được đọc 0.40 thành "40% thông tin".
+- **I chỉ có n=2.** Trên ba feature set không có radiomics, guard trong `OrdinalMLP` khiến I
+  **trùng khít E**, nên ba dòng `hiệu = 0.000` trong bảng mục 7 nghĩa là *không chạy*, không
+  phải *không tác dụng*. Bảng đang trình bày gây hiểu nhầm.
+- **H đổi HAI thứ, không phải một.** Bật `learn_thresholds` buộc phải bật luôn thành phần
+  loss `exp` (trọng số 1.0), vì đó là đường gradient duy nhất tới `tau`. Câu "mỗi biến thể
+  khác E đúng một chỗ" trong markdown không đúng với H.
+- **`tau` không bao giờ được in ra.** Notebook có lưu `r["tau"]` nhưng mục 7 chỉ hiện `alpha`.
+  Toàn bộ giá trị chẩn đoán của H bị mất — không biết `tau` có dịch khỏi 0 hay không.
+- **Con số cũ trong markdown S8 đã lỗi thời.** Ô mô tả G ghi "KL4 chỉ đạt 0.26 tới 0.38 ở
+  ngưỡng cuối"; lần chạy S7 mới nhất cho 0.46 tới 0.57.
+- **Chưa phân tích `y_alt` của G.** G vẫn giữ head softmax được huấn luyện bình thường
+  (`cls=1.0`), nên so `y_count` với `y_softmax` của chính G sẽ tách được "ASL phá head ngưỡng"
+  khỏi "ASL phá cả mô hình". Dữ liệu nằm trong `FITTED`, chỉ cần thêm vài dòng.
+
+### Decision
+Người dùng đọc kết quả và nhận định ASL không phù hợp, fusion bio/radiomics cho kết quả tốt.
+Kiểm chứng xác nhận cả hai theo đúng chiều, với điều chỉnh: ASL hỏng **do cấu hình**, và
+fusion **chưa vượt nhiễu**.
+
+### Consequence
+1. **Không đưa G vào báo cáo như một kiến trúc ứng viên.** Giữ lại làm kết quả âm tính có
+   giải thích, đúng tinh thần CLAUDE.md mục 7.
+2. Nếu còn muốn theo ASL: sửa `asymmetric_loss` nhận `gamma_neg` dạng **vector theo ngưỡng**,
+   rồi chạy lại. Trước khi làm, cân nhắc rằng dò ngưỡng hậu kiểm trên validation rẻ hơn nhiều
+   và nhắm đúng cùng một vấn đề.
+3. **Chạy I dưới cross-validation của S7** trước khi kết luận bất cứ điều gì về fusion. Một
+   lần chia với n=2 feature set không đủ.
+4. Chạy phép kiểm nhận dạng `alpha` (gate khởi tạo −2 / +2).
+5. Sửa ba lỗi trình bày: đánh dấu ba dòng `0.000` của I là "không áp dụng", in `tau` ở mục 7,
+   cập nhật con số 0.26–0.38 thành 0.46–0.57.
