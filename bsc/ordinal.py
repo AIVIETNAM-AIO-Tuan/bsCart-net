@@ -259,7 +259,25 @@ class FrankHall:
         self.models_ = []
         self.n_classes_ = None
 
+    def __getstate__(self):
+        """Bo `make_clf` khi pickle.
+
+        `make_clf` thuong la mot lambda dinh nghia ngay tai cho goi, ma lambda thi khong
+        pickle duoc: `AttributeError: Can't get local object '<locals>.<lambda>'`. No chi
+        can luc fit; sau khi fit xong, `models_` giu cac bo phan loai DA fit va chung pickle
+        binh thuong. Nen doi tuong nap lai van du doan duoc, chi la khong fit lai duoc.
+        """
+        st = self.__dict__.copy()
+        st["make_clf"] = None
+        return st
+
     def fit(self, X, y_idx, n_classes: int):
+        if self.make_clf is None:
+            raise RuntimeError(
+                "FrankHall nay duoc nap tu file nen khong con `make_clf` (lambda khong pickle "
+                "duoc). Doi tuong nap lai chi du doan duoc, khong fit lai duoc. Muon fit thi "
+                "tao moi: FrankHall(lambda: XGBClassifier(...))."
+            )
         t = to_thresholds(y_idx, n_classes)
         self.n_classes_ = n_classes
         self.models_ = []

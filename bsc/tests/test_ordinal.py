@@ -166,6 +166,23 @@ def test_frank_hall_learns_ordinal_structure(data):
     assert np.nanmin(auc) > 0.85, auc
 
 
+def test_frank_hall_survives_pickle(data):
+    """Pickle duoc du `make_clf` la lambda, va nap lai van du doan y het."""
+    import pickle
+    Xtr, ytr, Xte, _ = data
+    fh = ORD.FrankHall(lambda: LogisticRegression(max_iter=2000)).fit(Xtr, ytr, K)
+    before = fh.predict(Xte)
+
+    fh2 = pickle.loads(pickle.dumps(fh))           # truoc day nem AttributeError o day
+    assert np.array_equal(fh2.predict(Xte), before)
+    assert np.allclose(fh2.predict_proba_thresholds(Xte), fh.predict_proba_thresholds(Xte))
+
+    # Nap lai thi KHONG fit lai duoc, va phai bao ro thay vi nem loi kho hieu
+    assert fh2.make_clf is None
+    with pytest.raises(RuntimeError, match="khong con"):
+        fh2.fit(Xtr, ytr, K)
+
+
 def test_frank_hall_handles_degenerate_threshold():
     X = np.random.default_rng(0).normal(size=(50, 3)).astype(np.float32)
     y = np.random.default_rng(1).integers(0, 3, size=50)         # chi co lop 0..2 trong K=5
