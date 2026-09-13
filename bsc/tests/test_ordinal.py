@@ -210,6 +210,52 @@ def test_softmax_only_isolates_loss_from_architecture(data):
     assert ORD.qwk(yte, o2["y_softmax"], K) < ORD.qwk(yte, o2["y_count"], K) - 0.2
 
 
+def test_head_hidden_makes_heads_mlp_and_keeps_linear_default(data):
+    """head_hidden rong => dau la MOT Linear (giu hanh vi cu). Co gia tri => dau thanh MLP."""
+    Xtr, ytr, Xte, yte = data
+    lin, _ = ORD.train_ordinal_mlp(Xtr, ytr, K, epochs=20, seed=0)
+    mlp, info = ORD.train_ordinal_mlp(Xtr, ytr, K, epochs=20, seed=0, head_hidden=(32,))
+
+    n_lin = sum(1 for m in lin.head_ord.modules() if isinstance(m, ORD.nn.Linear))
+    n_mlp = sum(1 for m in mlp.head_ord.modules() if isinstance(m, ORD.nn.Linear))
+    assert n_lin == 1 and n_mlp == 2, (n_lin, n_mlp)
+    assert info["head_hidden"] == (32,) and info["latent_dim"] == 32
+
+    # Dau MLP phai co NHIEU tham so hon, va van hoc duoc
+    assert sum(p.numel() for p in mlp.parameters()) > sum(p.numel() for p in lin.parameters())
+    m2, i2 = ORD.train_ordinal_mlp(Xtr, ytr, K, lambdas=ORD.ORDINAL_ONLY_LAMBDAS,
+                                   epochs=300, seed=0, head_hidden=(32,))
+    assert ORD.qwk(yte, ORD.predict_ordinal_mlp(m2, i2, Xte)["y_count"], K) > 0.65
+
+
+def test_trunk_output_is_returned_and_informative(data):
+    """Dau ra cua than duoc tra ve, dung shape, khong NaN, va mang thong tin ve nhan.
+
+    CHUA DUNG VAO VIEC GI. Y tuong trich "cls / latent vector" den tu mo hinh phan loai ANH,
+    ma nhanh anh thi chua co, nen S8 KHONG hien thuc no. Test nay chi khoa lai rang module
+    tra dung thu no noi la tra, va rang than that su hoc duoc mot bieu dien co nghia.
+    """
+    Xtr, ytr, Xte, yte = data
+    model, info = ORD.train_ordinal_mlp(Xtr, ytr, K, lambdas=ORD.ORDINAL_ONLY_LAMBDAS,
+                                        epochs=300, seed=0)
+    out = ORD.predict_ordinal_mlp(model, info, Xte)
+    z = out["latent"]
+    assert z.shape == (len(Xte), info["latent_dim"]) == (len(Xte), 32)
+    assert np.isfinite(z).all()
+
+    # Kiem latent co nghia: mot hoi quy tuyen tinh TU LATENT phai doan duoc lop tot hon nhieu
+    # so voi doan mu. Neu latent vo nghia thi moi y tuong dung lai no deu vo ich.
+    from sklearn.linear_model import LinearRegression
+    r = LinearRegression().fit(z, yte)
+    rss = float(((r.predict(z) - yte) ** 2).sum())
+    tss = float(((yte - yte.mean()) ** 2).sum())
+    assert 1 - rss / tss > 0.5, f"R2 tu latent chi {1 - rss / tss:.2f}"
+
+    # Chieu latent phai doi theo `hidden`
+    _, i3 = ORD.train_ordinal_mlp(Xtr, ytr, K, hidden=(64, 16), epochs=20, seed=0)
+    assert i3["latent_dim"] == 16
+
+
 def test_mlp_is_deterministic_given_seed(data):
     Xtr, ytr, Xte, _ = data
     a = ORD.predict_ordinal_mlp(*ORD.train_ordinal_mlp(Xtr, ytr, K, epochs=50, seed=3), Xte)

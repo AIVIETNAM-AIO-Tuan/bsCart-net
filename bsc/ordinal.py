@@ -160,6 +160,16 @@ def mae(y_true, y_pred) -> float:
     return float(np.abs(np.asarray(y_true, np.float64) - np.asarray(y_pred, np.float64)).mean())
 
 
+def off_by_rate(y_true, y_pred, n: int = 2) -> float:
+    """Ty le ca lech TU n bac tro len. Bao cao 13/9 dung off-by>=2 lam "loi lam sang nang".
+
+    Kappa va accuracy la mot con so, chung khong phan biet sai gan voi sai xa. Day la con so
+    tra loi truc tiep cau hoi "mo hinh co bot doan lech xa khong".
+    """
+    d = np.abs(np.asarray(y_true, np.int64) - np.asarray(y_pred, np.int64))
+    return float((d >= n).mean())
+
+
 def threshold_auc(p, t) -> np.ndarray:
     """AUC tung nguong P(y>k) vs t_k; NaN neu nguong chi co 1 lop."""
     p, t = np.asarray(p), np.asarray(t)
@@ -255,24 +265,52 @@ def fit_cutpoints(scores, y_idx, n_classes: int, n_pass: int = 3, n_grid: int = 
 
 # ------------------------------------------------------------ 3. MLP voi loss cua slide
 
-class OrdinalMLP(nn.Module):
-    """Than chung -> 3 dau: ord (K-1 logit nguong), cls (K logit softmax), oa (1 logit)."""
+def _mlp(d_in: int, d_out: int, hidden=(), dropout: float = 0.1) -> nn.Module:
+    """Chuoi Linear-ReLU-Dropout roi mot Linear cuoi. `hidden` rong => dung mot Linear."""
+    layers, d = [], d_in
+    for h in hidden:
+        layers += [nn.Linear(d, h), nn.ReLU(), nn.Dropout(dropout)]
+        d = h
+    layers.append(nn.Linear(d, d_out))
+    return nn.Sequential(*layers)
 
-    def __init__(self, n_in: int, n_classes: int, hidden=(64, 32), dropout: float = 0.1):
+
+class OrdinalMLP(nn.Module):
+    """Than chung -> LATENT -> 3 dau: ord (K-1 logit nguong), cls (K logit), oa (1 logit).
+
+    `hidden`      kien truc THAN. Dau ra cua than la LATENT, chieu = hidden[-1].
+    `head_hidden` kien truc tung DAU. Rong () => dau la mot lop Linear (mac dinh, giu nguyen
+                  hanh vi cu de so sanh duoc voi cac lan chay truoc). Vd (32,) => dau la MLP.
+
+    LATENT dung de lam gi: no la vector dai dien cua mot ca sau khi mo hinh da nen bang
+    biomarker lai. Dung duoc cho t-SNE/UMAP, phan cum, do tuong dong giua ca, hoac lam dau
+    vao cho mot mo hinh khac. Tuong duong voi vector CLS trong cac kien truc transformer:
+    cung la mot vector duy nhat ma moi dau du doan deu doc tu do.
+
+    CANH BAO khi dung latent: no duoc HUAN LUYEN tren tap train. Trich latent cho ca trong
+    tap train roi phan tich chung voi latent cua tap test la tron hai che do khac nhau -
+    latent cua ca train da bi mo hinh nhin thay nhan. Luon giu cot danh dau train/test khi
+    xuat latent ra file.
+    """
+
+    def __init__(self, n_in: int, n_classes: int, hidden=(64, 32), dropout: float = 0.1,
+                 head_hidden=()):
         super().__init__()
         layers, d = [], n_in
         for h in hidden:
             layers += [nn.Linear(d, h), nn.ReLU(), nn.Dropout(dropout)]
             d = h
         self.trunk = nn.Sequential(*layers)
-        self.head_ord = nn.Linear(d, n_classes - 1)
-        self.head_cls = nn.Linear(d, n_classes)
-        self.head_oa = nn.Linear(d, 1)
+        self.latent_dim = d
+        self.head_ord = _mlp(d, n_classes - 1, head_hidden, dropout)
+        self.head_cls = _mlp(d, n_classes, head_hidden, dropout)
+        self.head_oa = _mlp(d, 1, head_hidden, dropout)
         self.n_classes = n_classes
 
     def forward(self, x):
         h = self.trunk(x)
-        return dict(ord=self.head_ord(h), cls=self.head_cls(h), oa=self.head_oa(h).squeeze(1))
+        return dict(ord=self.head_ord(h), cls=self.head_cls(h),
+                    oa=self.head_oa(h).squeeze(1), latent=h)
 
 
 def ordinal_losses(out: dict, y_idx: torch.Tensor, t_thr: torch.Tensor,
@@ -293,7 +331,8 @@ def ordinal_losses(out: dict, y_idx: torch.Tensor, t_thr: torch.Tensor,
 
 def train_ordinal_mlp(X, y_idx, n_classes: int, oa_target=None, lambdas: "dict | None" = None,
                       hidden=(64, 32), dropout: float = 0.1, epochs: int = 400, lr: float = 1e-3,
-                      weight_decay: float = 1e-4, seed: int = 0, device: str = "cpu"):
+                      weight_decay: float = 1e-4, seed: int = 0, device: str = "cpu",
+                      head_hidden=()):
     """Full-batch Adam tren bang nho. Tra (model, info) - info co mu/sd de chuan hoa luc predict."""
     lambdas = dict(SLIDE_LAMBDAS if lambdas is None else lambdas)
     X = np.asarray(X, np.float32)
@@ -308,7 +347,7 @@ def train_ordinal_mlp(X, y_idx, n_classes: int, oa_target=None, lambdas: "dict |
         oa = torch.tensor(np.asarray(oa_target, np.float32), device=device)
 
     torch.manual_seed(seed)
-    model = OrdinalMLP(X.shape[1], n_classes, hidden, dropout).to(device)
+    model = OrdinalMLP(X.shape[1], n_classes, hidden, dropout, head_hidden).to(device)
     opt = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
     history = []
     model.train()
@@ -322,13 +361,19 @@ def train_ordinal_mlp(X, y_idx, n_classes: int, oa_target=None, lambdas: "dict |
             rec["epoch"] = ep
             history.append(rec)
     model.eval()
-    info = dict(mu=mu, sd=sd, n_classes=n_classes, lambdas=lambdas, history=history)
+    info = dict(mu=mu, sd=sd, n_classes=n_classes, lambdas=lambdas, history=history,
+                hidden=tuple(hidden), head_hidden=tuple(head_hidden),
+                latent_dim=model.latent_dim)
     return model, info
 
 
 @torch.no_grad()
 def predict_ordinal_mlp(model: OrdinalMLP, info: dict, X, device: str = "cpu") -> dict:
-    """p_thr [N,K-1], p_cls [N,K], p_oa [N] + 3 cach giai ma (count / cumdiff / softmax)."""
+    """p_thr [N,K-1], p_cls [N,K], p_oa [N], latent [N,d] + 3 cach giai ma.
+
+    `latent` la dau ra cua than, tuc vector dai dien cua tung ca. Xem docstring OrdinalMLP
+    ve canh bao tron latent cua tap train voi tap test.
+    """
     model.eval()
     xs = torch.tensor((np.asarray(X, np.float32) - info["mu"]) / info["sd"],
                       dtype=torch.float32, device=device)
@@ -337,6 +382,7 @@ def predict_ordinal_mlp(model: OrdinalMLP, info: dict, X, device: str = "cpu") -
     p_cls = torch.softmax(out["cls"], dim=1).cpu().numpy()
     p_oa = torch.sigmoid(out["oa"]).cpu().numpy()
     return dict(p_thr=p_thr, p_cls=p_cls, p_oa=p_oa,
+                latent=out["latent"].cpu().numpy(),
                 y_count=decode_count(p_thr), y_cumdiff=decode_cumdiff(p_thr),
                 y_softmax=p_cls.argmax(axis=1).astype(np.int64),
                 mono_violation=monotonic_violation_rate(p_thr))
