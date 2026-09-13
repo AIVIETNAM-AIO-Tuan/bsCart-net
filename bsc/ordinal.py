@@ -8,10 +8,24 @@ BA CACH XU LY THU TU
 1. FrankHall      K-1 bo phan loai nhi phan P(y>k) (Frank & Hall 2001; Niu et al. 2016),
                   ep don dieu bang cummin, giai ma bang DEM nguong.
 2. fit_cutpoints  hoi quy diem lien tuc -> toi uu K-1 diem cat theo QWK (coordinate descent).
-3. OrdinalMLP     MLP voi DUNG loss trong slide "Biomarker-guided ordinal multi-task":
+3. OrdinalMLP     MLP voi du 4 thanh phan LOSS cua slide "Biomarker-guided ordinal multi-task":
                   L = l_ord*BCE(nguong) + l_mono*sum relu(p_{k+1}-p_k) + l_cls*CE(softmax)
                       + l_oa*BCE(OA status).
                   SLIDE_LAMBDAS bat ca 4; ORDINAL_ONLY_LAMBDAS chi ord+mono.
+
+DINH CHINH QUAN TRONG: day la LOSS cua slide, KHONG phai KIEN TRUC cua slide
+---------------------------------------------------------------------------
+Slide mo ta mot mang hoc DAU CUOI tu anh: encoder dung chung tren X_MRI, head phan doan
+ra M_hat, head biomarker ra b_hat, roi module lam sang tren
+z = Fusion(GAP(F), Pool(F, M_hat), phi(b_hat)).
+
+Module nay chi lam phan phi(b_hat), tren mot BANG biomarker DA TINH SAN. Khong co encoder
+nen khong co GAP(F) lan Pool(F, M_hat); khong co head nao nen khong co L_seg lan L_bio.
+Chu "MLP" KHONG co trong slide - hai lop an 64/32 la lua chon cho phi, slide khong chi dinh.
+
+Ly do rut gon: phep thu RE truoc khi bo hang tuan GPU vao kien truc day du. Neu bo may
+ordinal khong thang noi softmax ngay tren bang so, noi moi thu khac da co dinh, thi kho tin
+no la thu lam nen khac biet trong mang dau cuoi. CHIEU NGUOC LAI KHONG SUY RA DUOC.
 
 GIAI MA LA QUYET DINH RIENG VOI LOSS - PHAI GHI RO KHI BAO CAO
 --------------------------------------------------------------
