@@ -58,6 +58,45 @@ ORDINAL_ONLY_LAMBDAS = dict(ord=1.0, mono=1.0, cls=0.0, oa=0.0)
 #: Giai ma bang argmax head softmax; head nguong khong duoc huan luyen nen p_thr vo nghia.
 SOFTMAX_ONLY_LAMBDAS = dict(ord=0.0, mono=0.0, cls=1.0, oa=0.0)
 
+#: ASL thay BCE o thanh phan nguong. Cung trong so voi SLIDE_LAMBDAS de so duoc 1-1.
+#: Dung kem `asl=ASL_KW` khi goi train_ordinal_mlp.
+ASL_LAMBDAS = dict(ord=1.0, mono=1.0, cls=1.0, oa=1.0)
+ASL_KW = dict(gamma_neg=4.0, gamma_pos=0.0, clip=0.05)
+
+#: Them thanh phan `exp` (expected-count) - thanh phan DUY NHAT huan luyen duoc `tau`.
+#: Dung kem `learn_thresholds=True`.
+LEARNED_THR_LAMBDAS = dict(ord=1.0, mono=1.0, cls=1.0, oa=1.0, exp=1.0)
+
+
+def asymmetric_loss(logits, targets, gamma_neg: float = 4.0, gamma_pos: float = 0.0,
+                    clip: float = 0.05, eps: float = 1e-8):
+    """Asymmetric Loss cho nhan nhi phan (Ridnik/Ben-Baruch et al., ICCV 2021).
+
+        L+ = (1 - p)^gamma_pos * log(p)
+        L- = p_m^gamma_neg * log(1 - p_m),   p_m = max(p - clip, 0)
+        L  = -mean[ y*L+ + (1-y)*L- ]
+
+    VI SAO HOP O DAY, khong phai y tuong ngau nhien. Phan ra nguong bien KL thanh mot bai
+    toan DA NHAN voi K-1 nhan nhi phan, va cac nhan do lech RAT khac nhau tren cohort 1229 ca:
+
+        t_0 = 1(KL>0)   945 duong / 1229   (77% duong - AM la thieu so)
+        t_1 = 1(KL>1)   712 / 1229         (58%)
+        t_2 = 1(KL>2)   417 / 1229         (34%)
+        t_3 = 1(KL>3)   106 / 1229         ( 8.6% duong - DUONG la thieu so)
+
+    Nguong cuoi lech 1:11. Do dung la trieu chung da do duoc: ca KL4 that co trung binh
+    P(KL>3) chi 0.26-0.38, nen gan nhu khong ai duoc doan la KL4. `gamma_neg > gamma_pos`
+    ha trong so cac AM DE, tuc dung cai dang lan at nguong cuoi.
+
+    `clip` day xac suat cua mau am xuong truoc khi tinh, bo qua han cac am qua de.
+    """
+    p = torch.sigmoid(logits)
+    t = targets
+    pm = (p - clip).clamp(min=0.0) if clip > 0 else p
+    l_pos = t * ((1.0 - p) ** gamma_pos) * torch.log(p.clamp(min=eps))
+    l_neg = (1.0 - t) * (pm ** gamma_neg) * torch.log((1.0 - pm).clamp(min=eps))
+    return -(l_pos + l_neg).mean()
+
 
 # ------------------------------------------------------------ nhan nguong & giai ma
 
@@ -349,6 +388,54 @@ def _mlp(d_in: int, d_out: int, hidden=(), dropout: float = 0.1) -> nn.Module:
     return nn.Sequential(*layers)
 
 
+def _trunk(d_in: int, hidden, dropout: float):
+    """Chuoi Linear-ReLU-Dropout, KHONG co Linear cuoi. Tra (Sequential, chieu ra)."""
+    layers, d = [], d_in
+    for h in hidden:
+        layers += [nn.Linear(d, h), nn.ReLU(), nn.Dropout(dropout)]
+        d = h
+    return nn.Sequential(*layers), d
+
+
+class TwoBranchTrunk(nn.Module):
+    """Hai nhanh rieng cho hai NHOM dac trung, gop bang trong so hoc duoc.
+
+        z = alpha * f_bio(x_bio) + beta * f_rad(x_rad),   alpha + beta = 1
+
+    Rang buoc duoc BAO DAM theo cau truc, khong phai bang phat: alpha = sigmoid(gate) va
+    beta = 1 - alpha, nen tong luon bang 1 va ca hai luon trong [0, 1]. Khong can chuan hoa
+    lai, khong the troi ra ngoai.
+
+    VI SAO DANG LAM. Bao cao 13/9 ket luan radiomics dong gop phan lon muc tang kappa, nhung
+    do la suy ra TU CHENH LECH giua hai mo hinh. O day `alpha` la mot tham so DOC RA DUOC:
+    sau khi huan luyen, no noi thang mo hinh dua vao biomarker hinh hoc bao nhieu phan.
+    Hai nhanh cho ra cung chieu latent nen phep gop co nghia.
+
+    Chu y khi doc alpha: no la trong so tren BIEU DIEN da hoc, khong phai ty le thong tin.
+    Mot nhanh co the cho vector bien do lon hon va bu lai bang alpha nho. So sanh alpha giua
+    cac lan chay chi co nghia khi cung feature set, cung seed va cung so epoch.
+    """
+
+    def __init__(self, bio_mask, hidden=(64, 32), dropout: float = 0.1):
+        super().__init__()
+        m = np.asarray(bio_mask, bool)
+        self.register_buffer("bio_idx", torch.as_tensor(np.flatnonzero(m), dtype=torch.long))
+        self.register_buffer("rad_idx", torch.as_tensor(np.flatnonzero(~m), dtype=torch.long))
+        self.branch_bio, d1 = _trunk(int(m.sum()), hidden, dropout)
+        self.branch_rad, d2 = _trunk(int((~m).sum()), hidden, dropout)
+        assert d1 == d2, "hai nhanh phai cho cung chieu latent moi gop duoc"
+        self.out_dim = d1
+        self.gate = nn.Parameter(torch.zeros(1))      # alpha = sigmoid(0) = 0.5 luc khoi tao
+
+    @property
+    def alpha(self) -> float:
+        return float(torch.sigmoid(self.gate).detach())
+
+    def forward(self, x):
+        a = torch.sigmoid(self.gate)
+        return a * self.branch_bio(x[:, self.bio_idx]) + (1 - a) * self.branch_rad(x[:, self.rad_idx])
+
+
 class OrdinalMLP(nn.Module):
     """Than chung -> LATENT -> 3 dau: ord (K-1 logit nguong), cls (K logit), oa (1 logit).
 
@@ -368,45 +455,83 @@ class OrdinalMLP(nn.Module):
     """
 
     def __init__(self, n_in: int, n_classes: int, hidden=(64, 32), dropout: float = 0.1,
-                 head_hidden=()):
+                 head_hidden=(), learn_thresholds: bool = False, bio_mask=None):
         super().__init__()
-        layers, d = [], n_in
-        for h in hidden:
-            layers += [nn.Linear(d, h), nn.ReLU(), nn.Dropout(dropout)]
-            d = h
-        self.trunk = nn.Sequential(*layers)
+        # bio_mask khac None va CA HAI nhom deu co cot => than hai nhanh co trong so alpha.
+        # Neu mot nhom rong (vd chua nap radiomics, hoac buoc chon loai het) thi khong co gi
+        # de gop, lui ve than thuong thay vi tao mot nhanh 0 cot.
+        two = bio_mask is not None and 0 < int(np.sum(np.asarray(bio_mask, bool))) < len(bio_mask)
+        if two:
+            self.trunk = TwoBranchTrunk(bio_mask, hidden, dropout)
+            d = self.trunk.out_dim
+        else:
+            self.trunk, d = _trunk(n_in, hidden, dropout)
         self.latent_dim = d
         self.head_ord = _mlp(d, n_classes - 1, head_hidden, dropout)
         self.head_cls = _mlp(d, n_classes, head_hidden, dropout)
         self.head_oa = _mlp(d, 1, head_hidden, dropout)
         self.n_classes = n_classes
+        # `tau` = do lech quyet dinh cua TUNG nguong, hoc duoc. Giai ma thanh z_k > tau_k
+        # thay vi p_k > 0.5. No CHI co gradient qua thanh phan `exp` trong ordinal_losses;
+        # neu khong bat `exp` thi tau dung yen o 0 va model y het ban thuong.
+        if learn_thresholds:
+            self.tau = nn.Parameter(torch.zeros(n_classes - 1))
+        else:
+            self.register_parameter("tau", None)
 
     def forward(self, x):
         h = self.trunk(x)
         return dict(ord=self.head_ord(h), cls=self.head_cls(h),
-                    oa=self.head_oa(h).squeeze(1), latent=h)
+                    oa=self.head_oa(h).squeeze(1), latent=h, tau=self.tau)
+
+    @property
+    def alpha(self):
+        """Trong so cua nhanh biomarker, None neu khong dung than hai nhanh."""
+        return self.trunk.alpha if isinstance(self.trunk, TwoBranchTrunk) else None
 
 
 def ordinal_losses(out: dict, y_idx: torch.Tensor, t_thr: torch.Tensor,
-                   oa_t: "torch.Tensor | None", lambdas: dict) -> dict:
-    """Cac thanh phan loss trong slide (trang 10-11). Tra dict co 'total'."""
-    l_ord = F.binary_cross_entropy_with_logits(out["ord"], t_thr)
-    p = torch.sigmoid(out["ord"])
+                   oa_t: "torch.Tensor | None", lambdas: dict,
+                   asl: "dict | None" = None, temp: float = 1.0) -> dict:
+    """Cac thanh phan loss trong slide (trang 10-11), cong hai mo rong. Tra dict co 'total'.
+
+    `asl`  khac None => thanh phan nguong dung Asymmetric Loss thay BCE.
+    `exp`  trong `lambdas` bat thanh phan EXPECTED-COUNT:
+
+               y_soft = sum_k sigmoid((z_k - tau_k) / temp)      va   MSE(y_soft, y)
+
+           Day la ban LIEN TUC, kha vi cua chinh quy tac giai ma "dem so nguong vuot".
+           No la thanh phan DUY NHAT co gradient chay vao `tau`: BCE chi quan tam tung
+           nguong co dung khong, khong quan tam TONG cua chung co ra dung lop khong.
+    """
+    z = out["ord"]
+    l_ord = asymmetric_loss(z, t_thr, **asl) if asl else         F.binary_cross_entropy_with_logits(z, t_thr)
+    p = torch.sigmoid(z)
     l_mono = F.relu(p[:, 1:] - p[:, :-1]).sum(dim=1).mean() if p.shape[1] > 1 else p.new_zeros(())
     l_cls = F.cross_entropy(out["cls"], y_idx)
     if oa_t is not None:
         l_oa = F.binary_cross_entropy_with_logits(out["oa"], oa_t)
     else:
         l_oa = p.new_zeros(())
+    if lambdas.get("exp", 0) > 0:
+        tau = out.get("tau")
+        zz = z if tau is None else z - tau
+        y_soft = torch.sigmoid(zz / temp).sum(dim=1)
+        l_exp = F.mse_loss(y_soft, y_idx.float())
+    else:
+        l_exp = p.new_zeros(())
+
     total = (lambdas.get("ord", 0) * l_ord + lambdas.get("mono", 0) * l_mono
-             + lambdas.get("cls", 0) * l_cls + lambdas.get("oa", 0) * l_oa)
-    return dict(ord=l_ord, mono=l_mono, cls=l_cls, oa=l_oa, total=total)
+             + lambdas.get("cls", 0) * l_cls + lambdas.get("oa", 0) * l_oa
+             + lambdas.get("exp", 0) * l_exp)
+    return dict(ord=l_ord, mono=l_mono, cls=l_cls, oa=l_oa, exp=l_exp, total=total)
 
 
 def train_ordinal_mlp(X, y_idx, n_classes: int, oa_target=None, lambdas: "dict | None" = None,
                       hidden=(64, 32), dropout: float = 0.1, epochs: int = 400, lr: float = 1e-3,
                       weight_decay: float = 1e-4, seed: int = 0, device: str = "cpu",
-                      head_hidden=()):
+                      head_hidden=(), learn_thresholds: bool = False,
+                      asl: "dict | None" = None, temp: float = 1.0, bio_mask=None):
     """Full-batch Adam tren bang nho. Tra (model, info) - info co mu/sd de chuan hoa luc predict."""
     lambdas = dict(SLIDE_LAMBDAS if lambdas is None else lambdas)
     X = np.asarray(X, np.float32)
@@ -421,13 +546,14 @@ def train_ordinal_mlp(X, y_idx, n_classes: int, oa_target=None, lambdas: "dict |
         oa = torch.tensor(np.asarray(oa_target, np.float32), device=device)
 
     torch.manual_seed(seed)
-    model = OrdinalMLP(X.shape[1], n_classes, hidden, dropout, head_hidden).to(device)
+    model = OrdinalMLP(X.shape[1], n_classes, hidden, dropout, head_hidden,
+                       learn_thresholds, bio_mask).to(device)
     opt = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
     history = []
     model.train()
     for ep in range(epochs):
         opt.zero_grad()
-        losses = ordinal_losses(model(xs), y, t, oa, lambdas)
+        losses = ordinal_losses(model(xs), y, t, oa, lambdas, asl=asl, temp=temp)
         losses["total"].backward()
         opt.step()
         if ep % 10 == 0 or ep == epochs - 1:
@@ -437,7 +563,9 @@ def train_ordinal_mlp(X, y_idx, n_classes: int, oa_target=None, lambdas: "dict |
     model.eval()
     info = dict(mu=mu, sd=sd, n_classes=n_classes, lambdas=lambdas, history=history,
                 hidden=tuple(hidden), head_hidden=tuple(head_hidden),
-                latent_dim=model.latent_dim)
+                latent_dim=model.latent_dim, temp=temp, asl=asl,
+                tau=(model.tau.detach().cpu().numpy().copy() if model.tau is not None else None),
+                alpha=model.alpha)
     return model, info
 
 
@@ -452,11 +580,18 @@ def predict_ordinal_mlp(model: OrdinalMLP, info: dict, X, device: str = "cpu") -
     xs = torch.tensor((np.asarray(X, np.float32) - info["mu"]) / info["sd"],
                       dtype=torch.float32, device=device)
     out = model(xs)
-    p_thr = torch.sigmoid(out["ord"]).cpu().numpy()
+    z = out["ord"]
+    p_thr = torch.sigmoid(z).cpu().numpy()
+    # Giai ma CO tau: z_k > tau_k, tuong duong sigmoid(z_k - tau_k) > 0.5.
+    # tau = 0 (model thuong) thi y_count_tau trung y_count.
+    tau = model.tau.detach() if model.tau is not None else torch.zeros(z.shape[1], device=z.device)
+    p_adj = torch.sigmoid(z - tau).cpu().numpy()
     p_cls = torch.softmax(out["cls"], dim=1).cpu().numpy()
     p_oa = torch.sigmoid(out["oa"]).cpu().numpy()
-    return dict(p_thr=p_thr, p_cls=p_cls, p_oa=p_oa,
+    return dict(p_thr=p_thr, p_thr_tau=p_adj, p_cls=p_cls, p_oa=p_oa,
+                tau=tau.cpu().numpy(),
                 latent=out["latent"].cpu().numpy(),
-                y_count=decode_count(p_thr), y_cumdiff=decode_cumdiff(p_thr),
+                y_count=decode_count(p_thr), y_count_tau=decode_count(p_adj),
+                y_cumdiff=decode_cumdiff(p_thr),
                 y_softmax=p_cls.argmax(axis=1).astype(np.int64),
                 mono_violation=monotonic_violation_rate(p_thr))

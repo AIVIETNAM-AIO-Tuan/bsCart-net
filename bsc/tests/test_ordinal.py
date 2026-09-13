@@ -323,6 +323,135 @@ def test_trunk_output_is_returned_and_informative(data):
     assert i3["latent_dim"] == 16
 
 
+# ------------------------------------------------------------ ASL & nguong hoc duoc
+
+def test_asymmetric_loss_downweights_easy_negatives():
+    """gamma_neg > 0 phai ha trong so cua AM DE, va khong dung toi mau DUONG."""
+    import torch
+    z = torch.tensor([[-4.0, 0.0, 4.0]])                  # am de, mo ho, duong tu tin
+    t_neg = torch.zeros_like(z)
+    bce = torch.nn.functional.binary_cross_entropy_with_logits
+    l_bce = bce(z, t_neg, reduction="none")
+    l_asl = -((1 - t_neg) * ((torch.sigmoid(z) - 0.05).clamp(min=0) ** 4.0)
+              * torch.log((1 - (torch.sigmoid(z) - 0.05).clamp(min=0)).clamp(min=1e-8)))
+    assert l_asl[0, 0] < l_bce[0, 0] * 0.01, "am DE khong duoc ha trong so"
+    assert l_asl[0, 2] > l_asl[0, 0] * 100, "am KHO phai van nang"
+
+    # gamma_pos = 0 va clip = 0 => nhanh DUONG trung khop BCE
+    t_pos = torch.ones_like(z)
+    a = ORD.asymmetric_loss(z, t_pos, gamma_neg=4.0, gamma_pos=0.0, clip=0.0)
+    b = bce(z, t_pos)
+    assert abs(float(a) - float(b)) < 1e-5, (float(a), float(b))
+
+
+def test_asl_model_trains_and_lifts_rare_threshold(data):
+    """Model dung ASL hoc duoc, va nang xac suat o nguong LECH NHAT (lop cuoi)."""
+    Xtr, ytr, Xte, yte = data
+    common = dict(oa_target=(ytr >= 2).astype(np.float32), epochs=300, seed=0)
+    m_bce, i_bce = ORD.train_ordinal_mlp(Xtr, ytr, K, lambdas=ORD.SLIDE_LAMBDAS, **common)
+    m_asl, i_asl = ORD.train_ordinal_mlp(Xtr, ytr, K, lambdas=ORD.ASL_LAMBDAS,
+                                         asl=ORD.ASL_KW, **common)
+    assert i_asl["history"][-1]["total"] < i_asl["history"][0]["total"]
+    assert i_asl["asl"] == ORD.ASL_KW
+
+    o_bce = ORD.predict_ordinal_mlp(m_bce, i_bce, Xte)
+    o_asl = ORD.predict_ordinal_mlp(m_asl, i_asl, Xte)
+    assert ORD.qwk(yte, o_asl["y_count"], K) > 0.6
+
+    # Tren lop CAO NHAT, ASL phai day P(y>K-2) len cao hon BCE - do la muc dich cua no
+    hi = yte == K - 1
+    assert hi.sum() > 5
+    assert o_asl["p_thr"][hi, -1].mean() > o_bce["p_thr"][hi, -1].mean()
+
+
+def test_learned_tau_needs_exp_term_and_changes_decode(data):
+    """`tau` CHI hoc duoc qua thanh phan `exp`; khong bat `exp` thi no dung yen o 0."""
+    Xtr, ytr, Xte, yte = data
+
+    # Bat learn_thresholds nhung KHONG bat `exp` => tau khong co gradient
+    _, i0 = ORD.train_ordinal_mlp(Xtr, ytr, K, lambdas=ORD.SLIDE_LAMBDAS,
+                                  learn_thresholds=True, epochs=100, seed=0,
+                                  oa_target=(ytr >= 2).astype(np.float32))
+    assert np.allclose(i0["tau"], 0.0), "tau doi ma khong co thanh phan exp"
+
+    m, info = ORD.train_ordinal_mlp(Xtr, ytr, K, lambdas=ORD.LEARNED_THR_LAMBDAS,
+                                    learn_thresholds=True, epochs=400, seed=0,
+                                    oa_target=(ytr >= 2).astype(np.float32))
+    assert info["tau"].shape == (K - 1,)
+    assert np.abs(info["tau"]).max() > 1e-3, "tau van dung yen du da bat exp"
+    assert info["history"][-1]["exp"] < info["history"][0]["exp"], "thanh phan exp khong giam"
+
+    out = ORD.predict_ordinal_mlp(m, info, Xte)
+    assert out["p_thr_tau"].shape == out["p_thr"].shape
+    assert not np.allclose(out["p_thr_tau"], out["p_thr"]), "tau khong anh huong xac suat"
+    assert ORD.qwk(yte, out["y_count_tau"], K) > 0.6
+
+    # Giai ma co the TRUNG y het: tren du lieu tong hop de nay tau hoc ra rat nho va it khi
+    # day duoc ca nao qua lan cat 0.5. Dieu PHAI dung la xac suat dich DUNG CHIEU cua tau,
+    # vi p_adj = sigmoid(z - tau).
+    k = int(np.argmax(np.abs(info["tau"])))
+    lo, hi = out["p_thr_tau"][:, k].mean(), out["p_thr"][:, k].mean()
+    assert (lo < hi) == (info["tau"][k] > 0), (info["tau"][k], lo, hi)
+
+    # Model THUONG: tau = 0 nen hai cach giai ma phai trung khop tuyet doi
+    m2, i2 = ORD.train_ordinal_mlp(Xtr, ytr, K, lambdas=ORD.ORDINAL_ONLY_LAMBDAS,
+                                   epochs=100, seed=0)
+    o2 = ORD.predict_ordinal_mlp(m2, i2, Xte)
+    assert np.array_equal(o2["y_count_tau"], o2["y_count"])
+    assert np.allclose(o2["tau"], 0.0)
+
+
+def test_two_branch_fusion_learns_alpha_and_respects_constraint(data):
+    """z = alpha*bio + beta*rad voi alpha + beta = 1 BAO DAM theo cau truc, va alpha hoc duoc."""
+    Xtr, ytr, Xte, yte = data
+    n_feat = Xtr.shape[1]
+    bio_mask = np.zeros(n_feat, bool)
+    bio_mask[: n_feat // 2] = True                       # nua dau = bio, nua sau = "radio"
+
+    model, info = ORD.train_ordinal_mlp(Xtr, ytr, K, lambdas=ORD.ORDINAL_ONLY_LAMBDAS,
+                                        epochs=300, seed=0, bio_mask=bio_mask)
+    assert isinstance(model.trunk, ORD.TwoBranchTrunk)
+    a = info["alpha"]
+    assert a is not None and 0.0 < a < 1.0, a
+    assert abs(a + (1 - a) - 1.0) < 1e-9                 # rang buoc la dong nhat thuc
+    assert abs(a - 0.5) > 1e-4, "alpha dung yen o gia tri khoi tao"
+    assert ORD.qwk(yte, ORD.predict_ordinal_mlp(model, info, Xte)["y_count"], K) > 0.6
+
+    # Moi nhanh chi duoc nhin phan cot cua no
+    assert len(model.trunk.bio_idx) == int(bio_mask.sum())
+    assert len(model.trunk.rad_idx) == int((~bio_mask).sum())
+    assert set(model.trunk.bio_idx.tolist()) & set(model.trunk.rad_idx.tolist()) == set()
+
+
+def test_fusion_alpha_leans_to_the_informative_branch(data):
+    """Nhanh nhieu thong tin hon phai duoc trong so lon hon."""
+    Xtr, ytr, Xte, _ = data
+    # Seed PHAI khac seed cua make_synthetic: default_rng(0).normal cho dung cung luong so,
+    # nen "nhieu" sinh bang seed 0 se TRUNG KHOP Xtr va hai nhanh nhan cung mot ma tran.
+    rng = np.random.default_rng(12345)
+    noise_tr = rng.normal(size=Xtr.shape).astype(np.float32)
+    assert not np.allclose(noise_tr, Xtr), "nhieu trung du lieu that - doi seed"
+    bio_mask = np.r_[np.ones(Xtr.shape[1], bool), np.zeros(Xtr.shape[1], bool)]
+
+    # bio = cot that, radio = nhieu thuan => alpha phai > 0.5
+    _, i1 = ORD.train_ordinal_mlp(np.hstack([Xtr, noise_tr]), ytr, K, epochs=400, seed=0,
+                                  lambdas=ORD.ORDINAL_ONLY_LAMBDAS, bio_mask=bio_mask)
+    # dao lai hai nhom => alpha phai < 0.5
+    _, i2 = ORD.train_ordinal_mlp(np.hstack([noise_tr, Xtr]), ytr, K, epochs=400, seed=0,
+                                  lambdas=ORD.ORDINAL_ONLY_LAMBDAS, bio_mask=bio_mask)
+    assert i1["alpha"] > i2["alpha"], (i1["alpha"], i2["alpha"])
+
+
+def test_fusion_falls_back_when_one_group_empty(data):
+    """Mot nhom rong thi khong co gi de gop: lui ve than thuong, khong tao nhanh 0 cot."""
+    Xtr, ytr, Xte, _ = data
+    for mask in (np.ones(Xtr.shape[1], bool), np.zeros(Xtr.shape[1], bool)):
+        model, info = ORD.train_ordinal_mlp(Xtr, ytr, K, epochs=20, seed=0, bio_mask=mask)
+        assert not isinstance(model.trunk, ORD.TwoBranchTrunk)
+        assert info["alpha"] is None
+        assert ORD.predict_ordinal_mlp(model, info, Xte)["p_thr"].shape == (len(Xte), K - 1)
+
+
 def test_mlp_is_deterministic_given_seed(data):
     Xtr, ytr, Xte, _ = data
     a = ORD.predict_ordinal_mlp(*ORD.train_ordinal_mlp(Xtr, ytr, K, epochs=50, seed=3), Xte)
