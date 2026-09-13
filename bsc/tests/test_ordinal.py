@@ -64,6 +64,39 @@ def test_qwk_penalises_far_errors_more():
     assert ORD.qwk(y, y, K) == pytest.approx(1.0)
 
 
+# ------------------------------------------------------------ chon dac trung
+
+def test_select_features_drops_duplicates_and_noise():
+    """Bo cot trung, giu cot co tin hieu, va tra chi so hop le."""
+    rng = np.random.default_rng(0)
+    n = 400
+    info = rng.normal(size=(n, 3))
+    z = info @ np.array([1.0, -0.7, 0.4]) + rng.normal(scale=0.3, size=n)
+    y = np.digitize(z, np.quantile(z, [0.2, 0.4, 0.6, 0.8]))
+    dup = info[:, 0] + 1e-8 * rng.normal(size=n)              # cot 3 = ban sao cua cot 0
+    X = np.column_stack([info, dup, rng.normal(size=(n, 40))])
+
+    sel = ORD.select_features(X, y, seed=0)
+    assert sel.ndim == 1 and set(sel) <= set(range(X.shape[1]))
+    assert not (0 in sel and 3 in sel), "giu ca hai ban sao gan trung nhau"
+    assert 3 not in sel, "loc tuong quan phai giu cot chi so NHO hon"
+    assert sum(j in sel for j in (0, 1, 2)) >= 2, "bo mat cot co tin hieu"
+    assert len(sel) < X.shape[1], "khong loai duoc cot nhieu nao"
+
+
+def test_select_features_is_deterministic_and_handles_degenerate():
+    rng = np.random.default_rng(1)
+    X = rng.normal(size=(120, 30))
+    X[:, 5] = 0.0                                              # cot hang so
+    y = rng.integers(0, 5, size=120)
+    a = ORD.select_features(X, y, seed=0)
+    b = ORD.select_features(X, y, seed=0)
+    assert np.array_equal(a, b)
+    assert 5 not in a, "cot hang so phai bi bo"
+    # it cot hon min_keep thi tra ve tat ca, khong sap
+    assert len(ORD.select_features(X[:, :4], y)) == 4
+
+
 # ------------------------------------------------------------ Frank & Hall
 
 def test_frank_hall_learns_ordinal_structure(data):

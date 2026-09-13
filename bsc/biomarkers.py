@@ -365,6 +365,7 @@ def compartment_metrics(name: str, thick, areas, footprint, graph,
         out[f"thin_le{int(round(e * 10)):02d}_{name}_pct"] = nan
     out[f"fcl_{name}_ndef"] = nan
     out[f"fcl_{name}_maxdef_mm2"] = nan
+    out[f"fcl_{name}_defarea_mm2"] = nan
 
     tab = areas[fp].sum()
     if tab <= 0:
@@ -390,9 +391,15 @@ def compartment_metrics(name: str, thick, areas, footprint, graph,
         big = comp_area[comp_area >= min_defect_mm2]
         out[f"fcl_{name}_ndef"] = float(len(big))
         out[f"fcl_{name}_maxdef_mm2"] = float(big.max()) if len(big) else 0.0
+        # TONG dien tich cac O DU LON. Day moi la con so nen bao cao, KHONG phai fcl_*_mm2:
+        # mep mang sun thuon dan ve 0 nen closing luon bac qua mot vanh, tao ra dom FCL rai
+        # rac o RIA. Do tren ca that (9000099_V00_R, sun dui trong): 51.3mm2 tong nhung o lon
+        # nhat chi 5.8mm2 => ~89% la dom ria. fcl_*_defarea_mm2 loai dung phan do.
+        out[f"fcl_{name}_defarea_mm2"] = float(big.sum())
     else:
         out[f"fcl_{name}_ndef"] = 0.0
         out[f"fcl_{name}_maxdef_mm2"] = 0.0
+        out[f"fcl_{name}_defarea_mm2"] = 0.0
     return out
 
 

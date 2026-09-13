@@ -75,6 +75,55 @@ def monotonic_violation_rate(p, eps: float = 1e-6) -> float:
 
 # ------------------------------------------------------------ metric
 
+def select_features(X, y, max_corr: float = 0.9, min_keep: int = 10,
+                    max_keep: "int | None" = None, seed: int = 0) -> np.ndarray:
+    """Chon dac trung khi so cot >> so ca. Tra CHI SO cac cot duoc giu.
+
+    CHI DUOC GOI TREN TRAIN CUA TUNG FOLD. Goi mot lan tren toan bo du lieu roi dung cho
+    moi fold la RO RI: buoc chon da nhin thay nhan cua tap test, va moi con so sau do deu
+    lac quan. Day dung la cho ma bang dac trung san co cua S5 khong dung lai duoc.
+
+    Buoc 1: bo cot hang so, roi bo bot cac cot gan trung nhau (|r| > max_corr), giu cot co
+            chi so nho hon.
+    Buoc 2: LassoCV tren y coi nhu LIEN TUC. Hop voi nhan co thu tu hon logistic da lop,
+            va nhanh hon nhieu - day la khac biet co y so voi LASSO logistic cua S5.
+    """
+    from sklearn.linear_model import LassoCV
+    from sklearn.preprocessing import StandardScaler
+
+    X = np.asarray(X, np.float64)
+    n_feat = X.shape[1]
+    if n_feat <= min_keep:
+        return np.arange(n_feat)
+
+    alive = np.flatnonzero(X.std(axis=0) > 1e-12)
+    if alive.size <= min_keep:
+        return alive if alive.size else np.arange(min(n_feat, min_keep))
+
+    c = np.abs(np.nan_to_num(np.corrcoef(X[:, alive], rowvar=False)))
+    keep_mask = np.ones(alive.size, bool)
+    for j in range(alive.size):
+        if not keep_mask[j]:
+            continue
+        dup = np.flatnonzero(c[j] > max_corr)
+        keep_mask[dup[dup > j]] = False
+    keep = alive[keep_mask]
+    if keep.size <= min_keep:
+        return keep
+
+    Xs = StandardScaler().fit_transform(X[:, keep])
+    # Luoi alpha truyen TUONG MINH: `n_alphas` da deprecated o sklearn moi con `alphas=int`
+    # chua co o ban cu, nen truyen mang la cach duy nhat chay duoc o ca hai.
+    las = LassoCV(cv=3, alphas=np.logspace(-3, 0, 20), max_iter=3000,
+                  random_state=seed, n_jobs=1)
+    las.fit(Xs, np.asarray(y, np.float64))
+    coef = np.abs(las.coef_)
+    k = max(int((coef > 1e-8).sum()), min_keep)
+    if max_keep:
+        k = min(k, max_keep)
+    return keep[np.argsort(-coef)[:k]]
+
+
 def qwk(y_true, y_pred, n_classes: int) -> float:
     """Quadratic-weighted kappa - metric chuan cho KL grading (phat sai xa nang hon)."""
     return float(cohen_kappa_score(np.asarray(y_true), np.asarray(y_pred), weights="quadratic",

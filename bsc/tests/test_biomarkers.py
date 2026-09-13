@@ -158,6 +158,7 @@ def test_fcl_recovers_cap_area_when_closing_covers_hole():
     assert abs(out["fcl_fem_pct"] - 100 * expect / (4 * np.pi * 144)) < 1.0
     assert out["fcl_fem_ndef"] == 1
     assert abs(out["fcl_fem_maxdef_mm2"] - got) < 1e-6
+    assert abs(out["fcl_fem_defarea_mm2"] - got) < 1e-6      # 1 o duy nhat => defarea = tong
     # ThC.tAB giam dung bang phan mat, ThC.cAB khong doi
     assert abs(out["thc_cab_fem_mm"] - 1.6) < 0.25
     assert out["thc_tab_fem_mm"] < out["thc_cab_fem_mm"] * (1 - 0.02)
@@ -235,6 +236,56 @@ def test_two_bone_end_to_end_compartments_and_fcl():
     assert set(surf0) == {"fem", "tib"}
     paint = BM.paint_vertices(surf0["tib"]["verts"], surf0["tib"]["footprint"], arr0.shape, SP)
     assert paint.sum() > 1000
+
+
+def test_result_is_invariant_to_axis_order():
+    """Doi thu tu truc mang + doi spacing tuong ung => KET QUA PHAI KHONG DOI.
+
+    Du lieu that co truc 0.70mm nam CUOI (xem io_utils.py), khac core.SPACING. Test nay
+    khoa lai dam bao: moi ham nhan spacing theo dung thu tu truc cua mang, khong ham nao
+    gia dinh truc nao la through-plane. Neu ai do them mot mac dinh spacing vao
+    biomarkers.py, test nay sup.
+    """
+    # Dung sai = 2% tuong doi + mot san TUYET DOI theo don vi: cac cot gan 0 (vd
+    # thin_le05_mt_pct ~ 0.09 diem phan tram) thi 2% tuong doi la vo nghia.
+    abs_floor = {"_pct": 0.10, "_mm": 0.02, "_mm2": 1.0, "_mm3": 5.0}
+
+    def tol(key, v):
+        for suf, atol in abs_floor.items():
+            if key.endswith(suf):
+                return 0.02 * abs(v) + atol
+        return 0.02 * abs(v) + 0.005          # ty le 0..1: denuded_ratio_*, extrusion_*
+
+    arr = two_bone_knee(defect=True)
+    base = BM.all_biomarkers(arr, SP)
+    for perm in [(1, 2, 0), (2, 0, 1), (2, 1, 0)]:
+        got = BM.all_biomarkers(np.transpose(arr, perm), tuple(SP[i] for i in perm))
+        for k, v in base.items():
+            if k.startswith("qc_") or not np.isfinite(v):
+                continue
+            if k.endswith("_ndef"):
+                # mot o co the tach/gop khac nhau ngay tai bien roi rac hoa
+                assert abs(got[k] - v) <= 1, (perm, k, v, got[k])
+                continue
+            assert abs(got[k] - v) <= tol(k, v), (perm, k, v, got[k])
+
+
+def test_defarea_separates_focal_defect_from_rim_speckle():
+    """fcl_*_defarea_mm2 giu o that, bo dom nho - ly do khong bao cao fcl_*_mm2 tho.
+
+    Lo 20 deg tren cau la MOT o ~50mm2; moi dom ria deu < min_defect_mm2. Nen defarea
+    phai ~ maxdef, va phan chenh so voi fcl tong chinh la dom ria.
+    """
+    out = BM.surface_biomarkers(sphere_knee(cap_deg=20.0), SP, close_mm=8.0, min_defect_mm2=5.0)
+    total, defarea, maxdef = out["fcl_fem_mm2"], out["fcl_fem_defarea_mm2"], out["fcl_fem_maxdef_mm2"]
+    assert defarea <= total + 1e-6
+    assert abs(defarea - maxdef) < 1e-6, (defarea, maxdef)
+    assert defarea > 0.8 * total, (defarea, total)          # phantom sach: it dom ria
+
+    # Nang nguong o len tren ca o that => defarea ve 0, tong thi khong
+    hi = BM.surface_biomarkers(sphere_knee(cap_deg=20.0), SP, close_mm=8.0, min_defect_mm2=500.0)
+    assert hi["fcl_fem_defarea_mm2"] == 0.0 and hi["fcl_fem_ndef"] == 0.0
+    assert hi["fcl_fem_mm2"] > 40.0
 
 
 def test_no_cartilage_gives_nan_not_crash():
