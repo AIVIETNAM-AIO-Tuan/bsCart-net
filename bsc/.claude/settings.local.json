@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/Users/Admin/nnUnet-OAI/**)",
+      "Bash(timeout 500 python -m pytest bsc/tests/ -q)"
+    ]
+  }
+}

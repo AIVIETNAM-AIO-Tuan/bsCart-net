@@ -1,0 +1,4546 @@
+{
+    "foreground_mean": {
+        "Dice": 0.90536125526738,
+        "FN": 17528.945,
+        "FP": 31720.467500000006,
+        "IoU": 0.8356462635499945,
+        "TN": 22841961.02,
+        "TP": 701749.5675,
+        "n_pred": 733470.035,
+        "n_ref": 719278.5125
+    },
+    "mean": {
+        "1": {
+            "Dice": 0.9662219704252962,
+            "FN": 38823.2125,
+            "FP": 111817.3875,
+            "IoU": 0.938955974843952,
+            "TN": 21447882.25,
+            "TP": 1994437.15,
+            "n_pred": 2106254.5375,
+            "n_ref": 2033260.3625
+        },
+        "2": {
+            "Dice": 0.8845142593185088,
+            "FN": 19331.05,
+            "FP": 18706.5,
+            "IoU": 0.7937886233996378,
+            "TN": 23406320.675,
+            "TP": 148601.775,
+            "n_pred": 167308.275,
+            "n_ref": 167932.825
+        },
+        "3": {
+            "Dice": 0.9840226940779683,
+            "FN": 23278.1125,
+            "FP": 20166.0875,
+            "IoU": 0.9685900030615244,
+            "TN": 22224958.0375,
+            "TP": 1324557.7625,
+            "n_pred": 1344723.85,
+            "n_ref": 1347835.875
+        },
+        "4": {
+            "Dice": 0.8379181132595953,
+            "FN": 3415.1375,
+            "FP": 3711.95,
+            "IoU": 0.7244759367764828,
+            "TN": 23566824.1375,
+            "TP": 19008.775,
+            "n_pred": 22720.725,
+            "n_ref": 22423.9125
+        },
+        "5": {
+            "Dice": 0.854129239255531,
+            "FN": 2797.2125,
+            "FP": 4200.4125,
+            "IoU": 0.7524207796683748,
+            "TN": 23563820.0,
+            "TP": 22142.375,
+            "n_pred": 26342.7875,
+            "n_ref": 24939.5875
+        }
+    },
+    "metric_per_case": [
+        {
+            "metrics": {
+                "1": {
+                    "Dice": 0.8506271891326478,
+                    "FN": 34760,
+                    "FP": 710950,
+                    "IoU": 0.7400794425359151,
+                    "TN": 20723968,
+                    "TP": 2123282,
+                    "n_pred": 2834232,
+                    "n_ref": 2158042
+                },
+                "2": {
+                    "Dice": 0.9122069220297468,
+                    "FN": 18275,
+                    "FP": 16421,
+                    "IoU": 0.8385849666665116,
+                    "TN": 23378011,
+                    "TP": 180253,
+                    "n_pred": 196674,
+                    "n_ref": 198528
+                },
+                "3": {
+                    "Dice": 0.9823995644122514,
+                    "FN": 28556,
+                    "FP": 26655,
+                    "IoU": 0.9654079637307096,
+                    "TN": 21996899,
+                    "TP": 1540850,
+                    "n_pred": 1567505,
+                    "n_ref": 1569406
+                },
+                "4": {
+                    "Dice": 0.8810907208191912,
+                    "FN": 3083,
+                    "FP": 3118,
+                    "IoU": 0.7874550128534704,
+                    "TN": 23563785,
+                    "TP": 22974,
+                    "n_pred": 26092,
+                    "n_ref": 26057
+                },
+                "5": {
+                    "Dice": 0.9068387431499075,
+                    "FN": 2863,
+                    "FP": 2883,
+                    "IoU": 0.8295562411010916,
+                    "TN": 23559248,
+                    "TP": 27966,
+                    "n_pred": 30849,
+                    "n_ref": 30829
+                }
+            },
+            "prediction_file": "/content/nnUNet_results/Dataset001_KneeOA/nnUNetTrainer_100epochs__nnUNetPlans__3d_fullres/fold_4/validation/oaizib_001.nii.gz",
+            "reference_file": "/content/nnUNet_preprocessed/Dataset001_KneeOA/gt_segmentations/oaizib_001.nii.gz"
+        },
+        {
+            "metrics": {
+                "1": {
+                    "Dice": 0.9816565394657927,
+                    "FN": 39839,
+                    "FP": 20719,
+                    "IoU": 0.9639739218738939,
+                    "TN": 21912011,
+                    "TP": 1620391,
+                    "n_pred": 1641110,
+                    "n_ref": 1660230
+                },
+                "2": {
+                    "Dice": 0.9115253312393108,
+                    "FN": 16117,
+                    "FP": 10473,
+                    "IoU": 0.8374336651096819,
+                    "TN": 23429396,
+                    "TP": 136974,
+                    "n_pred": 147447,
+                    "n_ref": 153091
+                },
+                "3": {
+                    "Dice": 0.9855453248142498,
+                    "FN": 2960,
+                    "FP": 22930,
+                    "IoU": 0.9715025707124798,
+                    "TN": 22684457,
+                    "TP": 882613,
+                    "n_pred": 905543,
+                    "n_ref": 885573
+                },
+                "4": {
+                    "Dice": 0.8550737594993295,
+                    "FN": 1856,
+                    "FP": 3007,
+                    "IoU": 0.746837419959394,
+                    "TN": 23573751,
+                    "TP": 14346,
+                    "n_pred": 17353,
+                    "n_ref": 16202
+                },
+                "5": {
+                    "Dice": 0.9037595559744476,
+                    "FN": 3777,
+                    "FP": 1737,
+                    "IoU": 0.8244172716851357,
+                    "TN": 23561556,
+                    "TP": 25890,
+                    "n_pred": 27627,
+                    "n_ref": 29667
+                }
+            },
+            "prediction_file": "/content/nnUNet_results/Dataset001_KneeOA/nnUNetTrainer_100epochs__nnUNetPlans__3d_fullres/fold_4/validation/oaizib_006.nii.gz",
+            "reference_file": "/content/nnUNet_preprocessed/Dataset001_KneeOA/gt_segmentations/oaizib_006.nii.gz"
+        },
+        {
+            "metrics": {
+                "1": {
+                    "Dice": 0.9813705294998165,
+                    "FN": 21141,
+                    "FP": 55623,
+                    "IoU": 0.963422478850851,
+                    "TN": 21494294,
+                    "TP": 2021902,
+                    "n_pred": 2077525,
+                    "n_ref": 2043043
+                },
+                "2": {
+                    "Dice": 0.8894632490513232,
+                    "FN": 16140,
+                    "FP": 19485,
+                    "IoU": 0.8009309446909331,
+                    "TN": 23414002,
+                    "TP": 143333,
+                    "n_pred": 162818,
+                    "n_ref": 159473
+                },
+                "3": {
+                    "Dice": 0.9848108228683543,
+                    "FN": 21136,
+                    "FP": 16860,
+                    "IoU": 0.9700761641794453,
+                    "TN": 22323203,
+                    "TP": 1231761,
+                    "n_pred": 1248621,
+                    "n_ref": 1252897
+                },
+                "4": {
+                    "Dice": 0.8654920665823032,
+                    "FN": 2953,
+                    "FP": 3956,
+                    "IoU": 0.76287881387926,
+                    "TN": 23563823,
+                    "TP": 22228,
+                    "n_pred": 26184,
+                    "n_ref": 25181
+                },
+                "5": {
+                    "Dice": 0.8778921333971598,
+                    "FN": 1262,
+                    "FP": 4860,
+                    "IoU": 0.7823598421557822,
+                    "TN": 23564831,
+                    "TP": 22007,
+                    "n_pred": 26867,
+                    "n_ref": 23269
+                }
+            },
+            "prediction_file": "/content/nnUNet_results/Dataset001_KneeOA/nnUNetTrainer_100epochs__nnUNetPlans__3d_fullres/fold_4/validation/oaizib_013.nii.gz",
+            "reference_file": "/content/nnUNet_preprocessed/Dataset001_KneeOA/gt_segmentations/oaizib_013.nii.gz"
+        },
+        {
+            "metrics": {
+                "1": {
+                    "Dice": 0.9847350831338602,
+                    "FN": 28540,
+                    "FP": 27796,
+                    "IoU": 0.969929194612065,
+                    "TN": 21719515,
+                    "TP": 1817109,
+                    "n_pred": 1844905,
+                    "n_ref": 1845649
+                },
+                "2": {
+                    "Dice": 0.8925093765898792,
+                    "FN": 7641,
+                    "FP": 19614,
+                    "IoU": 0.805884363916072,
+                    "TN": 23452554,
+                    "TP": 113151,
+                    "n_pred": 132765,
+                    "n_ref": 120792
+                },
+                "3": {
+                    "Dice": 0.9865898795280046,
+                    "FN": 17517,
+                    "FP": 12414,
+                    "IoU": 0.973534662421272,
+                    "TN": 22462009,
+                    "TP": 1101020,
+                    "n_pred": 1113434,
+                    "n_ref": 1118537
+                },
+                "4": {
+                    "Dice": 0.8277144850034875,
+                    "FN": 5379,
+                    "FP": 549,
+                    "IoU": 0.7060690202300675,
+                    "TN": 23572792,
+                    "TP": 14240,
+                    "n_pred": 14789,
+                    "n_ref": 19619
+                },
+                "5": {
+                    "Dice": 0.8538556540203237,
+                    "FN": 2920,
+                    "FP": 3825,
+                    "IoU": 0.744980906650535,
+                    "TN": 23566511,
+                    "TP": 19704,
+                    "n_pred": 23529,
+                    "n_ref": 22624
+                }
+            },
+            "prediction_file": "/content/nnUNet_results/Dataset001_KneeOA/nnUNetTrainer_100epochs__nnUNetPlans__3d_fullres/fold_4/validation/oaizib_024.nii.gz",
+            "reference_file": "/content/nnUNet_preprocessed/Dataset001_KneeOA/gt_segmentations/oaizib_024.nii.gz"
+        },
+        {
+            "metrics": {
+                "1": {
+                    "Dice": 0.9833466621412592,
+                    "FN": 46224,
+                    "FP": 29387,
+                    "IoU": 0.9672389058519874,
+                    "TN": 21285009,
+                    "TP": 2232340,
+                    "n_pred": 2261727,
+                    "n_ref": 2278564
+                },
+                "2": {
+                    "Dice": 0.8829224278781671,
+                    "FN": 18271,
+                    "FP": 20137,
+                    "IoU": 0.7903859587844918,
+                    "TN": 23409728,
+                    "TP": 144824,
+                    "n_pred": 164961,
+                    "n_ref": 163095
+                },
+                "3": {
+                    "Dice": 0.9858176335564378,
+                    "FN": 19644,
+                    "FP": 19139,
+                    "IoU": 0.972031920662759,
+                    "TN": 22206272,
+                    "TP": 1347905,
+                    "n_pred": 1367044,
+                    "n_ref": 1367549
+                },
+                "4": {
+                    "Dice": 0.8075511551155116,
+                    "FN": 2604,
+                    "FP": 4685,
+                    "IoU": 0.6772207953237092,
+                    "TN": 23570378,
+                    "TP": 15293,
+                    "n_pred": 19978,
+                    "n_ref": 17897
+                },
+                "5": {
+                    "Dice": 0.8859279351929915,
+                    "FN": 3299,
+                    "FP": 2925,
+                    "IoU": 0.7952160036850591,
+                    "TN": 23562567,
+                    "TP": 24169,
+                    "n_pred": 27094,
+                    "n_ref": 27468
+                }
+            },
+            "prediction_file": "/content/nnUNet_results/Dataset001_KneeOA/nnUNetTrainer_100epochs__nnUNetPlans__3d_fullres/fold_4/validation/oaizib_030.nii.gz",
+            "reference_file": "/content/nnUNet_preprocessed/Dataset001_KneeOA/gt_segmentations/oaizib_030.nii.gz"
+        },
+        {
+            "metrics": {
+                "1": {
+                    "Dice": 0.7058771841410876,
+                    "FN": 21886,
+                    "FP": 1571412,
+                    "IoU": 0.545448372821242,
+                    "TN": 20087752,
+                    "TP": 1911910,
+                    "n_pred": 3483322,
+                    "n_ref": 1933796
+                },
+                "2": {
+                    "Dice": 0.8639600541663168,
+                    "FN": 15252,
+                    "FP": 22019,
+                    "IoU": 0.7605014747367,
+                    "TN": 23437339,
+                    "TP": 118350,
+                    "n_pred": 140369,
+                    "n_ref": 133602
+                },
+                "3": {
+                    "Dice": 0.9843384053711893,
+                    "FN": 30187,
+                    "FP": 15165,
+                    "IoU": 0.9691598171839224,
+                    "TN": 22122411,
+                    "TP": 1425197,
+                    "n_pred": 1440362,
+                    "n_ref": 1455384
+                },
+                "4": {
+                    "Dice": 0.8093464273620048,
+                    "FN": 3379,
+                    "FP": 3377,
+                    "IoU": 0.679749715585893,
+                    "TN": 23571864,
+                    "TP": 14340,
+                    "n_pred": 17717,
+                    "n_ref": 17719
+                },
+                "5": {
+                    "Dice": 0.8493898999495294,
+                    "FN": 1046,
+                    "FP": 4027,
+                    "IoU": 0.7382082774280111,
+                    "TN": 23573582,
+                    "TP": 14305,
+                    "n_pred": 18332,
+                    "n_ref": 15351
+                }
+            },
+            "prediction_file": "/content/nnUNet_results/Dataset001_KneeOA/nnUNetTrainer_100epochs__nnUNetPlans__3d_fullres/fold_4/validation/oaizib_035.nii.gz",
+            "reference_file": "/content/nnUNet_preprocessed/Dataset001_KneeOA/gt_segmentations/oaizib_035.nii.gz"
+        },
+        {
+            "metrics": {
+                "1": {
+                    "Dice": 0.9826780690358728,
+                    "FN": 25884,
+                    "FP": 61052,
+                    "IoU": 0.9659460187834327,
+                    "TN": 21040072,
+                    "TP": 2465952,
+                    "n_pred": 2527004,
+                    "n_ref": 2491836
+                },
+                "2": {
+                    "Dice": 0.8623838383838384,
+                    "FN": 24396,
+                    "FP": 21585,
+                    "IoU": 0.7580622247478335,
+                    "TN": 23402907,
+                    "TP": 144072,
+                    "n_pred": 165657,
+                    "n_ref": 168468
+                },
+                "3": {
+                    "Dice": 0.985633691671916,
+                    "FN": 27243,
+                    "FP": 14265,
+                    "IoU": 0.9716743188133622,
+                    "TN": 22127576,
+                    "TP": 1423876,
+                    "n_pred": 1438141,
+                    "n_ref": 1451119
+                },
+                "4": {
+                    "Dice": 0.8415638671028258,
+                    "FN": 2281,
+                    "FP": 5759,
+                    "IoU": 0.7264654849794169,
+                    "TN": 23563567,
+                    "TP": 21353,
+                    "n_pred": 27112,
+                    "n_ref": 23634
+                },
+                "5": {
+                    "Dice": 0.8652463941337037,
+                    "FN": 1183,
+                    "FP": 7160,
+                    "IoU": 0.7624971532680482,
+                    "TN": 23557832,
+                    "TP": 26785,
+                    "n_pred": 33945,
+                    "n_ref": 27968
+                }
+            },
+            "prediction_file": "/content/nnUNet_results/Dataset001_KneeOA/nnUNetTrainer_100epochs__nnUNetPlans__3d_fullres/fold_4/validation/oaizib_037.nii.gz",
+            "reference_file": "/content/nnUNet_preprocessed/Dataset001_KneeOA/gt_segmentations/oaizib_037.nii.gz"
+        },
+        {
+            "metrics": {
+                "1": {
+                    "Dice": 0.9869027814924883,
+                    "FN": 26183,
+                    "FP": 37085,
+                    "IoU": 0.9741442020207964,
+                    "TN": 21146004,
+                    "TP": 2383688,
+                    "n_pred": 2420773,
+                    "n_ref": 2409871
+                },
+                "2": {
+                    "Dice": 0.8899277518062049,
+                    "FN": 19645,
+                    "FP": 22572,
+                    "IoU": 0.8016845329249617,
+                    "TN": 23380082,
+                    "TP": 170661,
+                    "n_pred": 193233,
+                    "n_ref": 190306
+                },
+                "3": {
+                    "Dice": 0.9858746315189647,
+                    "FN": 27282,
+                    "FP": 15379,
+                    "IoU": 0.9721427568621177,
+                    "TN": 22061545,
+                    "TP": 1488754,
+                    "n_pred": 1504133,
+                    "n_ref": 1516036
+                },
+                "4": {
+                    "Dice": 0.8661893928325437,
+                    "FN": 3374,
+                    "FP": 3037,
+                    "IoU": 0.7639630352343434,
+                    "TN": 23565799,
+                    "TP": 20750,
+                    "n_pred": 23787,
+                    "n_ref": 24124
+                },
+                "5": {
+                    "Dice": 0.8919909265398709,
+                    "FN": 1093,
+                    "FP": 5716,
+                    "IoU": 0.8050393700787402,
+                    "TN": 23558035,
+                    "TP": 28116,
+                    "n_pred": 33832,
+                    "n_ref": 29209
+                }
+            },
+            "prediction_file": "/content/nnUNet_results/Dataset001_KneeOA/nnUNetTrainer_100epochs__nnUNetPlans__3d_fullres/fold_4/validation/oaizib_044.nii.gz",
+            "reference_file": "/content/nnUNet_preprocessed/Dataset001_KneeOA/gt_segmentations/oaizib_044.nii.gz"
+        },
+        {
+            "metrics": {
+                "1": {
+                    "Dice": 0.9876446052971268,
+                    "FN": 24977,
+                    "FP": 25514,
+                    "IoU": 0.9755907959447393,
+                    "TN": 21524437,
+                    "TP": 2018032,
+                    "n_pred": 2043546,
+                    "n_ref": 2043009
+                },
+                "2": {
+                    "Dice": 0.8839421737214056,
+                    "FN": 11191,
+                    "FP": 28042,
+                    "IoU": 0.7920218405428329,
+                    "TN": 23404320,
+                    "TP": 149407,
+                    "n_pred": 177449,
+                    "n_ref": 160598
+                },
+                "3": {
+                    "Dice": 0.9848061119358029,
+                    "FN": 13079,
+                    "FP": 27402,
+                    "IoU": 0.9700670221859408,
+                    "TN": 22240572,
+                    "TP": 1311907,
+                    "n_pred": 1339309,
+                    "n_ref": 1324986
+                },
+                "4": {
+                    "Dice": 0.8768852170856039,
+                    "FN": 5502,
+                    "FP": 1502,
+                    "IoU": 0.7807618868751369,
+                    "TN": 23561013,
+                    "TP": 24943,
+                    "n_pred": 26445,
+                    "n_ref": 30445
+                },
+                "5": {
+                    "Dice": 0.9151755133410189,
+                    "FN": 2464,
+                    "FP": 2613,
+                    "IoU": 0.843616202063761,
+                    "TN": 23560495,
+                    "TP": 27388,
+                    "n_pred": 30001,
+                    "n_ref": 29852
+                }
+            },
+            "prediction_file": "/content/nnUNet_results/Dataset001_KneeOA/nnUNetTrainer_100epochs__nnUNetPlans__3d_fullres/fold_4/validation/oaizib_059.nii.gz",
+            "reference_file": "/content/nnUNet_preprocessed/Dataset001_KneeOA/gt_segmentations/oaizib_059.nii.gz"
+        },
+        {
+            "metrics": {
+                "1": {
+                    "Dice": 0.9796737307569389,
+                    "FN": 25157,
+                    "FP": 68400,
+                    "IoU": 0.960157314663396,
+                    "TN": 21244800,
+                    "TP": 2254603,
+                    "n_pred": 2323003,
+                    "n_ref": 2279760
+                },
+                "2": {
+                    "Dice": 0.8850497445549879,
+                    "FN": 21280,
+                    "FP": 19760,
+                    "IoU": 0.7938020016881707,
+                    "TN": 23393928,
+                    "TP": 157992,
+                    "n_pred": 177752,
+                    "n_ref": 179272
+                },
+                "3": {
+                    "Dice": 0.989057060081937,
+                    "FN": 18642,
+                    "FP": 18208,
+                    "IoU": 0.9783510236117777,
+                    "TN": 21890801,
+                    "TP": 1665309,
+                    "n_pred": 1683517,
+                    "n_ref": 1683951
+                },
+                "4": {
+                    "Dice": 0.856324696243562,
+                    "FN": 1650,
+                    "FP": 5575,
+                    "IoU": 0.7487480873556823,
+                    "TN": 23564204,
+                    "TP": 21531,
+                    "n_pred": 27106,
+                    "n_ref": 23181
+                },
+                "5": {
+                    "Dice": 0.8592604560050083,
+                    "FN": 1397,
+                    "FP": 5572,
+                    "IoU": 0.7532485925716107,
+                    "TN": 23564717,
+                    "TP": 21274,
+                    "n_pred": 26846,
+                    "n_ref": 22671
+                }
+            },
+            "prediction_file": "/content/nnUNet_results/Dataset001_KneeOA/nnUNetTrainer_100epochs__nnUNetPlans__3d_fullres/fold_4/validation/oaizib_060.nii.gz",
+            "reference_file": "/content/nnUNet_preprocessed/Dataset001_KneeOA/gt_segmentations/oaizib_060.nii.gz"
+        },
+        {
+            "metrics": {
+                "1": {
+                    "Dice": 0.9802364544684078,
+                    "FN": 51491,
+                    "FP": 21079,
+                    "IoU": 0.9612389644281906,
+                    "TN": 21720719,
+                    "TP": 1799671,
+                    "n_pred": 1820750,
+                    "n_ref": 1851162
+                },
+                "2": {
+                    "Dice": 0.8902370689655172,
+                    "FN": 14366,
+                    "FP": 16192,
+                    "IoU": 0.8021867049890277,
+                    "TN": 23438481,
+                    "TP": 123921,
+                    "n_pred": 140113,
+                    "n_ref": 138287
+                },
+                "3": {
+                    "Dice": 0.980400722996385,
+                    "FN": 8839,
+                    "FP": 32973,
+                    "IoU": 0.9615549413467356,
+                    "TN": 22505382,
+                    "TP": 1045766,
+                    "n_pred": 1078739,
+                    "n_ref": 1054605
+                },
+                "4": {
+                    "Dice": 0.8673777609967906,
+                    "FN": 3188,
+                    "FP": 2432,
+                    "IoU": 0.7658138178181515,
+                    "TN": 23568962,
+                    "TP": 18378,
+                    "n_pred": 20810,
+                    "n_ref": 21566
+                },
+                "5": {
+                    "Dice": 0.8562907735321529,
+                    "FN": 2578,
+                    "FP": 3590,
+                    "IoU": 0.7486962190352021,
+                    "TN": 23568416,
+                    "TP": 18376,
+                    "n_pred": 21966,
+                    "n_ref": 20954
+                }
+            },
+            "prediction_file": "/content/nnUNet_results/Dataset001_KneeOA/nnUNetTrainer_100epochs__nnUNetPlans__3d_fullres/fold_4/validation/oaizib_063.nii.gz",
+            "reference_file": "/content/nnUNet_preprocessed/Dataset001_KneeOA/gt_segmentations/oaizib_063.nii.gz"
+        },
+        {
+            "metrics": {
+                "1": {
+                    "Dice": 0.9857314496915562,
+                    "FN": 32410,
+                    "FP": 26791,
+                    "IoU": 0.9718643542598169,
+                    "TN": 21488832,
+                    "TP": 2044927,
+                    "n_pred": 2071718,
+                    "n_ref": 2077337
+                },
+                "2": {
+                    "Dice": 0.8601342935540967,
+                    "FN": 23423,
+                    "FP": 21382,
+                    "IoU": 0.7545926583193664,
+                    "TN": 23410386,
+                    "TP": 137769,
+                    "n_pred": 159151,
+                    "n_ref": 161192
+                },
+                "3": {
+                    "Dice": 0.9768746092760375,
+                    "FN": 31864,
+                    "FP": 44264,
+                    "IoU": 0.9547946108392462,
+                    "TN": 21908913,
+                    "TP": 1607919,
+                    "n_pred": 1652183,
+                    "n_ref": 1639783
+                },
+                "4": {
+                    "Dice": 0.768960414354421,
+                    "FN": 3825,
+                    "FP": 6167,
+                    "IoU": 0.6246431254695718,
+                    "TN": 23566340,
+                    "TP": 16628,
+                    "n_pred": 22795,
+                    "n_ref": 20453
+                },
+                "5": {
+                    "Dice": 0.8389576834609447,
+                    "FN": 2413,
+                    "FP": 7809,
+                    "IoU": 0.7225900998697351,
+                    "TN": 23556112,
+                    "TP": 26626,
+                    "n_pred": 34435,
+                    "n_ref": 29039
+                }
+            },
+            "prediction_file": "/content/nnUNet_results/Dataset001_KneeOA/nnUNetTrainer_100epochs__nnUNetPlans__3d_fullres/fold_4/validation/oaizib_064.nii.gz",
+            "reference_file": "/content/nnUNet_preprocessed/Dataset001_KneeOA/gt_segmentations/oaizib_064.nii.gz"
+        },
+        {
+            "metrics": {
+                "1": {
+                    "Dice": 0.9799256501071382,
+                    "FN": 43342,
+                    "FP": 22921,
+                    "IoU": 0.960641398551056,
+                    "TN": 21909389,
+                    "TP": 1617308,
+                    "n_pred": 1640229,
+                    "n_ref": 1660650
+                },
+                "2": {
+                    "Dice": 0.9007953768719319,
+                    "FN": 15148,
+                    "FP": 10396,
+                    "IoU": 0.8194974419853586,
+                    "TN": 23451444,
+                    "TP": 115972,
+                    "n_pred": 126368,
+                    "n_ref": 131120
+                },
+                "3": {
+                    "Dice": 0.9866493113405965,
+                    "FN": 9702,
+                    "FP": 17663,
+                    "IoU": 0.9736504078818645,
+                    "TN": 22554424,
+                    "TP": 1011171,
+                    "n_pred": 1028834,
+                    "n_ref": 1020873
+                },
+                "4": {
+                    "Dice": 0.8181247252402185,
+                    "FN": 2678,
+                    "FP": 3114,
+                    "IoU": 0.6922259418672618,
+                    "TN": 23574141,
+                    "TP": 13027,
+                    "n_pred": 16141,
+                    "n_ref": 15705
+                },
+                "5": {
+                    "Dice": 0.9059139207899538,
+                    "FN": 1804,
+                    "FP": 2579,
+                    "IoU": 0.8280097315962958,
+                    "TN": 23567476,
+                    "TP": 21101,
+                    "n_pred": 23680,
+                    "n_ref": 22905
+                }
+            },
+            "prediction_file": "/content/nnUNet_results/Dataset001_KneeOA/nnUNetTrainer_100epochs__nnUNetPlans__3d_fullres/fold_4/validation/oaizib_065.nii.gz",
+            "reference_file": "/content/nnUNet_preprocessed/Dataset001_KneeOA/gt_segmentations/oaizib_065.nii.gz"
+        },
+        {
+            "metrics": {
+                "1": {
+                    "Dice": 0.9846980985566666,
+                    "FN": 19873,
+                    "FP": 26496,
+                    "IoU": 0.9698574356620814,
+                    "TN": 22054637,
+                    "TP": 1491954,
+                    "n_pred": 1518450,
+                    "n_ref": 1511827
+                },
+                "2": {
+                    "Dice": 0.8960404667275934,
+                    "FN": 12711,
+                    "FP": 11746,
+                    "IoU": 0.8116606086742237,
+                    "TN": 23463104,
+                    "TP": 105399,
+                    "n_pred": 117145,
+                    "n_ref": 118110
+                },
+                "3": {
+                    "Dice": 0.9879826240963844,
+                    "FN": 15978,
+                    "FP": 8707,
+                    "IoU": 0.9762506530228584,
+                    "TN": 22553563,
+                    "TP": 1014712,
+                    "n_pred": 1023419,
+                    "n_ref": 1030690
+                },
+                "4": {
+                    "Dice": 0.8346823019565356,
+                    "FN": 1422,
+                    "FP": 3766,
+                    "IoU": 0.7162701668033907,
+                    "TN": 23574675,
+                    "TP": 13097,
+                    "n_pred": 16863,
+                    "n_ref": 14519
+                },
+                "5": {
+                    "Dice": 0.8682430604404524,
+                    "FN": 1221,
+                    "FP": 3649,
+                    "IoU": 0.7671638936699178,
+                    "TN": 23572044,
+                    "TP": 16046,
+                    "n_pred": 19695,
+                    "n_ref": 17267
+                }
+            },
+            "prediction_file": "/content/nnUNet_results/Dataset001_KneeOA/nnUNetTrainer_100epochs__nnUNetPlans__3d_fullres/fold_4/validation/oaizib_073.nii.gz",
+            "reference_file": "/content/nnUNet_preprocessed/Dataset001_KneeOA/gt_segmentations/oaizib_073.nii.gz"
+        },
+        {
+            "metrics": {
+                "1": {
+                    "Dice": 0.9850722556209408,
+                    "FN": 37455,
+                    "FP": 18921,
+                    "IoU": 0.9705836312747719,
+                    "TN": 21676476,
+                    "TP": 1860108,
+                    "n_pred": 1879029,
+                    "n_ref": 1897563
+                },
+                "2": {
+                    "Dice": 0.9051124496991735,
+                    "FN": 12873,
+                    "FP": 13796,
+                    "IoU": 0.8266716060936932,
+                    "TN": 23439096,
+                    "TP": 127195,
+                    "n_pred": 140991,
+                    "n_ref": 140068
+                },
+                "3": {
+                    "Dice": 0.981110646622533,
+                    "FN": 13867,
+                    "FP": 32403,
+                    "IoU": 0.9629216787576559,
+                    "TN": 22345061,
+                    "TP": 1201629,
+                    "n_pred": 1234032,
+                    "n_ref": 1215496
+                },
+                "4": {
+                    "Dice": 0.8639181202248811,
+                    "FN": 2370,
+                    "FP": 3294,
+                    "IoU": 0.760436492830859,
+                    "TN": 23569317,
+                    "TP": 17979,
+                    "n_pred": 21273,
+                    "n_ref": 20349
+                },
+                "5": {
+                    "Dice": 0.889422088160691,
+                    "FN": 3248,
+                    "FP": 1591,
+                    "IoU": 0.8008641975308642,
+                    "TN": 23568660,
+                    "TP": 19461,
+                    "n_pred": 21052,
+                    "n_ref": 22709
+                }
+            },
+            "prediction_file": "/content/nnUNet_results/Dataset001_KneeOA/nnUNetTrainer_100epochs__nnUNetPlans__3d_fullres/fold_4/validation/oaizib_075.nii.gz",
+            "reference_file": "/content/nnUNet_preprocessed/Dataset001_KneeOA/gt_segmentations/oaizib_075.nii.gz"
+        },
+        {
+            "metrics": {
+                "1": {
+                    "Dice": 0.9813007966891598,
+                    "FN": 38291,
+                    "FP": 43689,
+                    "IoU": 0.9632880770887687,
+                    "TN": 21359898,
+                    "TP": 2151082,
+                    "n_pred": 2194771,
+                    "n_ref": 2189373
+                },
+                "2": {
+                    "Dice": 0.9046275412985872,
+                    "FN": 15022,
+                    "FP": 14959,
+                    "IoU": 0.8258629602309359,
+                    "TN": 23420791,
+                    "TP": 142188,
+                    "n_pred": 157147,
+                    "n_ref": 157210
+                },
+                "3": {
+                    "Dice": 0.9865758476408573,
+                    "FN": 16288,
+                    "FP": 18978,
+                    "IoU": 0.9735073368285279,
+                    "TN": 22261799,
+                    "TP": 1295895,
+                    "n_pred": 1314873,
+                    "n_ref": 1312183
+                },
+                "4": {
+                    "Dice": 0.8686934951516021,
+                    "FN": 2332,
+                    "FP": 4073,
+                    "IoU": 0.7678674978254566,
+                    "TN": 23565368,
+                    "TP": 21187,
+                    "n_pred": 25260,
+                    "n_ref": 23519
+                },
+                "5": {
+                    "Dice": 0.8746820078812164,
+                    "FN": 6308,
+                    "FP": 1229,
+                    "IoU": 0.7772754137115839,
+                    "TN": 23559120,
+                    "TP": 26303,
+                    "n_pred": 27532,
+                    "n_ref": 32611
+                }
+            },
+            "prediction_file": "/content/nnUNet_results/Dataset001_KneeOA/nnUNetTrainer_100epochs__nnUNetPlans__3d_fullres/fold_4/validation/oaizib_077.nii.gz",
+            "reference_file": "/content/nnUNet_preprocessed/Dataset001_KneeOA/gt_segmentations/oaizib_077.nii.gz"
+        },
+        {
+            "metrics": {
+                "1": {
+                    "Dice": 0.9812342060891183,
+                    "FN": 23236,
+                    "FP": 37108,
+                    "IoU": 0.9631597487409882,
+                    "TN": 21954969,
+                    "TP": 1577647,
+                    "n_pred": 1614755,
+                    "n_ref": 1600883
+                },
+                "2": {
+                    "Dice": 0.8545909836132431,
+                    "FN": 25311,
+                    "FP": 10343,
+                    "IoU": 0.7461011493598052,
+                    "TN": 23452534,
+                    "TP": 104772,
+                    "n_pred": 115115,
+                    "n_ref": 130083
+                },
+                "3": {
+                    "Dice": 0.9859423381698379,
+                    "FN": 12403,
+                    "FP": 16966,
+                    "IoU": 0.9722744329848245,
+                    "TN": 22533685,
+                    "TP": 1029906,
+                    "n_pred": 1046872,
+                    "n_ref": 1042309
+                },
+                "4": {
+                    "Dice": 0.8372563176895307,
+                    "FN": 1707,
+                    "FP": 2801,
+                    "IoU": 0.7200695479384004,
+                    "TN": 23576856,
+                    "TP": 11596,
+                    "n_pred": 14397,
+                    "n_ref": 13303
+                },
+                "5": {
+                    "Dice": 0.8595575910668335,
+                    "FN": 3152,
+                    "FP": 2797,
+                    "IoU": 0.7537053904115261,
+                    "TN": 23568806,
+                    "TP": 18205,
+                    "n_pred": 21002,
+                    "n_ref": 21357
+                }
+            },
+            "prediction_file": "/content/nnUNet_results/Dataset001_KneeOA/nnUNetTrainer_100epochs__nnUNetPlans__3d_fullres/fold_4/validation/oaizib_078.nii.gz",
+            "reference_file": "/content/nnUNet_preprocessed/Dataset001_KneeOA/gt_segmentations/oaizib_078.nii.gz"
+        },
+        {
+            "metrics": {
+                "1": {
+                    "Dice": 0.9772533038450503,
+                    "FN": 47250,
+                    "FP": 33529,
+                    "IoU": 0.9555184167488064,
+                    "TN": 21776950,
+                    "TP": 1735231,
+                    "n_pred": 1768760,
+                    "n_ref": 1782481
+                },
+                "2": {
+                    "Dice": 0.8764759526875403,
+                    "FN": 21774,
+                    "FP": 14391,
+                    "IoU": 0.7801132114476108,
+                    "TN": 23428489,
+                    "TP": 128306,
+                    "n_pred": 142697,
+                    "n_ref": 150080
+                },
+                "3": {
+                    "Dice": 0.9890832184381383,
+                    "FN": 9557,
+                    "FP": 15044,
+                    "IoU": 0.9784022151754266,
+                    "TN": 22453908,
+                    "TP": 1114451,
+                    "n_pred": 1129495,
+                    "n_ref": 1124008
+                },
+                "4": {
+                    "Dice": 0.8606734491761951,
+                    "FN": 3485,
+                    "FP": 2705,
+                    "IoU": 0.7554229720652732,
+                    "TN": 23567651,
+                    "TP": 19119,
+                    "n_pred": 21824,
+                    "n_ref": 22604
+                },
+                "5": {
+                    "Dice": 0.8273461150353179,
+                    "FN": 4080,
+                    "FP": 2764,
+                    "IoU": 0.7055330866534721,
+                    "TN": 23569718,
+                    "TP": 16398,
+                    "n_pred": 19162,
+                    "n_ref": 20478
+                }
+            },
+            "prediction_file": "/content/nnUNet_results/Dataset001_KneeOA/nnUNetTrainer_100epochs__nnUNetPlans__3d_fullres/fold_4/validation/oaizib_081.nii.gz",
+            "reference_file": "/content/nnUNet_preprocessed/Dataset001_KneeOA/gt_segmentations/oaizib_081.nii.gz"
+        },
+        {
+            "metrics": {
+                "1": {
+                    "Dice": 0.9830585991825106,
+                    "FN": 29272,
+                    "FP": 17920,
+                    "IoU": 0.9666816577555587,
+                    "TN": 22176563,
+                    "TP": 1369205,
+                    "n_pred": 1387125,
+                    "n_ref": 1398477
+                },
+                "2": {
+                    "Dice": 0.8877268053550471,
+                    "FN": 15293,
+                    "FP": 6327,
+                    "IoU": 0.7981193915568712,
+                    "TN": 23485867,
+                    "TP": 85473,
+                    "n_pred": 91800,
+                    "n_ref": 100766
+                },
+                "3": {
+                    "Dice": 0.9861961452714106,
+                    "FN": 9545,
+                    "FP": 14460,
+                    "IoU": 0.9727681944308944,
+                    "TN": 22711454,
+                    "TP": 857501,
+                    "n_pred": 871961,
+                    "n_ref": 867046
+                },
+                "4": {
+                    "Dice": 0.8616036851330969,
+                    "FN": 1635,
+                    "FP": 1760,
+                    "IoU": 0.7568574088662895,
+                    "TN": 23578997,
+                    "TP": 10568,
+                    "n_pred": 12328,
+                    "n_ref": 12203
+                },
+                "5": {
+                    "Dice": 0.8241452277536474,
+                    "FN": 1623,
+                    "FP": 3114,
+                    "IoU": 0.7008903201363895,
+                    "TN": 23577123,
+                    "TP": 11100,
+                    "n_pred": 14214,
+                    "n_ref": 12723
+                }
+            },
+            "prediction_file": "/content/nnUNet_results/Dataset001_KneeOA/nnUNetTrainer_100epochs__nnUNetPlans__3d_fullres/fold_4/validation/oaizib_082.nii.gz",
+            "reference_file": "/content/nnUNet_preprocessed/Dataset001_KneeOA/gt_segmentations/oaizib_082.nii.gz"
+        },
+        {
+            "metrics": {
+                "1": {
+                    "Dice": 0.9817658832145635,
+                    "FN": 26702,
+                    "FP": 58471,
+                    "IoU": 0.964184824521493,
+                    "TN": 21214834,
+                    "TP": 2292953,
+                    "n_pred": 2351424,
+                    "n_ref": 2319655
+                },
+                "2": {
+                    "Dice": 0.8719799515007989,
+                    "FN": 16587,
+                    "FP": 30768,
+                    "IoU": 0.7730181326661203,
+                    "TN": 23384331,
+                    "TP": 161274,
+                    "n_pred": 192042,
+                    "n_ref": 177861
+                },
+                "3": {
+                    "Dice": 0.9843799966334339,
+                    "FN": 15527,
+                    "FP": 24282,
+                    "IoU": 0.9692404574254365,
+                    "TN": 22298760,
+                    "TP": 1254391,
+                    "n_pred": 1278673,
+                    "n_ref": 1269918
+                },
+                "4": {
+                    "Dice": 0.8149108955560569,
+                    "FN": 4636,
+                    "FP": 5210,
+                    "IoU": 0.6876368135528695,
+                    "TN": 23561439,
+                    "TP": 21675,
+                    "n_pred": 26885,
+                    "n_ref": 26311
+                },
+                "5": {
+                    "Dice": 0.9256582723753735,
+                    "FN": 2831,
+                    "FP": 2220,
+                    "IoU": 0.861605063429871,
+                    "TN": 23556463,
+                    "TP": 31446,
+                    "n_pred": 33666,
+                    "n_ref": 34277
+                }
+            },
+            "prediction_file": "/content/nnUNet_results/Dataset001_KneeOA/nnUNetTrainer_100epochs__nnUNetPlans__3d_fullres/fold_4/validation/oaizib_083.nii.gz",
+            "reference_file": "/content/nnUNet_preprocessed/Dataset001_KneeOA/gt_segmentations/oaizib_083.nii.gz"
+        },
+        {
+            "metrics": {
+                "1": {
+                    "Dice": 0.9782580390575076,
+                    "FN": 60406,
+                    "FP": 26593,
+                    "IoU": 0.9574413858418093,
+                    "TN": 21548744,
+                    "TP": 1957217,
+                    "n_pred": 1983810,
+                    "n_ref": 2017623
+                },
+                "2": {
+                    "Dice": 0.9110982793927863,
+                    "FN": 13095,
+                    "FP": 15080,
+                    "IoU": 0.836713049626483,
+                    "TN": 23420411,
+                    "TP": 144374,
+                    "n_pred": 159454,
+                    "n_ref": 157469
+                },
+                "3": {
+                    "Dice": 0.9856794418760684,
+                    "FN": 19977,
+                    "FP": 13149,
+                    "IoU": 0.9717632497749652,
+                    "TN": 22419808,
+                    "TP": 1140026,
+                    "n_pred": 1153175,
+                    "n_ref": 1160003
+                },
+                "4": {
+                    "Dice": 0.9045066216249297,
+                    "FN": 1911,
+                    "FP": 1990,
+                    "IoU": 0.8256614229531641,
+                    "TN": 23570584,
+                    "TP": 18475,
+                    "n_pred": 20465,
+                    "n_ref": 20386
+                },
+                "5": {
+                    "Dice": 0.9127191269857581,
+                    "FN": 1342,
+                    "FP": 2905,
+                    "IoU": 0.8394511019544098,
+                    "TN": 23566507,
+                    "TP": 22206,
+                    "n_pred": 25111,
+                    "n_ref": 23548
+                }
+            },
+            "prediction_file": "/content/nnUNet_results/Dataset001_KneeOA/nnUNetTrainer_100epochs__nnUNetPlans__3d_fullres/fold_4/validation/oaizib_084.nii.gz",
+            "reference_file": "/content/nnUNet_preprocessed/Dataset001_KneeOA/gt_segmentations/oaizib_084.nii.gz"
+        },
+        {
+            "metrics": {
+                "1": {
+                    "Dice": 0.9629477193128523,
+                    "FN": 18096,
+                    "FP": 123423,
+                    "IoU": 0.9285430804653417,
+                    "TN": 21612480,
+                    "TP": 1838961,
+                    "n_pred": 1962384,
+                    "n_ref": 1857057
+                },
+                "2": {
+                    "Dice": 0.8475417187455275,
+                    "FN": 17189,
+                    "FP": 30748,
+                    "IoU": 0.7354207371593204,
+                    "TN": 23411778,
+                    "TP": 133245,
+                    "n_pred": 163993,
+                    "n_ref": 150434
+                },
+                "3": {
+                    "Dice": 0.9861870238439276,
+                    "FN": 9531,
+                    "FP": 23449,
+                    "IoU": 0.9727504451394081,
+                    "TN": 22382665,
+                    "TP": 1177315,
+                    "n_pred": 1200764,
+                    "n_ref": 1186846
+                },
+                "4": {
+                    "Dice": 0.8788581623550401,
+                    "FN": 4046,
+                    "FP": 1386,
+                    "IoU": 0.7838956078930618,
+                    "TN": 23567824,
+                    "TP": 19704,
+                    "n_pred": 21090,
+                    "n_ref": 23750
+                },
+                "5": {
+                    "Dice": 0.8754172989377845,
+                    "FN": 2997,
+                    "FP": 3571,
+                    "IoU": 0.778437457832951,
+                    "TN": 23563316,
+                    "TP": 23076,
+                    "n_pred": 26647,
+                    "n_ref": 26073
+                }
+            },
+            "prediction_file": "/content/nnUNet_results/Dataset001_KneeOA/nnUNetTrainer_100epochs__nnUNetPlans__3d_fullres/fold_4/validation/oaizib_092.nii.gz",
+            "reference_file": "/content/nnUNet_preprocessed/Dataset001_KneeOA/gt_segmentations/oaizib_092.nii.gz"
+        },
+        {
+            "metrics": {
+                "1": {
+                    "Dice": 0.9841674547209794,
+                    "FN": 48689,
+                    "FP": 31590,
+                    "IoU": 0.9688284346615972,
+                    "TN": 21017568,
+                    "TP": 2495113,
+                    "n_pred": 2526703,
+                    "n_ref": 2543802
+                },
+                "2": {
+                    "Dice": 0.9162301488317951,
+                    "FN": 22892,
+                    "FP": 9348,
+                    "IoU": 0.8454102573938395,
+                    "TN": 23384408,
+                    "TP": 176312,
+                    "n_pred": 185660,
+                    "n_ref": 199204
+                },
+                "3": {
+                    "Dice": 0.9870581689960313,
+                    "FN": 18844,
+                    "FP": 18817,
+                    "IoU": 0.9744470400809857,
+                    "TN": 22119119,
+                    "TP": 1436180,
+                    "n_pred": 1454997,
+                    "n_ref": 1455024
+                },
+                "4": {
+                    "Dice": 0.8952239777287682,
+                    "FN": 2358,
+                    "FP": 3438,
+                    "IoU": 0.8103216938835619,
+                    "TN": 23562403,
+                    "TP": 24761,
+                    "n_pred": 28199,
+                    "n_ref": 27119
+                },
+                "5": {
+                    "Dice": 0.9223668228353288,
+                    "FN": 1938,
+                    "FP": 2536,
+                    "IoU": 0.855919103439392,
+                    "TN": 23561908,
+                    "TP": 26578,
+                    "n_pred": 29114,
+                    "n_ref": 28516
+                }
+            },
+            "prediction_file": "/content/nnUNet_results/Dataset001_KneeOA/nnUNetTrainer_100epochs__nnUNetPlans__3d_fullres/fold_4/validation/oaizib_106.nii.gz",
+            "reference_file": "/content/nnUNet_preprocessed/Dataset001_KneeOA/gt_segmentations/oaizib_106.nii.gz"
+        },
+        {
+            "metrics": {
+                "1": {
+                    "Dice": 0.9812456392699076,
+                    "FN": 35155,
+                    "FP": 23792,
+                    "IoU": 0.9631817807058964,
+                    "TN": 21991932,
+                    "TP": 1542081,
+                    "n_pred": 1565873,
+                    "n_ref": 1577236
+                },
+                "2": {
+                    "Dice": 0.9129161861908766,
+                    "FN": 12320,
+                    "FP": 13885,
+                    "IoU": 0.8397845452155465,
+                    "TN": 23429399,
+                    "TP": 137356,
+                    "n_pred": 151241,
+                    "n_ref": 149676
+                },
+                "3": {
+                    "Dice": 0.9872070018088634,
+                    "FN": 10280,
+                    "FP": 16878,
+                    "IoU": 0.9747371906915133,
+                    "TN": 22517941,
+                    "TP": 1047861,
+                    "n_pred": 1064739,
+                    "n_ref": 1058141
+                },
+                "4": {
+                    "Dice": 0.8954470539761021,
+                    "FN": 1667,
+                    "FP": 2393,
+                    "IoU": 0.8106873076564395,
+                    "TN": 23571514,
+                    "TP": 17386,
+                    "n_pred": 19779,
+                    "n_ref": 19053
+                },
+                "5": {
+                    "Dice": 0.8533725475020316,
+                    "FN": 2044,
+                    "FP": 5534,
+                    "IoU": 0.7442456969287884,
+                    "TN": 23563330,
+                    "TP": 22052,
+                    "n_pred": 27586,
+                    "n_ref": 24096
+                }
+            },
+            "prediction_file": "/content/nnUNet_results/Dataset001_KneeOA/nnUNetTrainer_100epochs__nnUNetPlans__3d_fullres/fold_4/validation/oaizib_108.nii.gz",
+            "reference_file": "/content/nnUNet_preprocessed/Dataset001_KneeOA/gt_segmentations/oaizib_108.nii.gz"
+        },
+        {
+            "metrics": {
+                "1": {
+                    "Dice": 0.984735545526424,
+                    "FN": 40077,
+                    "FP": 25312,
+                    "IoU": 0.9699300917976277,
+                    "TN": 21418394,
+                    "TP": 2109177,
+                    "n_pred": 2134489,
+                    "n_ref": 2149254
+                },
+                "2": {
+                    "Dice": 0.9092988640099353,
+                    "FN": 30602,
+                    "FP": 9128,
+                    "IoU": 0.8336828797602154,
+                    "TN": 23354079,
+                    "TP": 199151,
+                    "n_pred": 208279,
+                    "n_ref": 229753
+                },
+                "3": {
+                    "Dice": 0.9871144004166605,
+                    "FN": 18832,
+                    "FP": 13801,
+                    "IoU": 0.9745566536070015,
+                    "TN": 22310385,
+                    "TP": 1249942,
+                    "n_pred": 1263743,
+                    "n_ref": 1268774
+                },
+                "4": {
+                    "Dice": 0.899934232815832,
+                    "FN": 2137,
+                    "FP": 2884,
+                    "IoU": 0.8180731185912533,
+                    "TN": 23565361,
+                    "TP": 22578,
+                    "n_pred": 25462,
+                    "n_ref": 24715
+                },
+                "5": {
+                    "Dice": 0.9320945617277945,
+                    "FN": 4817,
+                    "FP": 767,
+                    "IoU": 0.8728249977225107,
+                    "TN": 23549052,
+                    "TP": 38324,
+                    "n_pred": 39091,
+                    "n_ref": 43141
+                }
+            },
+            "prediction_file": "/content/nnUNet_results/Dataset001_KneeOA/nnUNetTrainer_100epochs__nnUNetPlans__3d_fullres/fold_4/validation/oaizib_109.nii.gz",
+            "reference_file": "/content/nnUNet_preprocessed/Dataset001_KneeOA/gt_segmentations/oaizib_109.nii.gz"
+        },
+        {
+            "metrics": {
+                "1": {
+                    "Dice": 0.9833737568097722,
+                    "FN": 28337,
+                    "FP": 38335,
+                    "IoU": 0.967291335824553,
+                    "TN": 21554601,
+                    "TP": 1971687,
+                    "n_pred": 2010022,
+                    "n_ref": 2000024
+                },
+                "2": {
+                    "Dice": 0.8814916983966639,
+                    "FN": 18397,
+                    "FP": 18205,
+                    "IoU": 0.7880958032524938,
+                    "TN": 23420231,
+                    "TP": 136127,
+                    "n_pred": 154332,
+                    "n_ref": 154524
+                },
+                "3": {
+                    "Dice": 0.9869026156738242,
+                    "FN": 10757,
+                    "FP": 16450,
+                    "IoU": 0.9741438789028422,
+                    "TN": 22540714,
+                    "TP": 1025039,
+                    "n_pred": 1041489,
+                    "n_ref": 1035796
+                },
+                "4": {
+                    "Dice": 0.8173358149428344,
+                    "FN": 3491,
+                    "FP": 4066,
+                    "IoU": 0.6910971223021583,
+                    "TN": 23568496,
+                    "TP": 16907,
+                    "n_pred": 20973,
+                    "n_ref": 20398
+                },
+                "5": {
+                    "Dice": 0.8940838055984888,
+                    "FN": 2096,
+                    "FP": 2838,
+                    "IoU": 0.8084552971776855,
+                    "TN": 23567201,
+                    "TP": 20825,
+                    "n_pred": 23663,
+                    "n_ref": 22921
+                }
+            },
+            "prediction_file": "/content/nnUNet_results/Dataset001_KneeOA/nnUNetTrainer_100epochs__nnUNetPlans__3d_fullres/fold_4/validation/oaizib_119.nii.gz",
+            "reference_file": "/content/nnUNet_preprocessed/Dataset001_KneeOA/gt_segmentations/oaizib_119.nii.gz"
+        },
+        {
+            "metrics": {
+                "1": {
+                    "Dice": 0.9791752892528086,
+                    "FN": 43085,
+                    "FP": 46275,
+                    "IoU": 0.9592002220793642,
+                    "TN": 21402752,
+                    "TP": 2100848,
+                    "n_pred": 2147123,
+                    "n_ref": 2143933
+                },
+                "2": {
+                    "Dice": 0.8702749730351326,
+                    "FN": 20049,
+                    "FP": 27218,
+                    "IoU": 0.7703422976945314,
+                    "TN": 23387145,
+                    "TP": 158548,
+                    "n_pred": 185766,
+                    "n_ref": 178597
+                },
+                "3": {
+                    "Dice": 0.9841511754096015,
+                    "FN": 25971,
+                    "FP": 20222,
+                    "IoU": 0.9687968835386724,
+                    "TN": 22112563,
+                    "TP": 1434204,
+                    "n_pred": 1454426,
+                    "n_ref": 1460175
+                },
+                "4": {
+                    "Dice": 0.790462132394686,
+                    "FN": 3345,
+                    "FP": 5882,
+                    "IoU": 0.6535240884683264,
+                    "TN": 23566329,
+                    "TP": 17404,
+                    "n_pred": 23286,
+                    "n_ref": 20749
+                },
+                "5": {
+                    "Dice": 0.8393077646104794,
+                    "FN": 2329,
+                    "FP": 6390,
+                    "IoU": 0.7231096573406587,
+                    "TN": 23561471,
+                    "TP": 22770,
+                    "n_pred": 29160,
+                    "n_ref": 25099
+                }
+            },
+            "prediction_file": "/content/nnUNet_results/Dataset001_KneeOA/nnUNetTrainer_100epochs__nnUNetPlans__3d_fullres/fold_4/validation/oaizib_120.nii.gz",
+            "reference_file": "/content/nnUNet_preprocessed/Dataset001_KneeOA/gt_segmentations/oaizib_120.nii.gz"
+        },
+        {
+            "metrics": {
+                "1": {
+                    "Dice": 0.9151859316311568,
+                    "FN": 45561,
+                    "FP": 392480,
+                    "IoU": 0.8436339077048071,
+                    "TN": 20791579,
+                    "TP": 2363340,
+                    "n_pred": 2755820,
+                    "n_ref": 2408901
+                },
+                "2": {
+                    "Dice": 0.9228377350095684,
+                    "FN": 11435,
+                    "FP": 19088,
+                    "IoU": 0.8567304713536044,
+                    "TN": 23379914,
+                    "TP": 182523,
+                    "n_pred": 201611,
+                    "n_ref": 193958
+                },
+                "3": {
+                    "Dice": 0.9858325795971135,
+                    "FN": 23017,
+                    "FP": 23864,
+                    "IoU": 0.9720609829937973,
+                    "TN": 21914984,
+                    "TP": 1631095,
+                    "n_pred": 1654959,
+                    "n_ref": 1654112
+                },
+                "4": {
+                    "Dice": 0.8169397554576506,
+                    "FN": 501,
+                    "FP": 6895,
+                    "IoU": 0.6905309845600235,
+                    "TN": 23569061,
+                    "TP": 16503,
+                    "n_pred": 23398,
+                    "n_ref": 17004
+                },
+                "5": {
+                    "Dice": 0.893863125200814,
+                    "FN": 746,
+                    "FP": 5200,
+                    "IoU": 0.8080945003872967,
+                    "TN": 23561976,
+                    "TP": 25038,
+                    "n_pred": 30238,
+                    "n_ref": 25784
+                }
+            },
+            "prediction_file": "/content/nnUNet_results/Dataset001_KneeOA/nnUNetTrainer_100epochs__nnUNetPlans__3d_fullres/fold_4/validation/oaizib_125.nii.gz",
+            "reference_file": "/content/nnUNet_preprocessed/Dataset001_KneeOA/gt_segmentations/oaizib_125.nii.gz"
+        },
+        {
+            "metrics": {
+                "1": {
+                    "Dice": 0.9196733688980308,
+                    "FN": 37357,
+                    "FP": 390965,
+                    "IoU": 0.8512919541379196,
+                    "TN": 20712672,
+                    "TP": 2451966,
+                    "n_pred": 2842931,
+                    "n_ref": 2489323
+                },
+                "2": {
+                    "Dice": 0.9250055580656498,
+                    "FN": 21749,
+                    "FP": 9622,
+                    "IoU": 0.860474735479739,
+                    "TN": 23368119,
+                    "TP": 193470,
+                    "n_pred": 203092,
+                    "n_ref": 215219
+                },
+                "3": {
+                    "Dice": 0.9883791687355387,
+                    "FN": 22836,
+                    "FP": 18051,
+                    "IoU": 0.9770253223237088,
+                    "TN": 21813305,
+                    "TP": 1738768,
+                    "n_pred": 1756819,
+                    "n_ref": 1761604
+                },
+                "4": {
+                    "Dice": 0.9075330239200285,
+                    "FN": 2612,
+                    "FP": 3086,
+                    "IoU": 0.8307189542483661,
+                    "TN": 23559300,
+                    "TP": 27962,
+                    "n_pred": 31048,
+                    "n_ref": 30574
+                },
+                "5": {
+                    "Dice": 0.9242191978032231,
+                    "FN": 4750,
+                    "FP": 935,
+                    "IoU": 0.8591147898493259,
+                    "TN": 23552608,
+                    "TP": 34667,
+                    "n_pred": 35602,
+                    "n_ref": 39417
+                }
+            },
+            "prediction_file": "/content/nnUNet_results/Dataset001_KneeOA/nnUNetTrainer_100epochs__nnUNetPlans__3d_fullres/fold_4/validation/oaizib_130.nii.gz",
+            "reference_file": "/content/nnUNet_preprocessed/Dataset001_KneeOA/gt_segmentations/oaizib_130.nii.gz"
+        },
+        {
+            "metrics": {
+                "1": {
+                    "Dice": 0.9806375247066377,
+                    "FN": 33724,
+                    "FP": 40345,
+                    "IoU": 0.9620106178858703,
+                    "TN": 21643231,
+                    "TP": 1875660,
+                    "n_pred": 1916005,
+                    "n_ref": 1909384
+                },
+                "2": {
+                    "Dice": 0.9206281339723277,
+                    "FN": 17054,
+                    "FP": 12277,
+                    "IoU": 0.8529295259106977,
+                    "TN": 23393525,
+                    "TP": 170104,
+                    "n_pred": 182381,
+                    "n_ref": 187158
+                },
+                "3": {
+                    "Dice": 0.9887275302996178,
+                    "FN": 22412,
+                    "FP": 12122,
+                    "IoU": 0.9777063649251284,
+                    "TN": 22043908,
+                    "TP": 1514518,
+                    "n_pred": 1526640,
+                    "n_ref": 1536930
+                },
+                "4": {
+                    "Dice": 0.9019094576423129,
+                    "FN": 4379,
+                    "FP": 1092,
+                    "IoU": 0.8213434346732847,
+                    "TN": 23562337,
+                    "TP": 25152,
+                    "n_pred": 26244,
+                    "n_ref": 29531
+                },
+                "5": {
+                    "Dice": 0.8953794113048793,
+                    "FN": 6949,
+                    "FP": 412,
+                    "IoU": 0.8105764282038086,
+                    "TN": 23554100,
+                    "TP": 31499,
+                    "n_pred": 31911,
+                    "n_ref": 38448
+                }
+            },
+            "prediction_file": "/content/nnUNet_results/Dataset001_KneeOA/nnUNetTrainer_100epochs__nnUNetPlans__3d_fullres/fold_4/validation/oaizib_134.nii.gz",
+            "reference_file": "/content/nnUNet_preprocessed/Dataset001_KneeOA/gt_segmentations/oaizib_134.nii.gz"
+        },
+        {
+            "metrics": {
+                "1": {
+                    "Dice": 0.9873506479952032,
+                    "FN": 31582,
+                    "FP": 27805,
+                    "IoU": 0.9750173108198724,
+                    "TN": 21215834,
+                    "TP": 2317739,
+                    "n_pred": 2345544,
+                    "n_ref": 2349321
+                },
+                "2": {
+                    "Dice": 0.9174738237807493,
+                    "FN": 12132,
+                    "FP": 15005,
+                    "IoU": 0.8475303821151459,
+                    "TN": 23414977,
+                    "TP": 150846,
+                    "n_pred": 165851,
+                    "n_ref": 162978
+                },
+                "3": {
+                    "Dice": 0.989415514491228,
+                    "FN": 21304,
+                    "FP": 12027,
+                    "IoU": 0.9790527449005051,
+                    "TN": 22001773,
+                    "TP": 1557856,
+                    "n_pred": 1569883,
+                    "n_ref": 1579160
+                },
+                "4": {
+                    "Dice": 0.8835411421888318,
+                    "FN": 2001,
+                    "FP": 3874,
+                    "IoU": 0.791378147082845,
+                    "TN": 23564799,
+                    "TP": 22286,
+                    "n_pred": 26160,
+                    "n_ref": 24287
+                },
+                "5": {
+                    "Dice": 0.9037024599110066,
+                    "FN": 1551,
+                    "FP": 3037,
+                    "IoU": 0.8243222545565937,
+                    "TN": 23566844,
+                    "TP": 21528,
+                    "n_pred": 24565,
+                    "n_ref": 23079
+                }
+            },
+            "prediction_file": "/content/nnUNet_results/Dataset001_KneeOA/nnUNetTrainer_100epochs__nnUNetPlans__3d_fullres/fold_4/validation/oaizib_139.nii.gz",
+            "reference_file": "/content/nnUNet_preprocessed/Dataset001_KneeOA/gt_segmentations/oaizib_139.nii.gz"
+        },
+        {
+            "metrics": {
+                "1": {
+                    "Dice": 0.9749367943637242,
+                    "FN": 48301,
+                    "FP": 37856,
+                    "IoU": 0.9510991995450296,
+                    "TN": 21831087,
+                    "TP": 1675716,
+                    "n_pred": 1713572,
+                    "n_ref": 1724017
+                },
+                "2": {
+                    "Dice": 0.8701632104710092,
+                    "FN": 24230,
+                    "FP": 14814,
+                    "IoU": 0.770167176830704,
+                    "TN": 23423080,
+                    "TP": 130836,
+                    "n_pred": 145650,
+                    "n_ref": 155066
+                },
+                "3": {
+                    "Dice": 0.9770429427485202,
+                    "FN": 11875,
+                    "FP": 39434,
+                    "IoU": 0.955116283545349,
+                    "TN": 22449806,
+                    "TP": 1091845,
+                    "n_pred": 1131279,
+                    "n_ref": 1103720
+                },
+                "4": {
+                    "Dice": 0.8755212577289939,
+                    "FN": 3627,
+                    "FP": 1567,
+                    "IoU": 0.7786018755328218,
+                    "TN": 23569500,
+                    "TP": 18266,
+                    "n_pred": 19833,
+                    "n_ref": 21893
+                },
+                "5": {
+                    "Dice": 0.8643823027438624,
+                    "FN": 3347,
+                    "FP": 2851,
+                    "IoU": 0.7611560693641618,
+                    "TN": 23567010,
+                    "TP": 19752,
+                    "n_pred": 22603,
+                    "n_ref": 23099
+                }
+            },
+            "prediction_file": "/content/nnUNet_results/Dataset001_KneeOA/nnUNetTrainer_100epochs__nnUNetPlans__3d_fullres/fold_4/validation/oaizib_143.nii.gz",
+            "reference_file": "/content/nnUNet_preprocessed/Dataset001_KneeOA/gt_segmentations/oaizib_143.nii.gz"
+        },
+        {
+            "metrics": {
+                "1": {
+                    "Dice": 0.9850233377311338,
+                    "FN": 33894,
+                    "FP": 23182,
+                    "IoU": 0.9704886568812576,
+                    "TN": 21658924,
+                    "TP": 1876960,
+                    "n_pred": 1900142,
+                    "n_ref": 1910854
+                },
+                "2": {
+                    "Dice": 0.9087715278573338,
+                    "FN": 20851,
+                    "FP": 12595,
+                    "IoU": 0.8327967525195968,
+                    "TN": 23392928,
+                    "TP": 166586,
+                    "n_pred": 179181,
+                    "n_ref": 187437
+                },
+                "3": {
+                    "Dice": 0.9852931552402753,
+                    "FN": 19328,
+                    "FP": 21572,
+                    "IoU": 0.9710126233292392,
+                    "TN": 22182001,
+                    "TP": 1370059,
+                    "n_pred": 1391631,
+                    "n_ref": 1389387
+                },
+                "4": {
+                    "Dice": 0.9054693372242119,
+                    "FN": 2133,
+                    "FP": 2143,
+                    "IoU": 0.8272672187436881,
+                    "TN": 23568205,
+                    "TP": 20479,
+                    "n_pred": 22622,
+                    "n_ref": 22612
+                },
+                "5": {
+                    "Dice": 0.887202832574608,
+                    "FN": 2423,
+                    "FP": 3375,
+                    "IoU": 0.7972727272727272,
+                    "TN": 23564360,
+                    "TP": 22802,
+                    "n_pred": 26177,
+                    "n_ref": 25225
+                }
+            },
+            "prediction_file": "/content/nnUNet_results/Dataset001_KneeOA/nnUNetTrainer_100epochs__nnUNetPlans__3d_fullres/fold_4/validation/oaizib_144.nii.gz",
+            "reference_file": "/content/nnUNet_preprocessed/Dataset001_KneeOA/gt_segmentations/oaizib_144.nii.gz"
+        },
+        {
+            "metrics": {
+                "1": {
+                    "Dice": 0.975833497063028,
+                    "FN": 35271,
+                    "FP": 39636,
+                    "IoU": 0.9528074724809483,
+                    "TN": 22005696,
+                    "TP": 1512357,
+                    "n_pred": 1551993,
+                    "n_ref": 1547628
+                },
+                "2": {
+                    "Dice": 0.8906070693177286,
+                    "FN": 12147,
+                    "FP": 14735,
+                    "IoU": 0.8027877631868535,
+                    "TN": 23456650,
+                    "TP": 109428,
+                    "n_pred": 124163,
+                    "n_ref": 121575
+                },
+                "3": {
+                    "Dice": 0.9830505149081081,
+                    "FN": 11333,
+                    "FP": 28405,
+                    "IoU": 0.9666660235530573,
+                    "TN": 22400843,
+                    "TP": 1152379,
+                    "n_pred": 1180784,
+                    "n_ref": 1163712
+                },
+                "4": {
+                    "Dice": 0.8573865199449794,
+                    "FN": 3028,
+                    "FP": 2156,
+                    "IoU": 0.7503731882313286,
+                    "TN": 23572193,
+                    "TP": 15583,
+                    "n_pred": 17739,
+                    "n_ref": 18611
+                },
+                "5": {
+                    "Dice": 0.8695994260986277,
+                    "FN": 4577,
+                    "FP": 1058,
+                    "IoU": 0.7692843105142483,
+                    "TN": 23568536,
+                    "TP": 18789,
+                    "n_pred": 19847,
+                    "n_ref": 23366
+                }
+            },
+            "prediction_file": "/content/nnUNet_results/Dataset001_KneeOA/nnUNetTrainer_100epochs__nnUNetPlans__3d_fullres/fold_4/validation/oaizib_147.nii.gz",
+            "reference_file": "/content/nnUNet_preprocessed/Dataset001_KneeOA/gt_segmentations/oaizib_147.nii.gz"
+        },
+        {
+            "metrics": {
+                "1": {
+                    "Dice": 0.9760919021909947,
+                    "FN": 48944,
+                    "FP": 11073,
+                    "IoU": 0.9533003052516829,
+                    "TN": 22307791,
+                    "TP": 1225152,
+                    "n_pred": 1236225,
+                    "n_ref": 1274096
+                },
+                "2": {
+                    "Dice": 0.8549070853826682,
+                    "FN": 15209,
+                    "FP": 12993,
+                    "IoU": 0.7465831588595254,
+                    "TN": 23481673,
+                    "TP": 83085,
+                    "n_pred": 96078,
+                    "n_ref": 98294
+                },
+                "3": {
+                    "Dice": 0.9811524258710833,
+                    "FN": 13980,
+                    "FP": 19012,
+                    "IoU": 0.9630021710656165,
+                    "TN": 22701232,
+                    "TP": 858736,
+                    "n_pred": 877748,
+                    "n_ref": 872716
+                },
+                "4": {
+                    "Dice": 0.8156031143628467,
+                    "FN": 1715,
+                    "FP": 2998,
+                    "IoU": 0.6886231501057083,
+                    "TN": 23577824,
+                    "TP": 10423,
+                    "n_pred": 13421,
+                    "n_ref": 12138
+                },
+                "5": {
+                    "Dice": 0.8560575025138728,
+                    "FN": 1890,
+                    "FP": 1975,
+                    "IoU": 0.7483396275556713,
+                    "TN": 23577602,
+                    "TP": 11493,
+                    "n_pred": 13468,
+                    "n_ref": 13383
+                }
+            },
+            "prediction_file": "/content/nnUNet_results/Dataset001_KneeOA/nnUNetTrainer_100epochs__nnUNetPlans__3d_fullres/fold_4/validation/oaizib_156.nii.gz",
+            "reference_file": "/content/nnUNet_preprocessed/Dataset001_KneeOA/gt_segmentations/oaizib_156.nii.gz"
+        },
+        {
+            "metrics": {
+                "1": {
+                    "Dice": 0.9839950861429284,
+                    "FN": 25267,
+                    "FP": 34846,
+                    "IoU": 0.9684944164368026,
+                    "TN": 21684949,
+                    "TP": 1847898,
+                    "n_pred": 1882744,
+                    "n_ref": 1873165
+                },
+                "2": {
+                    "Dice": 0.8546462659143754,
+                    "FN": 16342,
+                    "FP": 28355,
+                    "IoU": 0.746185427680706,
+                    "TN": 23416859,
+                    "TP": 131404,
+                    "n_pred": 159759,
+                    "n_ref": 147746
+                },
+                "3": {
+                    "Dice": 0.9852534177571078,
+                    "FN": 21218,
+                    "FP": 19064,
+                    "IoU": 0.9709354384612998,
+                    "TN": 22207011,
+                    "TP": 1345667,
+                    "n_pred": 1364731,
+                    "n_ref": 1366885
+                },
+                "4": {
+                    "Dice": 0.8531085353003162,
+                    "FN": 3458,
+                    "FP": 3512,
+                    "IoU": 0.7438441749356854,
+                    "TN": 23565750,
+                    "TP": 20240,
+                    "n_pred": 23752,
+                    "n_ref": 23698
+                },
+                "5": {
+                    "Dice": 0.8202975607480995,
+                    "FN": 1803,
+                    "FP": 5903,
+                    "IoU": 0.695342769036135,
+                    "TN": 23567666,
+                    "TP": 17588,
+                    "n_pred": 23491,
+                    "n_ref": 19391
+                }
+            },
+            "prediction_file": "/content/nnUNet_results/Dataset001_KneeOA/nnUNetTrainer_100epochs__nnUNetPlans__3d_fullres/fold_4/validation/oaizib_167.nii.gz",
+            "reference_file": "/content/nnUNet_preprocessed/Dataset001_KneeOA/gt_segmentations/oaizib_167.nii.gz"
+        },
+        {
+            "metrics": {
+                "1": {
+                    "Dice": 0.9766565441032986,
+                    "FN": 76399,
+                    "FP": 15114,
+                    "IoU": 0.9543780619064071,
+                    "TN": 21587061,
+                    "TP": 1914386,
+                    "n_pred": 1929500,
+                    "n_ref": 1990785
+                },
+                "2": {
+                    "Dice": 0.9166552141353878,
+                    "FN": 20111,
+                    "FP": 10818,
+                    "IoU": 0.8461343296204723,
+                    "TN": 23391947,
+                    "TP": 170084,
+                    "n_pred": 180902,
+                    "n_ref": 190195
+                },
+                "3": {
+                    "Dice": 0.9846709485386139,
+                    "FN": 26031,
+                    "FP": 14757,
+                    "IoU": 0.9698047614429575,
+                    "TN": 22242151,
+                    "TP": 1310021,
+                    "n_pred": 1324778,
+                    "n_ref": 1336052
+                },
+                "4": {
+                    "Dice": 0.856539434605654,
+                    "FN": 2700,
+                    "FP": 3821,
+                    "IoU": 0.7490764968446976,
+                    "TN": 23566972,
+                    "TP": 19467,
+                    "n_pred": 23288,
+                    "n_ref": 22167
+                },
+                "5": {
+                    "Dice": 0.8884482822517882,
+                    "FN": 4106,
+                    "FP": 1914,
+                    "IoU": 0.7992865001833761,
+                    "TN": 23562967,
+                    "TP": 23973,
+                    "n_pred": 25887,
+                    "n_ref": 28079
+                }
+            },
+            "prediction_file": "/content/nnUNet_results/Dataset001_KneeOA/nnUNetTrainer_100epochs__nnUNetPlans__3d_fullres/fold_4/validation/oaizib_173.nii.gz",
+            "reference_file": "/content/nnUNet_preprocessed/Dataset001_KneeOA/gt_segmentations/oaizib_173.nii.gz"
+        },
+        {
+            "metrics": {
+                "1": {
+                    "Dice": 0.9838875402785018,
+                    "FN": 35403,
+                    "FP": 25456,
+                    "IoU": 0.9682860699771079,
+                    "TN": 21673961,
+                    "TP": 1858140,
+                    "n_pred": 1883596,
+                    "n_ref": 1893543
+                },
+                "2": {
+                    "Dice": 0.8865256780436587,
+                    "FN": 14017,
+                    "FP": 17973,
+                    "IoU": 0.7961797237371936,
+                    "TN": 23436008,
+                    "TP": 124962,
+                    "n_pred": 142935,
+                    "n_ref": 138979
+                },
+                "3": {
+                    "Dice": 0.976595401388724,
+                    "FN": 37489,
+                    "FP": 28367,
+                    "IoU": 0.9542612987218639,
+                    "TN": 22153129,
+                    "TP": 1373975,
+                    "n_pred": 1402342,
+                    "n_ref": 1411464
+                },
+                "4": {
+                    "Dice": 0.8350973504850078,
+                    "FN": 2088,
+                    "FP": 5001,
+                    "IoU": 0.716881664603219,
+                    "TN": 23567921,
+                    "TP": 17950,
+                    "n_pred": 22951,
+                    "n_ref": 20038
+                },
+                "5": {
+                    "Dice": 0.8683200538660083,
+                    "FN": 3194,
+                    "FP": 2673,
+                    "IoU": 0.7672841220102337,
+                    "TN": 23567749,
+                    "TP": 19344,
+                    "n_pred": 22017,
+                    "n_ref": 22538
+                }
+            },
+            "prediction_file": "/content/nnUNet_results/Dataset001_KneeOA/nnUNetTrainer_100epochs__nnUNetPlans__3d_fullres/fold_4/validation/oaizib_179.nii.gz",
+            "reference_file": "/content/nnUNet_preprocessed/Dataset001_KneeOA/gt_segmentations/oaizib_179.nii.gz"
+        },
+        {
+            "metrics": {
+                "1": {
+                    "Dice": 0.9832962833191854,
+                    "FN": 49848,
+                    "FP": 26953,
+                    "IoU": 0.9671414269334109,
+                    "TN": 21255640,
+                    "TP": 2260519,
+                    "n_pred": 2287472,
+                    "n_ref": 2310367
+                },
+                "2": {
+                    "Dice": 0.883849869326656,
+                    "FN": 16067,
+                    "FP": 26376,
+                    "IoU": 0.791873642297074,
+                    "TN": 23389031,
+                    "TP": 161486,
+                    "n_pred": 187862,
+                    "n_ref": 177553
+                },
+                "3": {
+                    "Dice": 0.984104599873976,
+                    "FN": 31077,
+                    "FP": 19375,
+                    "IoU": 0.9687066205358306,
+                    "TN": 21980734,
+                    "TP": 1561774,
+                    "n_pred": 1581149,
+                    "n_ref": 1592851
+                },
+                "4": {
+                    "Dice": 0.8688369022568799,
+                    "FN": 3052,
+                    "FP": 3306,
+                    "IoU": 0.7680916253282755,
+                    "TN": 23565544,
+                    "TP": 21058,
+                    "n_pred": 24364,
+                    "n_ref": 24110
+                },
+                "5": {
+                    "Dice": 0.5661857692208428,
+                    "FN": 3435,
+                    "FP": 13374,
+                    "IoU": 0.39488084095327236,
+                    "TN": 23565182,
+                    "TP": 10969,
+                    "n_pred": 24343,
+                    "n_ref": 14404
+                }
+            },
+            "prediction_file": "/content/nnUNet_results/Dataset001_KneeOA/nnUNetTrainer_100epochs__nnUNetPlans__3d_fullres/fold_4/validation/oaizib_186.nii.gz",
+            "reference_file": "/content/nnUNet_preprocessed/Dataset001_KneeOA/gt_segmentations/oaizib_186.nii.gz"
+        },
+        {
+            "metrics": {
+                "1": {
+                    "Dice": 0.9847264579237681,
+                    "FN": 39284,
+                    "FP": 40086,
+                    "IoU": 0.9699124591683981,
+                    "TN": 20954991,
+                    "TP": 2558599,
+                    "n_pred": 2598685,
+                    "n_ref": 2597883
+                },
+                "2": {
+                    "Dice": 0.9106037968197651,
+                    "FN": 25799,
+                    "FP": 15725,
+                    "IoU": 0.8358793560703374,
+                    "TN": 23339951,
+                    "TP": 211485,
+                    "n_pred": 227210,
+                    "n_ref": 237284
+                },
+                "3": {
+                    "Dice": 0.9835550315375536,
+                    "FN": 13005,
+                    "FP": 40122,
+                    "IoU": 0.9676421863009026,
+                    "TN": 21951100,
+                    "TP": 1588733,
+                    "n_pred": 1628855,
+                    "n_ref": 1601738
+                },
+                "4": {
+                    "Dice": 0.8818624531408752,
+                    "FN": 4279,
+                    "FP": 2465,
+                    "IoU": 0.7886887043709855,
+                    "TN": 23561045,
+                    "TP": 25171,
+                    "n_pred": 27636,
+                    "n_ref": 29450
+                },
+                "5": {
+                    "Dice": 0.9119970132885327,
+                    "FN": 5533,
+                    "FP": 2010,
+                    "IoU": 0.8382302479197049,
+                    "TN": 23546332,
+                    "TP": 39085,
+                    "n_pred": 41095,
+                    "n_ref": 44618
+                }
+            },
+            "prediction_file": "/content/nnUNet_results/Dataset001_KneeOA/nnUNetTrainer_100epochs__nnUNetPlans__3d_fullres/fold_4/validation/oaizib_190.nii.gz",
+            "reference_file": "/content/nnUNet_preprocessed/Dataset001_KneeOA/gt_segmentations/oaizib_190.nii.gz"
+        },
+        {
+            "metrics": {
+                "1": {
+                    "Dice": 0.9820221622043597,
+                    "FN": 23507,
+                    "FP": 32454,
+                    "IoU": 0.9646793139729445,
+                    "TN": 22008591,
+                    "TP": 1528408,
+                    "n_pred": 1560862,
+                    "n_ref": 1551915
+                },
+                "2": {
+                    "Dice": 0.887882529461411,
+                    "FN": 15770,
+                    "FP": 12924,
+                    "IoU": 0.7983711729943574,
+                    "TN": 23450649,
+                    "TP": 113617,
+                    "n_pred": 126541,
+                    "n_ref": 129387
+                },
+                "3": {
+                    "Dice": 0.9860795169358458,
+                    "FN": 9670,
+                    "FP": 19728,
+                    "IoU": 0.9725412726211325,
+                    "TN": 22522335,
+                    "TP": 1041227,
+                    "n_pred": 1060955,
+                    "n_ref": 1050897
+                },
+                "4": {
+                    "Dice": 0.7882841795885274,
+                    "FN": 1112,
+                    "FP": 5155,
+                    "IoU": 0.6505520240883238,
+                    "TN": 23575026,
+                    "TP": 11667,
+                    "n_pred": 16822,
+                    "n_ref": 12779
+                },
+                "5": {
+                    "Dice": 0.8844347783105135,
+                    "FN": 1727,
+                    "FP": 2949,
+                    "IoU": 0.7928131507820462,
+                    "TN": 23570391,
+                    "TP": 17893,
+                    "n_pred": 20842,
+                    "n_ref": 19620
+                }
+            },
+            "prediction_file": "/content/nnUNet_results/Dataset001_KneeOA/nnUNetTrainer_100epochs__nnUNetPlans__3d_fullres/fold_4/validation/oaizib_202.nii.gz",
+            "reference_file": "/content/nnUNet_preprocessed/Dataset001_KneeOA/gt_segmentations/oaizib_202.nii.gz"
+        },
+        {
+            "metrics": {
+                "1": {
+                    "Dice": 0.9864755720408075,
+                    "FN": 31431,
+                    "FP": 30693,
+                    "IoU": 0.9733120828938975,
+                    "TN": 21265165,
+                    "TP": 2265671,
+                    "n_pred": 2296364,
+                    "n_ref": 2297102
+                },
+                "2": {
+                    "Dice": 0.8959491498748546,
+                    "FN": 25731,
+                    "FP": 15259,
+                    "IoU": 0.8115107649011799,
+                    "TN": 23375494,
+                    "TP": 176476,
+                    "n_pred": 191735,
+                    "n_ref": 202207
+                },
+                "3": {
+                    "Dice": 0.9882060927006022,
+                    "FN": 25514,
+                    "FP": 12926,
+                    "IoU": 0.9766871351679175,
+                    "TN": 21944085,
+                    "TP": 1610435,
+                    "n_pred": 1623361,
+                    "n_ref": 1635949
+                },
+                "4": {
+                    "Dice": 0.9099926136963175,
+                    "FN": 2791,
+                    "FP": 2327,
+                    "IoU": 0.8348499515972895,
+                    "TN": 23561970,
+                    "TP": 25872,
+                    "n_pred": 28199,
+                    "n_ref": 28663
+                },
+                "5": {
+                    "Dice": 0.9156367544331004,
+                    "FN": 2547,
+                    "FP": 2948,
+                    "IoU": 0.844400396432111,
+                    "TN": 23557645,
+                    "TP": 29820,
+                    "n_pred": 32768,
+                    "n_ref": 32367
+                }
+            },
+            "prediction_file": "/content/nnUNet_results/Dataset001_KneeOA/nnUNetTrainer_100epochs__nnUNetPlans__3d_fullres/fold_4/validation/oaizib_209.nii.gz",
+            "reference_file": "/content/nnUNet_preprocessed/Dataset001_KneeOA/gt_segmentations/oaizib_209.nii.gz"
+        },
+        {
+            "metrics": {
+                "1": {
+                    "Dice": 0.9836454642650421,
+                    "FN": 39811,
+                    "FP": 27831,
+                    "IoU": 0.9678172622644292,
+                    "TN": 21491150,
+                    "TP": 2034168,
+                    "n_pred": 2061999,
+                    "n_ref": 2073979
+                },
+                "2": {
+                    "Dice": 0.9139448060138238,
+                    "FN": 20509,
+                    "FP": 13605,
+                    "IoU": 0.8415270338695666,
+                    "TN": 23377693,
+                    "TP": 181153,
+                    "n_pred": 194758,
+                    "n_ref": 201662
+                },
+                "3": {
+                    "Dice": 0.9866895986045325,
+                    "FN": 23557,
+                    "FP": 20014,
+                    "IoU": 0.9737288764091689,
+                    "TN": 21934447,
+                    "TP": 1614942,
+                    "n_pred": 1634956,
+                    "n_ref": 1638499
+                },
+                "4": {
+                    "Dice": 0.9215337052221252,
+                    "FN": 2260,
+                    "FP": 2410,
+                    "IoU": 0.8544854018010158,
+                    "TN": 23560867,
+                    "TP": 27423,
+                    "n_pred": 29833,
+                    "n_ref": 29683
+                },
+                "5": {
+                    "Dice": 0.8786962756268651,
+                    "FN": 1437,
+                    "FP": 4823,
+                    "IoU": 0.7836380603463173,
+                    "TN": 23564027,
+                    "TP": 22673,
+                    "n_pred": 27496,
+                    "n_ref": 24110
+                }
+            },
+            "prediction_file": "/content/nnUNet_results/Dataset001_KneeOA/nnUNetTrainer_100epochs__nnUNetPlans__3d_fullres/fold_4/validation/oaizib_211.nii.gz",
+            "reference_file": "/content/nnUNet_preprocessed/Dataset001_KneeOA/gt_segmentations/oaizib_211.nii.gz"
+        },
+        {
+            "metrics": {
+                "1": {
+                    "Dice": 0.9784258646580395,
+                    "FN": 36451,
+                    "FP": 60482,
+                    "IoU": 0.9577629569982431,
+                    "TN": 21297984,
+                    "TP": 2198043,
+                    "n_pred": 2258525,
+                    "n_ref": 2234494
+                },
+                "2": {
+                    "Dice": 0.8668136699573825,
+                    "FN": 23541,
+                    "FP": 15961,
+                    "IoU": 0.764934809904372,
+                    "TN": 23424913,
+                    "TP": 128545,
+                    "n_pred": 144506,
+                    "n_ref": 152086
+                },
+                "3": {
+                    "Dice": 0.98635945764242,
+                    "FN": 23765,
+                    "FP": 13344,
+                    "IoU": 0.9730860363460717,
+                    "TN": 22214159,
+                    "TP": 1341692,
+                    "n_pred": 1355036,
+                    "n_ref": 1365457
+                },
+                "4": {
+                    "Dice": 0.8284805480792757,
+                    "FN": 3298,
+                    "FP": 2310,
+                    "IoU": 0.7071846282372598,
+                    "TN": 23573808,
+                    "TP": 13544,
+                    "n_pred": 15854,
+                    "n_ref": 16842
+                },
+                "5": {
+                    "Dice": 0.8647138796193301,
+                    "FN": 1743,
+                    "FP": 3730,
+                    "IoU": 0.7616704406897753,
+                    "TN": 23569996,
+                    "TP": 17491,
+                    "n_pred": 21221,
+                    "n_ref": 19234
+                }
+            },
+            "prediction_file": "/content/nnUNet_results/Dataset001_KneeOA/nnUNetTrainer_100epochs__nnUNetPlans__3d_fullres/fold_4/validation/oaizib_219.nii.gz",
+            "reference_file": "/content/nnUNet_preprocessed/Dataset001_KneeOA/gt_segmentations/oaizib_219.nii.gz"
+        },
+        {
+            "metrics": {
+                "1": {
+                    "Dice": 0.9865979655281214,
+                    "FN": 27805,
+                    "FP": 26182,
+                    "IoU": 0.9735504093814793,
+                    "TN": 21551832,
+                    "TP": 1987141,
+                    "n_pred": 2013323,
+                    "n_ref": 2014946
+                },
+                "2": {
+                    "Dice": 0.9178659876334295,
+                    "FN": 18811,
+                    "FP": 11767,
+                    "IoU": 0.8481999245417899,
+                    "TN": 23391524,
+                    "TP": 170858,
+                    "n_pred": 182625,
+                    "n_ref": 189669
+                },
+                "3": {
+                    "Dice": 0.9891030112766951,
+                    "FN": 18120,
+                    "FP": 11669,
+                    "IoU": 0.9784409512643478,
+                    "TN": 22211220,
+                    "TP": 1351951,
+                    "n_pred": 1363620,
+                    "n_ref": 1370071
+                },
+                "4": {
+                    "Dice": 0.891937012137346,
+                    "FN": 2674,
+                    "FP": 2116,
+                    "IoU": 0.8049515432852838,
+                    "TN": 23568402,
+                    "TP": 19768,
+                    "n_pred": 21884,
+                    "n_ref": 22442
+                },
+                "5": {
+                    "Dice": 0.9271362676882183,
+                    "FN": 1517,
+                    "FP": 2211,
+                    "IoU": 0.8641696422065146,
+                    "TN": 23565514,
+                    "TP": 23718,
+                    "n_pred": 25929,
+                    "n_ref": 25235
+                }
+            },
+            "prediction_file": "/content/nnUNet_results/Dataset001_KneeOA/nnUNetTrainer_100epochs__nnUNetPlans__3d_fullres/fold_4/validation/oaizib_227.nii.gz",
+            "reference_file": "/content/nnUNet_preprocessed/Dataset001_KneeOA/gt_segmentations/oaizib_227.nii.gz"
+        },
+        {
+            "metrics": {
+                "1": {
+                    "Dice": 0.9807851653727317,
+                    "FN": 37944,
+                    "FP": 25433,
+                    "IoU": 0.9622948293638305,
+                    "TN": 21912103,
+                    "TP": 1617480,
+                    "n_pred": 1642913,
+                    "n_ref": 1655424
+                },
+                "2": {
+                    "Dice": 0.8925769134499233,
+                    "FN": 19308,
+                    "FP": 10305,
+                    "IoU": 0.805994496855346,
+                    "TN": 23440320,
+                    "TP": 123027,
+                    "n_pred": 133332,
+                    "n_ref": 142335
+                },
+                "3": {
+                    "Dice": 0.9863162513815881,
+                    "FN": 11624,
+                    "FP": 10797,
+                    "IoU": 0.9730019374641016,
+                    "TN": 22762493,
+                    "TP": 808046,
+                    "n_pred": 818843,
+                    "n_ref": 819670
+                },
+                "4": {
+                    "Dice": 0.7884971333122658,
+                    "FN": 8848,
+                    "FP": 522,
+                    "IoU": 0.6508421523326874,
+                    "TN": 23566124,
+                    "TP": 17466,
+                    "n_pred": 17988,
+                    "n_ref": 26314
+                },
+                "5": {
+                    "Dice": 0.789131266743207,
+                    "FN": 9427,
+                    "FP": 491,
+                    "IoU": 0.6517067003792667,
+                    "TN": 23564484,
+                    "TP": 18558,
+                    "n_pred": 19049,
+                    "n_ref": 27985
+                }
+            },
+            "prediction_file": "/content/nnUNet_results/Dataset001_KneeOA/nnUNetTrainer_100epochs__nnUNetPlans__3d_fullres/fold_4/validation/oaizib_232.nii.gz",
+            "reference_file": "/content/nnUNet_preprocessed/Dataset001_KneeOA/gt_segmentations/oaizib_232.nii.gz"
+        },
+        {
+            "metrics": {
+                "1": {
+                    "Dice": 0.9831149537439648,
+                    "FN": 39459,
+                    "FP": 39487,
+                    "IoU": 0.9667906489170973,
+                    "TN": 21215738,
+                    "TP": 2298276,
+                    "n_pred": 2337763,
+                    "n_ref": 2337735
+                },
+                "2": {
+                    "Dice": 0.9093733861812445,
+                    "FN": 27032,
+                    "FP": 14559,
+                    "IoU": 0.8338081747309787,
+                    "TN": 23342701,
+                    "TP": 208668,
+                    "n_pred": 223227,
+                    "n_ref": 235700
+                },
+                "3": {
+                    "Dice": 0.988770684719808,
+                    "FN": 19511,
+                    "FP": 19102,
+                    "IoU": 0.9777907639533164,
+                    "TN": 21854359,
+                    "TP": 1699988,
+                    "n_pred": 1719090,
+                    "n_ref": 1719499
+                },
+                "4": {
+                    "Dice": 0.8581166772352569,
+                    "FN": 6572,
+                    "FP": 4168,
+                    "IoU": 0.7514924337081772,
+                    "TN": 23549742,
+                    "TP": 32478,
+                    "n_pred": 36646,
+                    "n_ref": 39050
+                },
+                "5": {
+                    "Dice": 0.9296489320485422,
+                    "FN": 4348,
+                    "FP": 1281,
+                    "IoU": 0.8685458069638728,
+                    "TN": 23550139,
+                    "TP": 37192,
+                    "n_pred": 38473,
+                    "n_ref": 41540
+                }
+            },
+            "prediction_file": "/content/nnUNet_results/Dataset001_KneeOA/nnUNetTrainer_100epochs__nnUNetPlans__3d_fullres/fold_4/validation/oaizib_236.nii.gz",
+            "reference_file": "/content/nnUNet_preprocessed/Dataset001_KneeOA/gt_segmentations/oaizib_236.nii.gz"
+        },
+        {
+            "metrics": {
+                "1": {
+                    "Dice": 0.9789132649002781,
+                    "FN": 33332,
+                    "FP": 37182,
+                    "IoU": 0.9586974654064768,
+                    "TN": 21885704,
+                    "TP": 1636742,
+                    "n_pred": 1673924,
+                    "n_ref": 1670074
+                },
+                "2": {
+                    "Dice": 0.8696771552961913,
+                    "FN": 30137,
+                    "FP": 9346,
+                    "IoU": 0.7694059793368881,
+                    "TN": 23421737,
+                    "TP": 131740,
+                    "n_pred": 141086,
+                    "n_ref": 161877
+                },
+                "3": {
+                    "Dice": 0.9744900371286844,
+                    "FN": 45556,
+                    "FP": 10021,
+                    "IoU": 0.9502492149371412,
+                    "TN": 22475852,
+                    "TP": 1061531,
+                    "n_pred": 1071552,
+                    "n_ref": 1107087
+                },
+                "4": {
+                    "Dice": 0.8307091948727677,
+                    "FN": 3490,
+                    "FP": 2757,
+                    "IoU": 0.710438490775934,
+                    "TN": 23571386,
+                    "TP": 15327,
+                    "n_pred": 18084,
+                    "n_ref": 18817
+                },
+                "5": {
+                    "Dice": 0.8748091603053435,
+                    "FN": 4362,
+                    "FP": 1214,
+                    "IoU": 0.7774762550881954,
+                    "TN": 23567902,
+                    "TP": 19482,
+                    "n_pred": 20696,
+                    "n_ref": 23844
+                }
+            },
+            "prediction_file": "/content/nnUNet_results/Dataset001_KneeOA/nnUNetTrainer_100epochs__nnUNetPlans__3d_fullres/fold_4/validation/oaizib_248.nii.gz",
+            "reference_file": "/content/nnUNet_preprocessed/Dataset001_KneeOA/gt_segmentations/oaizib_248.nii.gz"
+        },
+        {
+            "metrics": {
+                "1": {
+                    "Dice": 0.9835140689571538,
+                    "FN": 42070,
+                    "FP": 37049,
+                    "IoU": 0.9675628938101823,
+                    "TN": 21153809,
+                    "TP": 2360032,
+                    "n_pred": 2397081,
+                    "n_ref": 2402102
+                },
+                "2": {
+                    "Dice": 0.9005259690225463,
+                    "FN": 28487,
+                    "FP": 16052,
+                    "IoU": 0.8190516043584598,
+                    "TN": 23346818,
+                    "TP": 201603,
+                    "n_pred": 217655,
+                    "n_ref": 230090
+                },
+                "3": {
+                    "Dice": 0.9765519126773023,
+                    "FN": 58163,
+                    "FP": 21775,
+                    "IoU": 0.954178257572327,
+                    "TN": 21848417,
+                    "TP": 1664605,
+                    "n_pred": 1686380,
+                    "n_ref": 1722768
+                },
+                "4": {
+                    "Dice": 0.871578871901493,
+                    "FN": 4877,
+                    "FP": 2288,
+                    "IoU": 0.7723879411671273,
+                    "TN": 23561481,
+                    "TP": 24314,
+                    "n_pred": 26602,
+                    "n_ref": 29191
+                },
+                "5": {
+                    "Dice": 0.9178362945059294,
+                    "FN": 4017,
+                    "FP": 1796,
+                    "IoU": 0.8481492124030198,
+                    "TN": 23554679,
+                    "TP": 32468,
+                    "n_pred": 34264,
+                    "n_ref": 36485
+                }
+            },
+            "prediction_file": "/content/nnUNet_results/Dataset001_KneeOA/nnUNetTrainer_100epochs__nnUNetPlans__3d_fullres/fold_4/validation/oaizib_249.nii.gz",
+            "reference_file": "/content/nnUNet_preprocessed/Dataset001_KneeOA/gt_segmentations/oaizib_249.nii.gz"
+        },
+        {
+            "metrics": {
+                "1": {
+                    "Dice": 0.983324116306016,
+                    "FN": 35775,
+                    "FP": 30745,
+                    "IoU": 0.9671952803023242,
+                    "TN": 21565203,
+                    "TP": 1961237,
+                    "n_pred": 1991982,
+                    "n_ref": 1997012
+                },
+                "2": {
+                    "Dice": 0.9060987842112805,
+                    "FN": 20197,
+                    "FP": 13879,
+                    "IoU": 0.8283186554079925,
+                    "TN": 23394476,
+                    "TP": 164408,
+                    "n_pred": 178287,
+                    "n_ref": 184605
+                },
+                "3": {
+                    "Dice": 0.9884930744330428,
+                    "FN": 23607,
+                    "FP": 12776,
+                    "IoU": 0.9772479549549156,
+                    "TN": 21993851,
+                    "TP": 1562726,
+                    "n_pred": 1575502,
+                    "n_ref": 1586333
+                },
+                "4": {
+                    "Dice": 0.9104342371227434,
+                    "FN": 3682,
+                    "FP": 1458,
+                    "IoU": 0.8355936540429887,
+                    "TN": 23561696,
+                    "TP": 26124,
+                    "n_pred": 27582,
+                    "n_ref": 29806
+                },
+                "5": {
+                    "Dice": 0.9321953939186002,
+                    "FN": 3986,
+                    "FP": 757,
+                    "IoU": 0.8730018475379548,
+                    "TN": 23555613,
+                    "TP": 32604,
+                    "n_pred": 33361,
+                    "n_ref": 36590
+                }
+            },
+            "prediction_file": "/content/nnUNet_results/Dataset001_KneeOA/nnUNetTrainer_100epochs__nnUNetPlans__3d_fullres/fold_4/validation/oaizib_252.nii.gz",
+            "reference_file": "/content/nnUNet_preprocessed/Dataset001_KneeOA/gt_segmentations/oaizib_252.nii.gz"
+        },
+        {
+            "metrics": {
+                "1": {
+                    "Dice": 0.9482222168395602,
+                    "FN": 15897,
+                    "FP": 172215,
+                    "IoU": 0.9015423524066937,
+                    "TN": 21682372,
+                    "TP": 1722476,
+                    "n_pred": 1894691,
+                    "n_ref": 1738373
+                },
+                "2": {
+                    "Dice": 0.8806200672536418,
+                    "FN": 21105,
+                    "FP": 16846,
+                    "IoU": 0.7867034609894001,
+                    "TN": 23415034,
+                    "TP": 139975,
+                    "n_pred": 156821,
+                    "n_ref": 161080
+                },
+                "3": {
+                    "Dice": 0.9865661717011605,
+                    "FN": 11528,
+                    "FP": 18109,
+                    "IoU": 0.9734884944162764,
+                    "TN": 22475068,
+                    "TP": 1088255,
+                    "n_pred": 1106364,
+                    "n_ref": 1099783
+                },
+                "4": {
+                    "Dice": 0.8787761325167326,
+                    "FN": 2507,
+                    "FP": 2184,
+                    "IoU": 0.7837650963400018,
+                    "TN": 23571266,
+                    "TP": 17003,
+                    "n_pred": 19187,
+                    "n_ref": 19510
+                },
+                "5": {
+                    "Dice": 0.851956624233852,
+                    "FN": 3015,
+                    "FP": 3265,
+                    "IoU": 0.742094455852156,
+                    "TN": 23568610,
+                    "TP": 18070,
+                    "n_pred": 21335,
+                    "n_ref": 21085
+                }
+            },
+            "prediction_file": "/content/nnUNet_results/Dataset001_KneeOA/nnUNetTrainer_100epochs__nnUNetPlans__3d_fullres/fold_4/validation/oaizib_253.nii.gz",
+            "reference_file": "/content/nnUNet_preprocessed/Dataset001_KneeOA/gt_segmentations/oaizib_253.nii.gz"
+        },
+        {
+            "metrics": {
+                "1": {
+                    "Dice": 0.9857264458380967,
+                    "FN": 24620,
+                    "FP": 24361,
+                    "IoU": 0.9718546261936256,
+                    "TN": 21852674,
+                    "TP": 1691305,
+                    "n_pred": 1715666,
+                    "n_ref": 1715925
+                },
+                "2": {
+                    "Dice": 0.8745307346326836,
+                    "FN": 18275,
+                    "FP": 13108,
+                    "IoU": 0.7770365318214758,
+                    "TN": 23452206,
+                    "TP": 109371,
+                    "n_pred": 122479,
+                    "n_ref": 127646
+                },
+                "3": {
+                    "Dice": 0.9893007129043702,
+                    "FN": 10588,
+                    "FP": 10917,
+                    "IoU": 0.9788279516326254,
+                    "TN": 22577234,
+                    "TP": 994221,
+                    "n_pred": 1005138,
+                    "n_ref": 1004809
+                },
+                "4": {
+                    "Dice": 0.8651991242085331,
+                    "FN": 925,
+                    "FP": 3631,
+                    "IoU": 0.7624237367680033,
+                    "TN": 23573783,
+                    "TP": 14621,
+                    "n_pred": 18252,
+                    "n_ref": 15546
+                },
+                "5": {
+                    "Dice": 0.8132620577812482,
+                    "FN": 2287,
+                    "FP": 3931,
+                    "IoU": 0.6852920336066404,
+                    "TN": 23573202,
+                    "TP": 13540,
+                    "n_pred": 17471,
+                    "n_ref": 15827
+                }
+            },
+            "prediction_file": "/content/nnUNet_results/Dataset001_KneeOA/nnUNetTrainer_100epochs__nnUNetPlans__3d_fullres/fold_4/validation/oaizib_258.nii.gz",
+            "reference_file": "/content/nnUNet_preprocessed/Dataset001_KneeOA/gt_segmentations/oaizib_258.nii.gz"
+        },
+        {
+            "metrics": {
+                "1": {
+                    "Dice": 0.9815610104517164,
+                    "FN": 26265,
+                    "FP": 41320,
+                    "IoU": 0.9637897022059966,
+                    "TN": 21726502,
+                    "TP": 1798873,
+                    "n_pred": 1840193,
+                    "n_ref": 1825138
+                },
+                "2": {
+                    "Dice": 0.919114129914857,
+                    "FN": 19132,
+                    "FP": 11306,
+                    "IoU": 0.8503341151480285,
+                    "TN": 23389587,
+                    "TP": 172935,
+                    "n_pred": 184241,
+                    "n_ref": 192067
+                },
+                "3": {
+                    "Dice": 0.9848290098112045,
+                    "FN": 20320,
+                    "FP": 19279,
+                    "IoU": 0.970111458393873,
+                    "TN": 22268071,
+                    "TP": 1285290,
+                    "n_pred": 1304569,
+                    "n_ref": 1305610
+                },
+                "4": {
+                    "Dice": 0.8474618447246185,
+                    "FN": 5080,
+                    "FP": 2276,
+                    "IoU": 0.7353004677941706,
+                    "TN": 23565170,
+                    "TP": 20434,
+                    "n_pred": 22710,
+                    "n_ref": 25514
+                },
+                "5": {
+                    "Dice": 0.8553292141340028,
+                    "FN": 903,
+                    "FP": 5091,
+                    "IoU": 0.7472272593092396,
+                    "TN": 23569247,
+                    "TP": 17719,
+                    "n_pred": 22810,
+                    "n_ref": 18622
+                }
+            },
+            "prediction_file": "/content/nnUNet_results/Dataset001_KneeOA/nnUNetTrainer_100epochs__nnUNetPlans__3d_fullres/fold_4/validation/oaizib_262.nii.gz",
+            "reference_file": "/content/nnUNet_preprocessed/Dataset001_KneeOA/gt_segmentations/oaizib_262.nii.gz"
+        },
+        {
+            "metrics": {
+                "1": {
+                    "Dice": 0.9771675276673222,
+                    "FN": 38279,
+                    "FP": 42218,
+                    "IoU": 0.9553544242086762,
+                    "TN": 21789937,
+                    "TP": 1722526,
+                    "n_pred": 1764744,
+                    "n_ref": 1760805
+                },
+                "2": {
+                    "Dice": 0.8675006228248314,
+                    "FN": 20829,
+                    "FP": 14273,
+                    "IoU": 0.7660053862357679,
+                    "TN": 23442948,
+                    "TP": 114910,
+                    "n_pred": 129183,
+                    "n_ref": 135739
+                },
+                "3": {
+                    "Dice": 0.9858957774007406,
+                    "FN": 14083,
+                    "FP": 11953,
+                    "IoU": 0.9721838795560702,
+                    "TN": 22656956,
+                    "TP": 909968,
+                    "n_pred": 921921,
+                    "n_ref": 924051
+                },
+                "4": {
+                    "Dice": 0.8249360002250542,
+                    "FN": 3548,
+                    "FP": 2675,
+                    "IoU": 0.7020349533157769,
+                    "TN": 23572075,
+                    "TP": 14662,
+                    "n_pred": 17337,
+                    "n_ref": 18210
+                },
+                "5": {
+                    "Dice": 0.8739674788300691,
+                    "FN": 2080,
+                    "FP": 2772,
+                    "IoU": 0.7761476355247982,
+                    "TN": 23571285,
+                    "TP": 16823,
+                    "n_pred": 19595,
+                    "n_ref": 18903
+                }
+            },
+            "prediction_file": "/content/nnUNet_results/Dataset001_KneeOA/nnUNetTrainer_100epochs__nnUNetPlans__3d_fullres/fold_4/validation/oaizib_264.nii.gz",
+            "reference_file": "/content/nnUNet_preprocessed/Dataset001_KneeOA/gt_segmentations/oaizib_264.nii.gz"
+        },
+        {
+            "metrics": {
+                "1": {
+                    "Dice": 0.9832267973459003,
+                    "FN": 31711,
+                    "FP": 22937,
+                    "IoU": 0.9670069930829879,
+                    "TN": 21936609,
+                    "TP": 1601703,
+                    "n_pred": 1624640,
+                    "n_ref": 1633414
+                },
+                "2": {
+                    "Dice": 0.8689050626449439,
+                    "FN": 13774,
+                    "FP": 22178,
+                    "IoU": 0.768198171478678,
+                    "TN": 23437862,
+                    "TP": 119146,
+                    "n_pred": 141324,
+                    "n_ref": 132920
+                },
+                "3": {
+                    "Dice": 0.9878619268418342,
+                    "FN": 16822,
+                    "FP": 10272,
+                    "IoU": 0.9760149855438368,
+                    "TN": 22463338,
+                    "TP": 1102528,
+                    "n_pred": 1112800,
+                    "n_ref": 1119350
+                },
+                "4": {
+                    "Dice": 0.8279146821288051,
+                    "FN": 5287,
+                    "FP": 2192,
+                    "IoU": 0.7063604240282686,
+                    "TN": 23567490,
+                    "TP": 17991,
+                    "n_pred": 20183,
+                    "n_ref": 23278
+                },
+                "5": {
+                    "Dice": 0.8653443956700605,
+                    "FN": 1853,
+                    "FP": 4006,
+                    "IoU": 0.7626493822159206,
+                    "TN": 23568275,
+                    "TP": 18826,
+                    "n_pred": 22832,
+                    "n_ref": 20679
+                }
+            },
+            "prediction_file": "/content/nnUNet_results/Dataset001_KneeOA/nnUNetTrainer_100epochs__nnUNetPlans__3d_fullres/fold_4/validation/oaizib_268.nii.gz",
+            "reference_file": "/content/nnUNet_preprocessed/Dataset001_KneeOA/gt_segmentations/oaizib_268.nii.gz"
+        },
+        {
+            "metrics": {
+                "1": {
+                    "Dice": 0.9797664109184288,
+                    "FN": 39311,
+                    "FP": 21526,
+                    "IoU": 0.9603353794697431,
+                    "TN": 22059175,
+                    "TP": 1472948,
+                    "n_pred": 1494474,
+                    "n_ref": 1512259
+                },
+                "2": {
+                    "Dice": 0.8516548314152893,
+                    "FN": 13126,
+                    "FP": 28007,
+                    "IoU": 0.7416366217353617,
+                    "TN": 23433754,
+                    "TP": 118073,
+                    "n_pred": 146080,
+                    "n_ref": 131199
+                },
+                "3": {
+                    "Dice": 0.9843952335482858,
+                    "FN": 12239,
+                    "FP": 19972,
+                    "IoU": 0.9692700015455155,
+                    "TN": 22544766,
+                    "TP": 1015983,
+                    "n_pred": 1035955,
+                    "n_ref": 1028222
+                },
+                "4": {
+                    "Dice": 0.8251046978718555,
+                    "FN": 4795,
+                    "FP": 1344,
+                    "IoU": 0.7022793404461688,
+                    "TN": 23572340,
+                    "TP": 14481,
+                    "n_pred": 15825,
+                    "n_ref": 19276
+                },
+                "5": {
+                    "Dice": 0.8883446298722257,
+                    "FN": 1023,
+                    "FP": 4858,
+                    "IoU": 0.7991187320672223,
+                    "TN": 23563684,
+                    "TP": 23395,
+                    "n_pred": 28253,
+                    "n_ref": 24418
+                }
+            },
+            "prediction_file": "/content/nnUNet_results/Dataset001_KneeOA/nnUNetTrainer_100epochs__nnUNetPlans__3d_fullres/fold_4/validation/oaizib_279.nii.gz",
+            "reference_file": "/content/nnUNet_preprocessed/Dataset001_KneeOA/gt_segmentations/oaizib_279.nii.gz"
+        },
+        {
+            "metrics": {
+                "1": {
+                    "Dice": 0.9834403096211313,
+                    "FN": 57301,
+                    "FP": 18924,
+                    "IoU": 0.967420131772691,
+                    "TN": 21253325,
+                    "TP": 2263410,
+                    "n_pred": 2282334,
+                    "n_ref": 2320711
+                },
+                "2": {
+                    "Dice": 0.9149302858474445,
+                    "FN": 20588,
+                    "FP": 14458,
+                    "IoU": 0.8431995418488012,
+                    "TN": 23369453,
+                    "TP": 188461,
+                    "n_pred": 202919,
+                    "n_ref": 209049
+                },
+                "3": {
+                    "Dice": 0.9797885977055192,
+                    "FN": 45106,
+                    "FP": 20392,
+                    "IoU": 0.9603780113630864,
+                    "TN": 21939888,
+                    "TP": 1587574,
+                    "n_pred": 1607966,
+                    "n_ref": 1632680
+                },
+                "4": {
+                    "Dice": 0.8379528838342811,
+                    "FN": 3892,
+                    "FP": 6082,
+                    "IoU": 0.7211006095855936,
+                    "TN": 23557198,
+                    "TP": 25788,
+                    "n_pred": 31870,
+                    "n_ref": 29680
+                },
+                "5": {
+                    "Dice": 0.8885273584711382,
+                    "FN": 1047,
+                    "FP": 4366,
+                    "IoU": 0.7994145112280442,
+                    "TN": 23565974,
+                    "TP": 21573,
+                    "n_pred": 25939,
+                    "n_ref": 22620
+                }
+            },
+            "prediction_file": "/content/nnUNet_results/Dataset001_KneeOA/nnUNetTrainer_100epochs__nnUNetPlans__3d_fullres/fold_4/validation/oaizib_280.nii.gz",
+            "reference_file": "/content/nnUNet_preprocessed/Dataset001_KneeOA/gt_segmentations/oaizib_280.nii.gz"
+        },
+        {
+            "metrics": {
+                "1": {
+                    "Dice": 0.9805007453126057,
+                    "FN": 34231,
+                    "FP": 37245,
+                    "IoU": 0.9617473880481192,
+                    "TN": 21724434,
+                    "TP": 1797050,
+                    "n_pred": 1834295,
+                    "n_ref": 1831281
+                },
+                "2": {
+                    "Dice": 0.818176233913818,
+                    "FN": 27178,
+                    "FP": 20182,
+                    "IoU": 0.6922996959380441,
+                    "TN": 23439044,
+                    "TP": 106556,
+                    "n_pred": 126738,
+                    "n_ref": 133734
+                },
+                "3": {
+                    "Dice": 0.9706988203939607,
+                    "FN": 6280,
+                    "FP": 62720,
+                    "IoU": 0.9430658777302593,
+                    "TN": 22381033,
+                    "TP": 1142927,
+                    "n_pred": 1205647,
+                    "n_ref": 1149207
+                },
+                "4": {
+                    "Dice": 0.7766660373796489,
+                    "FN": 5107,
+                    "FP": 1991,
+                    "IoU": 0.6348765432098765,
+                    "TN": 23573520,
+                    "TP": 12342,
+                    "n_pred": 14333,
+                    "n_ref": 17449
+                },
+                "5": {
+                    "Dice": 0.8150708792239462,
+                    "FN": 1986,
+                    "FP": 4915,
+                    "IoU": 0.687864670496178,
+                    "TN": 23570851,
+                    "TP": 15208,
+                    "n_pred": 20123,
+                    "n_ref": 17194
+                }
+            },
+            "prediction_file": "/content/nnUNet_results/Dataset001_KneeOA/nnUNetTrainer_100epochs__nnUNetPlans__3d_fullres/fold_4/validation/oaizib_286.nii.gz",
+            "reference_file": "/content/nnUNet_preprocessed/Dataset001_KneeOA/gt_segmentations/oaizib_286.nii.gz"
+        },
+        {
+            "metrics": {
+                "1": {
+                    "Dice": 0.9788183538008318,
+                    "FN": 26785,
+                    "FP": 48769,
+                    "IoU": 0.958515419312507,
+                    "TN": 21771705,
+                    "TP": 1745701,
+                    "n_pred": 1794470,
+                    "n_ref": 1772486
+                },
+                "2": {
+                    "Dice": 0.8722701042541208,
+                    "FN": 24933,
+                    "FP": 11124,
+                    "IoU": 0.7734743111312149,
+                    "TN": 23433786,
+                    "TP": 123117,
+                    "n_pred": 134241,
+                    "n_ref": 148050
+                },
+                "3": {
+                    "Dice": 0.9812209008261248,
+                    "FN": 21600,
+                    "FP": 21840,
+                    "IoU": 0.9631341098593342,
+                    "TN": 22414635,
+                    "TP": 1134885,
+                    "n_pred": 1156725,
+                    "n_ref": 1156485
+                },
+                "4": {
+                    "Dice": 0.8129138762263868,
+                    "FN": 7968,
+                    "FP": 2005,
+                    "IoU": 0.6847977243994943,
+                    "TN": 23561320,
+                    "TP": 21667,
+                    "n_pred": 23672,
+                    "n_ref": 29635
+                },
+                "5": {
+                    "Dice": 0.8926228265812095,
+                    "FN": 3558,
+                    "FP": 1401,
+                    "IoU": 0.8060693754643933,
+                    "TN": 23567389,
+                    "TP": 20612,
+                    "n_pred": 22013,
+                    "n_ref": 24170
+                }
+            },
+            "prediction_file": "/content/nnUNet_results/Dataset001_KneeOA/nnUNetTrainer_100epochs__nnUNetPlans__3d_fullres/fold_4/validation/oaizib_288.nii.gz",
+            "reference_file": "/content/nnUNet_preprocessed/Dataset001_KneeOA/gt_segmentations/oaizib_288.nii.gz"
+        },
+        {
+            "metrics": {
+                "1": {
+                    "Dice": 0.9847851607490313,
+                    "FN": 27801,
+                    "FP": 46242,
+                    "IoU": 0.9700263655283166,
+                    "TN": 21122689,
+                    "TP": 2396228,
+                    "n_pred": 2442470,
+                    "n_ref": 2424029
+                },
+                "2": {
+                    "Dice": 0.9123275055183219,
+                    "FN": 20091,
+                    "FP": 14941,
+                    "IoU": 0.8387887991532639,
+                    "TN": 23375655,
+                    "TP": 182273,
+                    "n_pred": 197214,
+                    "n_ref": 202364
+                },
+                "3": {
+                    "Dice": 0.9860873105820759,
+                    "FN": 22589,
+                    "FP": 20806,
+                    "IoU": 0.9725564349610591,
+                    "TN": 22011715,
+                    "TP": 1537850,
+                    "n_pred": 1558656,
+                    "n_ref": 1560439
+                },
+                "4": {
+                    "Dice": 0.7913681597456612,
+                    "FN": 2509,
+                    "FP": 7072,
+                    "IoU": 0.6547636206399539,
+                    "TN": 23565208,
+                    "TP": 18171,
+                    "n_pred": 25243,
+                    "n_ref": 20680
+                },
+                "5": {
+                    "Dice": 0.9027602957079796,
+                    "FN": 2746,
+                    "FP": 2739,
+                    "IoU": 0.8227557681121954,
+                    "TN": 23562014,
+                    "TP": 25461,
+                    "n_pred": 28200,
+                    "n_ref": 28207
+                }
+            },
+            "prediction_file": "/content/nnUNet_results/Dataset001_KneeOA/nnUNetTrainer_100epochs__nnUNetPlans__3d_fullres/fold_4/validation/oaizib_295.nii.gz",
+            "reference_file": "/content/nnUNet_preprocessed/Dataset001_KneeOA/gt_segmentations/oaizib_295.nii.gz"
+        },
+        {
+            "metrics": {
+                "1": {
+                    "Dice": 0.9776819680888834,
+                    "FN": 76030,
+                    "FP": 51891,
+                    "IoU": 0.9563383776584761,
+                    "TN": 20663133,
+                    "TP": 2801906,
+                    "n_pred": 2853797,
+                    "n_ref": 2877936
+                },
+                "2": {
+                    "Dice": 0.8569896623209742,
+                    "FN": 27663,
+                    "FP": 34216,
+                    "IoU": 0.7497654518691059,
+                    "TN": 23345676,
+                    "TP": 185405,
+                    "n_pred": 219621,
+                    "n_ref": 213068
+                },
+                "3": {
+                    "Dice": 0.9832692334548299,
+                    "FN": 26818,
+                    "FP": 33084,
+                    "IoU": 0.9670890916343154,
+                    "TN": 21772834,
+                    "TP": 1760224,
+                    "n_pred": 1793308,
+                    "n_ref": 1787042
+                },
+                "4": {
+                    "Dice": 0.7595791349646994,
+                    "FN": 7403,
+                    "FP": 6627,
+                    "IoU": 0.6123559804382063,
+                    "TN": 23556767,
+                    "TP": 22163,
+                    "n_pred": 28790,
+                    "n_ref": 29566
+                },
+                "5": {
+                    "Dice": 0.7880764500214203,
+                    "FN": 2470,
+                    "FP": 12865,
+                    "IoU": 0.6502691114760081,
+                    "TN": 23549112,
+                    "TP": 28513,
+                    "n_pred": 41378,
+                    "n_ref": 30983
+                }
+            },
+            "prediction_file": "/content/nnUNet_results/Dataset001_KneeOA/nnUNetTrainer_100epochs__nnUNetPlans__3d_fullres/fold_4/validation/oaizib_298.nii.gz",
+            "reference_file": "/content/nnUNet_preprocessed/Dataset001_KneeOA/gt_segmentations/oaizib_298.nii.gz"
+        },
+        {
+            "metrics": {
+                "1": {
+                    "Dice": 0.9858068312046322,
+                    "FN": 40946,
+                    "FP": 30651,
+                    "IoU": 0.9720109162000646,
+                    "TN": 21034927,
+                    "TP": 2486436,
+                    "n_pred": 2517087,
+                    "n_ref": 2527382
+                },
+                "2": {
+                    "Dice": 0.9115370893822553,
+                    "FN": 26303,
+                    "FP": 12379,
+                    "IoU": 0.8374535140245825,
+                    "TN": 23354985,
+                    "TP": 199293,
+                    "n_pred": 211672,
+                    "n_ref": 225596
+                },
+                "3": {
+                    "Dice": 0.9892124629729948,
+                    "FN": 15487,
+                    "FP": 14463,
+                    "IoU": 0.978655183939576,
+                    "TN": 22189809,
+                    "TP": 1373201,
+                    "n_pred": 1387664,
+                    "n_ref": 1388688
+                },
+                "4": {
+                    "Dice": 0.8978204359128175,
+                    "FN": 3412,
+                    "FP": 2720,
+                    "IoU": 0.8145863570391872,
+                    "TN": 23559888,
+                    "TP": 26940,
+                    "n_pred": 29660,
+                    "n_ref": 30352
+                },
+                "5": {
+                    "Dice": 0.9170531059236553,
+                    "FN": 5038,
+                    "FP": 1294,
+                    "IoU": 0.8468126285230434,
+                    "TN": 23551625,
+                    "TP": 35003,
+                    "n_pred": 36297,
+                    "n_ref": 40041
+                }
+            },
+            "prediction_file": "/content/nnUNet_results/Dataset001_KneeOA/nnUNetTrainer_100epochs__nnUNetPlans__3d_fullres/fold_4/validation/oaizib_303.nii.gz",
+            "reference_file": "/content/nnUNet_preprocessed/Dataset001_KneeOA/gt_segmentations/oaizib_303.nii.gz"
+        },
+        {
+            "metrics": {
+                "1": {
+                    "Dice": 0.9832584631924676,
+                    "FN": 30576,
+                    "FP": 26075,
+                    "IoU": 0.9670682544157697,
+                    "TN": 21872705,
+                    "TP": 1663604,
+                    "n_pred": 1689679,
+                    "n_ref": 1694180
+                },
+                "2": {
+                    "Dice": 0.8731958987308706,
+                    "FN": 25692,
+                    "FP": 15083,
+                    "IoU": 0.7749314168695182,
+                    "TN": 23411793,
+                    "TP": 140392,
+                    "n_pred": 155475,
+                    "n_ref": 166084
+                },
+                "3": {
+                    "Dice": 0.9811601141922576,
+                    "FN": 11701,
+                    "FP": 33432,
+                    "IoU": 0.9630169841794012,
+                    "TN": 22372589,
+                    "TP": 1175238,
+                    "n_pred": 1208670,
+                    "n_ref": 1186939
+                },
+                "4": {
+                    "Dice": 0.7326453298497714,
+                    "FN": 2065,
+                    "FP": 8168,
+                    "IoU": 0.5780902119238064,
+                    "TN": 23568706,
+                    "TP": 14021,
+                    "n_pred": 22189,
+                    "n_ref": 16086
+                },
+                "5": {
+                    "Dice": 0.8103443162608618,
+                    "FN": 1955,
+                    "FP": 4440,
+                    "IoU": 0.6811586977115222,
+                    "TN": 23572903,
+                    "TP": 13662,
+                    "n_pred": 18102,
+                    "n_ref": 15617
+                }
+            },
+            "prediction_file": "/content/nnUNet_results/Dataset001_KneeOA/nnUNetTrainer_100epochs__nnUNetPlans__3d_fullres/fold_4/validation/oaizib_310.nii.gz",
+            "reference_file": "/content/nnUNet_preprocessed/Dataset001_KneeOA/gt_segmentations/oaizib_310.nii.gz"
+        },
+        {
+            "metrics": {
+                "1": {
+                    "Dice": 0.9787312268044813,
+                    "FN": 41395,
+                    "FP": 38321,
+                    "IoU": 0.9583483334578626,
+                    "TN": 21679087,
+                    "TP": 1834157,
+                    "n_pred": 1872478,
+                    "n_ref": 1875552
+                },
+                "2": {
+                    "Dice": 0.8499073460158787,
+                    "FN": 23292,
+                    "FP": 20851,
+                    "IoU": 0.738990326624252,
+                    "TN": 23423836,
+                    "TP": 124981,
+                    "n_pred": 145832,
+                    "n_ref": 148273
+                },
+                "3": {
+                    "Dice": 0.9866664060651048,
+                    "FN": 19291,
+                    "FP": 12090,
+                    "IoU": 0.9736837029489582,
+                    "TN": 22400505,
+                    "TP": 1161074,
+                    "n_pred": 1173164,
+                    "n_ref": 1180365
+                },
+                "4": {
+                    "Dice": 0.7741860397451191,
+                    "FN": 1231,
+                    "FP": 6530,
+                    "IoU": 0.6315689532399715,
+                    "TN": 23571895,
+                    "TP": 13304,
+                    "n_pred": 19834,
+                    "n_ref": 14535
+                },
+                "5": {
+                    "Dice": 0.8180534638554217,
+                    "FN": 4675,
+                    "FP": 3057,
+                    "IoU": 0.6921239149478379,
+                    "TN": 23567846,
+                    "TP": 17382,
+                    "n_pred": 20439,
+                    "n_ref": 22057
+                }
+            },
+            "prediction_file": "/content/nnUNet_results/Dataset001_KneeOA/nnUNetTrainer_100epochs__nnUNetPlans__3d_fullres/fold_4/validation/oaizib_316.nii.gz",
+            "reference_file": "/content/nnUNet_preprocessed/Dataset001_KneeOA/gt_segmentations/oaizib_316.nii.gz"
+        },
+        {
+            "metrics": {
+                "1": {
+                    "Dice": 0.9856753156549426,
+                    "FN": 40582,
+                    "FP": 27951,
+                    "IoU": 0.9717552287425466,
+                    "TN": 21166564,
+                    "TP": 2357863,
+                    "n_pred": 2385814,
+                    "n_ref": 2398445
+                },
+                "2": {
+                    "Dice": 0.8699133617302841,
+                    "FN": 23680,
+                    "FP": 26650,
+                    "IoU": 0.7697758138811507,
+                    "TN": 23374347,
+                    "TP": 168283,
+                    "n_pred": 194933,
+                    "n_ref": 191963
+                },
+                "3": {
+                    "Dice": 0.9805117886244586,
+                    "FN": 50508,
+                    "FP": 13375,
+                    "IoU": 0.9617686381105929,
+                    "TN": 21922002,
+                    "TP": 1607075,
+                    "n_pred": 1620450,
+                    "n_ref": 1657583
+                },
+                "4": {
+                    "Dice": 0.8797432893597514,
+                    "FN": 5551,
+                    "FP": 1532,
+                    "IoU": 0.7853050832045103,
+                    "TN": 23559969,
+                    "TP": 25908,
+                    "n_pred": 27440,
+                    "n_ref": 31459
+                },
+                "5": {
+                    "Dice": 0.4662814389258158,
+                    "FN": 2444,
+                    "FP": 13535,
+                    "IoU": 0.3040202099394573,
+                    "TN": 23570001,
+                    "TP": 6980,
+                    "n_pred": 20515,
+                    "n_ref": 9424
+                }
+            },
+            "prediction_file": "/content/nnUNet_results/Dataset001_KneeOA/nnUNetTrainer_100epochs__nnUNetPlans__3d_fullres/fold_4/validation/oaizib_332.nii.gz",
+            "reference_file": "/content/nnUNet_preprocessed/Dataset001_KneeOA/gt_segmentations/oaizib_332.nii.gz"
+        },
+        {
+            "metrics": {
+                "1": {
+                    "Dice": 0.9737472336910805,
+                    "FN": 35472,
+                    "FP": 93891,
+                    "IoU": 0.9488376213525997,
+                    "TN": 21064481,
+                    "TP": 2399116,
+                    "n_pred": 2493007,
+                    "n_ref": 2434588
+                },
+                "2": {
+                    "Dice": 0.8858534680105457,
+                    "FN": 11342,
+                    "FP": 30742,
+                    "IoU": 0.7950960152689596,
+                    "TN": 23387576,
+                    "TP": 163300,
+                    "n_pred": 194042,
+                    "n_ref": 174642
+                },
+                "3": {
+                    "Dice": 0.9861826946461598,
+                    "FN": 23823,
+                    "FP": 25776,
+                    "IoU": 0.9727420211099717,
+                    "TN": 21773346,
+                    "TP": 1770015,
+                    "n_pred": 1795791,
+                    "n_ref": 1793838
+                },
+                "4": {
+                    "Dice": 0.8592700863289636,
+                    "FN": 2484,
+                    "FP": 3678,
+                    "IoU": 0.7532633939296869,
+                    "TN": 23567986,
+                    "TP": 18812,
+                    "n_pred": 22490,
+                    "n_ref": 21296
+                },
+                "5": {
+                    "Dice": 0.8204170679455178,
+                    "FN": 5088,
+                    "FP": 4049,
+                    "IoU": 0.695514529458811,
+                    "TN": 23562952,
+                    "TP": 20871,
+                    "n_pred": 24920,
+                    "n_ref": 25959
+                }
+            },
+            "prediction_file": "/content/nnUNet_results/Dataset001_KneeOA/nnUNetTrainer_100epochs__nnUNetPlans__3d_fullres/fold_4/validation/oaizib_338.nii.gz",
+            "reference_file": "/content/nnUNet_preprocessed/Dataset001_KneeOA/gt_segmentations/oaizib_338.nii.gz"
+        },
+        {
+            "metrics": {
+                "1": {
+                    "Dice": 0.7581865768544067,
+                    "FN": 36311,
+                    "FP": 964843,
+                    "IoU": 0.6105478993244181,
+                    "TN": 21022287,
+                    "TP": 1569519,
+                    "n_pred": 2534362,
+                    "n_ref": 1605830
+                },
+                "2": {
+                    "Dice": 0.8416153360551942,
+                    "FN": 25536,
+                    "FP": 16865,
+                    "IoU": 0.7265421947051046,
+                    "TN": 23437905,
+                    "TP": 112654,
+                    "n_pred": 129519,
+                    "n_ref": 138190
+                },
+                "3": {
+                    "Dice": 0.9818379952087217,
+                    "FN": 28459,
+                    "FP": 16407,
+                    "IoU": 0.9643239392045445,
+                    "TN": 22335366,
+                    "TP": 1212728,
+                    "n_pred": 1229135,
+                    "n_ref": 1241187
+                },
+                "4": {
+                    "Dice": 0.6721808156092831,
+                    "FN": 6106,
+                    "FP": 4714,
+                    "IoU": 0.5062291790261488,
+                    "TN": 23571047,
+                    "TP": 11093,
+                    "n_pred": 15807,
+                    "n_ref": 17199
+                },
+                "5": {
+                    "Dice": 0.7236743105760738,
+                    "FN": 2449,
+                    "FP": 5998,
+                    "IoU": 0.5669981546032397,
+                    "TN": 23573452,
+                    "TP": 11061,
+                    "n_pred": 17059,
+                    "n_ref": 13510
+                }
+            },
+            "prediction_file": "/content/nnUNet_results/Dataset001_KneeOA/nnUNetTrainer_100epochs__nnUNetPlans__3d_fullres/fold_4/validation/oaizib_344.nii.gz",
+            "reference_file": "/content/nnUNet_preprocessed/Dataset001_KneeOA/gt_segmentations/oaizib_344.nii.gz"
+        },
+        {
+            "metrics": {
+                "1": {
+                    "Dice": 0.8072506046437082,
+                    "FN": 35527,
+                    "FP": 830364,
+                    "IoU": 0.6767981671477357,
+                    "TN": 20913857,
+                    "TP": 1813212,
+                    "n_pred": 2643576,
+                    "n_ref": 1848739
+                },
+                "2": {
+                    "Dice": 0.8862615322904132,
+                    "FN": 13856,
+                    "FP": 20170,
+                    "IoU": 0.7957537231456304,
+                    "TN": 23426367,
+                    "TP": 132567,
+                    "n_pred": 152737,
+                    "n_ref": 146423
+                },
+                "3": {
+                    "Dice": 0.9848155524253687,
+                    "FN": 27468,
+                    "FP": 13582,
+                    "IoU": 0.970085342400766,
+                    "TN": 22220723,
+                    "TP": 1331187,
+                    "n_pred": 1344769,
+                    "n_ref": 1358655
+                },
+                "4": {
+                    "Dice": 0.7574322423333021,
+                    "FN": 2863,
+                    "FP": 7483,
+                    "IoU": 0.6095701724593381,
+                    "TN": 23566461,
+                    "TP": 16153,
+                    "n_pred": 23636,
+                    "n_ref": 19016
+                },
+                "5": {
+                    "Dice": 0.9207347609222571,
+                    "FN": 2199,
+                    "FP": 1758,
+                    "IoU": 0.8531125876981328,
+                    "TN": 23566021,
+                    "TP": 22982,
+                    "n_pred": 24740,
+                    "n_ref": 25181
+                }
+            },
+            "prediction_file": "/content/nnUNet_results/Dataset001_KneeOA/nnUNetTrainer_100epochs__nnUNetPlans__3d_fullres/fold_4/validation/oaizib_345.nii.gz",
+            "reference_file": "/content/nnUNet_preprocessed/Dataset001_KneeOA/gt_segmentations/oaizib_345.nii.gz"
+        },
+        {
+            "metrics": {
+                "1": {
+                    "Dice": 0.9794108758355082,
+                    "FN": 47013,
+                    "FP": 18866,
+                    "IoU": 0.9596524719360554,
+                    "TN": 21960171,
+                    "TP": 1566910,
+                    "n_pred": 1585776,
+                    "n_ref": 1613923
+                },
+                "2": {
+                    "Dice": 0.8747299425097953,
+                    "FN": 21947,
+                    "FP": 15684,
+                    "IoU": 0.7773511226814188,
+                    "TN": 23423945,
+                    "TP": 131384,
+                    "n_pred": 147068,
+                    "n_ref": 153331
+                },
+                "3": {
+                    "Dice": 0.9878431383164465,
+                    "FN": 13091,
+                    "FP": 13855,
+                    "IoU": 0.975978305055735,
+                    "TN": 22471224,
+                    "TP": 1094790,
+                    "n_pred": 1108645,
+                    "n_ref": 1107881
+                },
+                "4": {
+                    "Dice": 0.8416170566246712,
+                    "FN": 3330,
+                    "FP": 3534,
+                    "IoU": 0.7265447591729414,
+                    "TN": 23567859,
+                    "TP": 18237,
+                    "n_pred": 21771,
+                    "n_ref": 21567
+                },
+                "5": {
+                    "Dice": 0.8663036673053938,
+                    "FN": 2156,
+                    "FP": 4891,
+                    "IoU": 0.7641408394136153,
+                    "TN": 23563082,
+                    "TP": 22831,
+                    "n_pred": 27722,
+                    "n_ref": 24987
+                }
+            },
+            "prediction_file": "/content/nnUNet_results/Dataset001_KneeOA/nnUNetTrainer_100epochs__nnUNetPlans__3d_fullres/fold_4/validation/oaizib_348.nii.gz",
+            "reference_file": "/content/nnUNet_preprocessed/Dataset001_KneeOA/gt_segmentations/oaizib_348.nii.gz"
+        },
+        {
+            "metrics": {
+                "1": {
+                    "Dice": 0.9789806455483645,
+                    "FN": 91244,
+                    "FP": 29274,
+                    "IoU": 0.9588267267216997,
+                    "TN": 20665867,
+                    "TP": 2806575,
+                    "n_pred": 2835849,
+                    "n_ref": 2897819
+                },
+                "2": {
+                    "Dice": 0.8619545159685352,
+                    "FN": 18573,
+                    "FP": 47184,
+                    "IoU": 0.757399003873824,
+                    "TN": 23321910,
+                    "TP": 205293,
+                    "n_pred": 252477,
+                    "n_ref": 223866
+                },
+                "3": {
+                    "Dice": 0.9797301236464503,
+                    "FN": 44884,
+                    "FP": 34388,
+                    "IoU": 0.9602656575023183,
+                    "TN": 21597910,
+                    "TP": 1915778,
+                    "n_pred": 1950166,
+                    "n_ref": 1960662
+                },
+                "4": {
+                    "Dice": 0.7365728900255755,
+                    "FN": 4850,
+                    "FP": 8025,
+                    "IoU": 0.582995951417004,
+                    "TN": 23562085,
+                    "TP": 18000,
+                    "n_pred": 26025,
+                    "n_ref": 22850
+                },
+                "5": {
+                    "Dice": 0.8878472461570276,
+                    "FN": 3056,
+                    "FP": 5079,
+                    "IoU": 0.7983141192512706,
+                    "TN": 23552625,
+                    "TP": 32200,
+                    "n_pred": 37279,
+                    "n_ref": 35256
+                }
+            },
+            "prediction_file": "/content/nnUNet_results/Dataset001_KneeOA/nnUNetTrainer_100epochs__nnUNetPlans__3d_fullres/fold_4/validation/oaizib_351.nii.gz",
+            "reference_file": "/content/nnUNet_preprocessed/Dataset001_KneeOA/gt_segmentations/oaizib_351.nii.gz"
+        },
+        {
+            "metrics": {
+                "1": {
+                    "Dice": 0.973946797090345,
+                    "FN": 28574,
+                    "FP": 71124,
+                    "IoU": 0.9492166627699734,
+                    "TN": 21629757,
+                    "TP": 1863505,
+                    "n_pred": 1934629,
+                    "n_ref": 1892079
+                },
+                "2": {
+                    "Dice": 0.871352133044107,
+                    "FN": 28729,
+                    "FP": 15751,
+                    "IoU": 0.7720318786356763,
+                    "TN": 23397845,
+                    "TP": 150635,
+                    "n_pred": 166386,
+                    "n_ref": 179364
+                },
+                "3": {
+                    "Dice": 0.9847509920610453,
+                    "FN": 15833,
+                    "FP": 21265,
+                    "IoU": 0.9699600633544839,
+                    "TN": 22358004,
+                    "TP": 1197858,
+                    "n_pred": 1219123,
+                    "n_ref": 1213691
+                },
+                "4": {
+                    "Dice": 0.8792117692255542,
+                    "FN": 3113,
+                    "FP": 2232,
+                    "IoU": 0.7844584240664569,
+                    "TN": 23568162,
+                    "TP": 19453,
+                    "n_pred": 21685,
+                    "n_ref": 22566
+                },
+                "5": {
+                    "Dice": 0.8269600591715977,
+                    "FN": 7478,
+                    "FP": 1880,
+                    "IoU": 0.7049717834736278,
+                    "TN": 23561241,
+                    "TP": 22361,
+                    "n_pred": 24241,
+                    "n_ref": 29839
+                }
+            },
+            "prediction_file": "/content/nnUNet_results/Dataset001_KneeOA/nnUNetTrainer_100epochs__nnUNetPlans__3d_fullres/fold_4/validation/oaizib_354.nii.gz",
+            "reference_file": "/content/nnUNet_preprocessed/Dataset001_KneeOA/gt_segmentations/oaizib_354.nii.gz"
+        },
+        {
+            "metrics": {
+                "1": {
+                    "Dice": 0.7360714253251947,
+                    "FN": 44360,
+                    "FP": 1320369,
+                    "IoU": 0.5823678964727714,
+                    "TN": 20325182,
+                    "TP": 1903049,
+                    "n_pred": 3223418,
+                    "n_ref": 1947409
+                },
+                "2": {
+                    "Dice": 0.8745545281701422,
+                    "FN": 14061,
+                    "FP": 27440,
+                    "IoU": 0.7770741009319689,
+                    "TN": 23406795,
+                    "TP": 144664,
+                    "n_pred": 172104,
+                    "n_ref": 158725
+                },
+                "3": {
+                    "Dice": 0.9593306379698536,
+                    "FN": 123011,
+                    "FP": 18279,
+                    "IoU": 0.921839993538758,
+                    "TN": 21785258,
+                    "TP": 1666412,
+                    "n_pred": 1684691,
+                    "n_ref": 1789423
+                },
+                "4": {
+                    "Dice": 0.7984238619962888,
+                    "FN": 2476,
+                    "FP": 6323,
+                    "IoU": 0.6644804575786464,
+                    "TN": 23566735,
+                    "TP": 17426,
+                    "n_pred": 23749,
+                    "n_ref": 19902
+                },
+                "5": {
+                    "Dice": 0.8777467908779841,
+                    "FN": 2773,
+                    "FP": 3408,
+                    "IoU": 0.7821290095170955,
+                    "TN": 23564590,
+                    "TP": 22189,
+                    "n_pred": 25597,
+                    "n_ref": 24962
+                }
+            },
+            "prediction_file": "/content/nnUNet_results/Dataset001_KneeOA/nnUNetTrainer_100epochs__nnUNetPlans__3d_fullres/fold_4/validation/oaizib_357.nii.gz",
+            "reference_file": "/content/nnUNet_preprocessed/Dataset001_KneeOA/gt_segmentations/oaizib_357.nii.gz"
+        },
+        {
+            "metrics": {
+                "1": {
+                    "Dice": 0.9827507537813688,
+                    "FN": 49048,
+                    "FP": 29849,
+                    "IoU": 0.9660864900460708,
+                    "TN": 21266542,
+                    "TP": 2247521,
+                    "n_pred": 2277370,
+                    "n_ref": 2296569
+                },
+                "2": {
+                    "Dice": 0.8644078666692692,
+                    "FN": 19693,
+                    "FP": 28934,
+                    "IoU": 0.7611957156958556,
+                    "TN": 23389333,
+                    "TP": 155000,
+                    "n_pred": 183934,
+                    "n_ref": 174693
+                },
+                "3": {
+                    "Dice": 0.9737689270408114,
+                    "FN": 59842,
+                    "FP": 22602,
+                    "IoU": 0.9488788175482741,
+                    "TN": 21980243,
+                    "TP": 1530273,
+                    "n_pred": 1552875,
+                    "n_ref": 1590115
+                },
+                "4": {
+                    "Dice": 0.7917410011543708,
+                    "FN": 641,
+                    "FP": 7297,
+                    "IoU": 0.6552742432796282,
+                    "TN": 23569933,
+                    "TP": 15089,
+                    "n_pred": 22386,
+                    "n_ref": 15730
+                },
+                "5": {
+                    "Dice": 0.5671514635185297,
+                    "FN": 869,
+                    "FP": 13357,
+                    "IoU": 0.3958209462329058,
+                    "TN": 23569414,
+                    "TP": 9320,
+                    "n_pred": 22677,
+                    "n_ref": 10189
+                }
+            },
+            "prediction_file": "/content/nnUNet_results/Dataset001_KneeOA/nnUNetTrainer_100epochs__nnUNetPlans__3d_fullres/fold_4/validation/oaizib_358.nii.gz",
+            "reference_file": "/content/nnUNet_preprocessed/Dataset001_KneeOA/gt_segmentations/oaizib_358.nii.gz"
+        },
+        {
+            "metrics": {
+                "1": {
+                    "Dice": 0.9860823236726874,
+                    "FN": 50495,
+                    "FP": 20648,
+                    "IoU": 0.9725467330292017,
+                    "TN": 21001538,
+                    "TP": 2520279,
+                    "n_pred": 2540927,
+                    "n_ref": 2570774
+                },
+                "2": {
+                    "Dice": 0.919085185414049,
+                    "FN": 16044,
+                    "FP": 19311,
+                    "IoU": 0.8502845673052493,
+                    "TN": 23356812,
+                    "TP": 200793,
+                    "n_pred": 220104,
+                    "n_ref": 216837
+                },
+                "3": {
+                    "Dice": 0.983412012635929,
+                    "FN": 33821,
+                    "FP": 24702,
+                    "IoU": 0.9673653681329006,
+                    "TN": 21799681,
+                    "TP": 1734756,
+                    "n_pred": 1759458,
+                    "n_ref": 1768577
+                },
+                "4": {
+                    "Dice": 0.8950344149459194,
+                    "FN": 2610,
+                    "FP": 4222,
+                    "IoU": 0.8100111234705228,
+                    "TN": 23557000,
+                    "TP": 29128,
+                    "n_pred": 33350,
+                    "n_ref": 31738
+                },
+                "5": {
+                    "Dice": 0.8065653707170534,
+                    "FN": 1325,
+                    "FP": 7561,
+                    "IoU": 0.6758354005545016,
+                    "TN": 23565548,
+                    "TP": 18526,
+                    "n_pred": 26087,
+                    "n_ref": 19851
+                }
+            },
+            "prediction_file": "/content/nnUNet_results/Dataset001_KneeOA/nnUNetTrainer_100epochs__nnUNetPlans__3d_fullres/fold_4/validation/oaizib_370.nii.gz",
+            "reference_file": "/content/nnUNet_preprocessed/Dataset001_KneeOA/gt_segmentations/oaizib_370.nii.gz"
+        },
+        {
+            "metrics": {
+                "1": {
+                    "Dice": 0.9761252668753444,
+                    "FN": 86441,
+                    "FP": 27755,
+                    "IoU": 0.9533639568352374,
+                    "TN": 21144296,
+                    "TP": 2334468,
+                    "n_pred": 2362223,
+                    "n_ref": 2420909
+                },
+                "2": {
+                    "Dice": 0.8515097117259232,
+                    "FN": 24963,
+                    "FP": 38482,
+                    "IoU": 0.7414165539053457,
+                    "TN": 23347604,
+                    "TP": 181911,
+                    "n_pred": 220393,
+                    "n_ref": 206874
+                },
+                "3": {
+                    "Dice": 0.9805475847169282,
+                    "FN": 53798,
+                    "FP": 11606,
+                    "IoU": 0.9618375218078806,
+                    "TN": 21879130,
+                    "TP": 1648426,
+                    "n_pred": 1660032,
+                    "n_ref": 1702224
+                },
+                "4": {
+                    "Dice": 0.8423813192674687,
+                    "FN": 3470,
+                    "FP": 7168,
+                    "IoU": 0.7276846281837962,
+                    "TN": 23553895,
+                    "TP": 28427,
+                    "n_pred": 35595,
+                    "n_ref": 31897
+                },
+                "5": {
+                    "Dice": 0.6818462080507355,
+                    "FN": 1033,
+                    "FP": 13415,
+                    "IoU": 0.5172736384898096,
+                    "TN": 23563030,
+                    "TP": 15482,
+                    "n_pred": 28897,
+                    "n_ref": 16515
+                }
+            },
+            "prediction_file": "/content/nnUNet_results/Dataset001_KneeOA/nnUNetTrainer_100epochs__nnUNetPlans__3d_fullres/fold_4/validation/oaizib_371.nii.gz",
+            "reference_file": "/content/nnUNet_preprocessed/Dataset001_KneeOA/gt_segmentations/oaizib_371.nii.gz"
+        },
+        {
+            "metrics": {
+                "1": {
+                    "Dice": 0.97724227533316,
+                    "FN": 35597,
+                    "FP": 33820,
+                    "IoU": 0.9554973301731782,
+                    "TN": 22033121,
+                    "TP": 1490422,
+                    "n_pred": 1524242,
+                    "n_ref": 1526019
+                },
+                "2": {
+                    "Dice": 0.8447781856318826,
+                    "FN": 17408,
+                    "FP": 19593,
+                    "IoU": 0.7312692464121783,
+                    "TN": 23455272,
+                    "TP": 100687,
+                    "n_pred": 120280,
+                    "n_ref": 118095
+                },
+                "3": {
+                    "Dice": 0.9818859465107296,
+                    "FN": 15611,
+                    "FP": 22512,
+                    "IoU": 0.9644164552543202,
+                    "TN": 22521594,
+                    "TP": 1033243,
+                    "n_pred": 1055755,
+                    "n_ref": 1048854
+                },
+                "4": {
+                    "Dice": 0.7392526847115417,
+                    "FN": 3774,
+                    "FP": 3923,
+                    "IoU": 0.5863607050730868,
+                    "TN": 23574352,
+                    "TP": 10911,
+                    "n_pred": 14834,
+                    "n_ref": 14685
+                },
+                "5": {
+                    "Dice": 0.8172371877818296,
+                    "FN": 1906,
+                    "FP": 2755,
+                    "IoU": 0.6909561066171596,
+                    "TN": 23577878,
+                    "TP": 10421,
+                    "n_pred": 13176,
+                    "n_ref": 12327
+                }
+            },
+            "prediction_file": "/content/nnUNet_results/Dataset001_KneeOA/nnUNetTrainer_100epochs__nnUNetPlans__3d_fullres/fold_4/validation/oaizib_375.nii.gz",
+            "reference_file": "/content/nnUNet_preprocessed/Dataset001_KneeOA/gt_segmentations/oaizib_375.nii.gz"
+        },
+        {
+            "metrics": {
+                "1": {
+                    "Dice": 0.9847691245605468,
+                    "FN": 48572,
+                    "FP": 26815,
+                    "IoU": 0.9699952477649769,
+                    "TN": 21080458,
+                    "TP": 2437115,
+                    "n_pred": 2463930,
+                    "n_ref": 2485687
+                },
+                "2": {
+                    "Dice": 0.8591140297600972,
+                    "FN": 21565,
+                    "FP": 37819,
+                    "IoU": 0.7530235730565121,
+                    "TN": 23352516,
+                    "TP": 181060,
+                    "n_pred": 218879,
+                    "n_ref": 202625
+                },
+                "3": {
+                    "Dice": 0.9855753818553855,
+                    "FN": 34216,
+                    "FP": 13255,
+                    "IoU": 0.9715609856334182,
+                    "TN": 21923739,
+                    "TP": 1621750,
+                    "n_pred": 1635005,
+                    "n_ref": 1655966
+                },
+                "4": {
+                    "Dice": 0.7824215100930101,
+                    "FN": 5113,
+                    "FP": 5601,
+                    "IoU": 0.6426045766895724,
+                    "TN": 23562982,
+                    "TP": 19264,
+                    "n_pred": 24865,
+                    "n_ref": 24377
+                },
+                "5": {
+                    "Dice": 0.870616562043168,
+                    "FN": 1524,
+                    "FP": 5999,
+                    "IoU": 0.7708777486751538,
+                    "TN": 23560126,
+                    "TP": 25311,
+                    "n_pred": 31310,
+                    "n_ref": 26835
+                }
+            },
+            "prediction_file": "/content/nnUNet_results/Dataset001_KneeOA/nnUNetTrainer_100epochs__nnUNetPlans__3d_fullres/fold_4/validation/oaizib_380.nii.gz",
+            "reference_file": "/content/nnUNet_preprocessed/Dataset001_KneeOA/gt_segmentations/oaizib_380.nii.gz"
+        },
+        {
+            "metrics": {
+                "1": {
+                    "Dice": 0.9756336470922017,
+                    "FN": 71971,
+                    "FP": 67332,
+                    "IoU": 0.9524264871866764,
+                    "TN": 20664797,
+                    "TP": 2788860,
+                    "n_pred": 2856192,
+                    "n_ref": 2860831
+                },
+                "2": {
+                    "Dice": 0.8939484471037534,
+                    "FN": 16613,
+                    "FP": 34149,
+                    "IoU": 0.8082339785726159,
+                    "TN": 23328252,
+                    "TP": 213946,
+                    "n_pred": 248095,
+                    "n_ref": 230559
+                },
+                "3": {
+                    "Dice": 0.9800320621729807,
+                    "FN": 42997,
+                    "FP": 27814,
+                    "IoU": 0.9608459499823889,
+                    "TN": 21784437,
+                    "TP": 1737712,
+                    "n_pred": 1765526,
+                    "n_ref": 1780709
+                },
+                "4": {
+                    "Dice": 0.655983253027268,
+                    "FN": 10675,
+                    "FP": 8388,
+                    "IoU": 0.48807669584832697,
+                    "TN": 23555722,
+                    "TP": 18175,
+                    "n_pred": 26563,
+                    "n_ref": 28850
+                },
+                "5": {
+                    "Dice": 0.7582266009852217,
+                    "FN": 3062,
+                    "FP": 16570,
+                    "IoU": 0.610599809584259,
+                    "TN": 23542544,
+                    "TP": 30784,
+                    "n_pred": 47354,
+                    "n_ref": 33846
+                }
+            },
+            "prediction_file": "/content/nnUNet_results/Dataset001_KneeOA/nnUNetTrainer_100epochs__nnUNetPlans__3d_fullres/fold_4/validation/oaizib_383.nii.gz",
+            "reference_file": "/content/nnUNet_preprocessed/Dataset001_KneeOA/gt_segmentations/oaizib_383.nii.gz"
+        },
+        {
+            "metrics": {
+                "1": {
+                    "Dice": 0.980566143807204,
+                    "FN": 25649,
+                    "FP": 33844,
+                    "IoU": 0.9618732376313766,
+                    "TN": 22032560,
+                    "TP": 1500907,
+                    "n_pred": 1534751,
+                    "n_ref": 1526556
+                },
+                "2": {
+                    "Dice": 0.8305372421887612,
+                    "FN": 26126,
+                    "FP": 12713,
+                    "IoU": 0.7101869953885415,
+                    "TN": 23458946,
+                    "TP": 95175,
+                    "n_pred": 107888,
+                    "n_ref": 121301
+                },
+                "3": {
+                    "Dice": 0.9828268471276184,
+                    "FN": 14784,
+                    "FP": 20581,
+                    "IoU": 0.9662335703141858,
+                    "TN": 22545618,
+                    "TP": 1011977,
+                    "n_pred": 1032558,
+                    "n_ref": 1026761
+                },
+                "4": {
+                    "Dice": 0.7781609546189764,
+                    "FN": 5631,
+                    "FP": 1638,
+                    "IoU": 0.6368768108702169,
+                    "TN": 23572942,
+                    "TP": 12749,
+                    "n_pred": 14387,
+                    "n_ref": 18380
+                },
+                "5": {
+                    "Dice": 0.8193743205701172,
+                    "FN": 2296,
+                    "FP": 5181,
+                    "IoU": 0.694017024062858,
+                    "TN": 23568524,
+                    "TP": 16959,
+                    "n_pred": 22140,
+                    "n_ref": 19255
+                }
+            },
+            "prediction_file": "/content/nnUNet_results/Dataset001_KneeOA/nnUNetTrainer_100epochs__nnUNetPlans__3d_fullres/fold_4/validation/oaizib_399.nii.gz",
+            "reference_file": "/content/nnUNet_preprocessed/Dataset001_KneeOA/gt_segmentations/oaizib_399.nii.gz"
+        },
+        {
+            "metrics": {
+                "1": {
+                    "Dice": 0.9798191265861897,
+                    "FN": 61675,
+                    "FP": 42433,
+                    "IoU": 0.96043667561365,
+                    "TN": 20961533,
+                    "TP": 2527319,
+                    "n_pred": 2569752,
+                    "n_ref": 2588994
+                },
+                "2": {
+                    "Dice": 0.8660187370416287,
+                    "FN": 12441,
+                    "FP": 38028,
+                    "IoU": 0.7636975718472876,
+                    "TN": 23379382,
+                    "TP": 163109,
+                    "n_pred": 201137,
+                    "n_ref": 175550
+                },
+                "3": {
+                    "Dice": 0.9833098801204232,
+                    "FN": 27651,
+                    "FP": 18712,
+                    "IoU": 0.9671677346848738,
+                    "TN": 22180843,
+                    "TP": 1365754,
+                    "n_pred": 1384466,
+                    "n_ref": 1393405
+                },
+                "4": {
+                    "Dice": 0.847384125721106,
+                    "FN": 1324,
+                    "FP": 6348,
+                    "IoU": 0.7351834593213904,
+                    "TN": 23563989,
+                    "TP": 21299,
+                    "n_pred": 27647,
+                    "n_ref": 22623
+                },
+                "5": {
+                    "Dice": 0.8658331672030302,
+                    "FN": 1943,
+                    "FP": 7479,
+                    "IoU": 0.7634089995982323,
+                    "TN": 23553136,
+                    "TP": 30402,
+                    "n_pred": 37881,
+                    "n_ref": 32345
+                }
+            },
+            "prediction_file": "/content/nnUNet_results/Dataset001_KneeOA/nnUNetTrainer_100epochs__nnUNetPlans__3d_fullres/fold_4/validation/oaizib_400.nii.gz",
+            "reference_file": "/content/nnUNet_preprocessed/Dataset001_KneeOA/gt_segmentations/oaizib_400.nii.gz"
+        }
+    ]
+}

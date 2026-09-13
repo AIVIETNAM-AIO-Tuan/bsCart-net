@@ -46,10 +46,25 @@ thứ ROI cascade đã không có:
 | `headroom.py` | **M0** — phân rã error mass, counterfactual, Gate 1 | `test_headroom.py` (4) |
 | `track.py` | exp_id, git sha, config, metric per-case (§7) | — |
 | `io_utils.py` | I/O Colab (nibabel), giải nén baseline | — (chạy trên Colab) |
+| `biomarkers.py` | Biomarker từ mask 8-class: legacy S3 (vol/thickness proxy/denuded/extrusion) + **bề mặt xương: độ dày theo pháp tuyến, footprint closing trắc địa, FCL/dAB, ThC.tAB** | `test_biomarkers.py` (14) |
+| `ordinal.py` | KL ordinal: Frank & Hall, điểm cắt QWK, MLP với loss slide (ngưỡng + mono + softmax + OA), giải mã + chẩn đoán p_k | `test_ordinal.py` (9) |
 | `make_splits.py` | Khôi phục + ghim splits, sửa rò rỉ V00/V01 | — |
 | `splits/*.json` | Splits đã ghim (immutable) | — |
 
 Chạy test local: `python -m pytest bsc/tests -v` (không cần data, không cần GPU).
+
+## Nhánh biomarker (KL grade từ mask)
+
+| Notebook | Vai trò | Input → Output |
+|---|---|---|
+| `biomarker_s1..s5` | cohort, inference d20, biomarker voxel, XGB, radiomics (bản gốc) | `knee_biomarkers/` |
+| `biomarker_s6_fcl` | biomarker bề mặt + **FCL**, superset bảng S3, QC + sanity theo KL | `masks/` → `s6_fcl/biomarker_table_v2.csv` |
+| `biomarker_s7_ordinal` | nominal (S4) vs 4 cách ordinal, CV theo subject × 3 seed, chẩn đoán head ngưỡng | `s6_fcl/…v2.csv` → `s7_ordinal/` |
+
+Đã đo bằng phantom (`test_biomarkers.py`): `thickness_*` cũ = thể tích / tiếp xúc **mù với mất sụn toàn bề dày**
+(giảm 2.8% khi mất 8.5% diện tích), `thc_tab` giảm đúng bằng phần mất; `denuded_ratio` cũ có mẫu số là *toàn bộ*
+xương nên không dùng làm FCL. Footprint bằng closing chỉ bắt ổ *được bao quanh* ⇒ FCL là cận dưới, bán kính closing
+phải báo cáo.
 
 ## Drive-first (bắt buộc)
 
