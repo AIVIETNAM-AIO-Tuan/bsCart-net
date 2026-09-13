@@ -31,6 +31,14 @@ GIAI MA LA QUYET DINH RIENG VOI LOSS - PHAI GHI RO KHI BAO CAO
 --------------------------------------------------------------
   decode_count  : y = #{k : p_k > 0.5}                         (Niu/CORAL, mac dinh)
   decode_cumdiff: y = argmax_k (p_{k-1} - p_k), p_{-1}=1, p_{K-1}=0 (can p don dieu)
+
+TANG QUYET DINH - fit tren diem INNER-OOF cua tap train, KHONG train lai scorer
+  fit_cutpoints(objective=, min_recall=, qwk_slack=)   diem cat cho diem hoi quy (C)
+  quantile_cutpoints                                    diem cat theo phan vi, 0 tham so
+  fit_threshold_cuts                                    thr[K-1] thay 0.5 cho p_k (B/D/E)
+  Trade-off "QWK cao <-> recall lop giua thap" la tinh chat cua MUC TIEU dat diem cat, khong
+  phai cua scorer: xem docstring quantile_cutpoints. Moi quy tac deu dung chung
+  _coordinate_descent; objective="qwk" khong rang buoc thi byte-identical voi ban cu.
 Voi ca KL3 that, p_1, p_2 "cao qua" KHONG gay sai (t_1 = t_2 = 1); sai chi den tu
 p_3 > 0.5 (thanh KL4) hoac p_2 < 0.5 (thanh KL2). Xem test_decode_rules_document_the_slide_question.
 
@@ -111,9 +119,17 @@ def monotone_cummin(p) -> np.ndarray:
     return np.minimum.accumulate(np.asarray(p, np.float64), axis=1)
 
 
-def decode_count(p, thr: float = 0.5) -> np.ndarray:
-    """y = so nguong vuot thr. Do lon p_k KHONG quan trong, chi phia nao cua thr."""
-    return (np.asarray(p) > thr).sum(axis=1).astype(np.int64)
+def decode_count(p, thr=0.5) -> np.ndarray:
+    """y = so nguong vuot thr. Do lon p_k KHONG quan trong, chi phia nao cua thr.
+
+    `thr` co the la VECTOR [K-1]: muc quyet dinh rieng tung nguong (xem fit_threshold_cuts).
+    Chan hinh dang tuong minh: thr [N] voi N == K-1 se broadcast SAI truc ma numpy khong keu.
+    """
+    p = np.asarray(p)
+    thr = np.asarray(thr, np.float64)
+    assert thr.ndim == 0 or thr.shape == (p.shape[1],), \
+        f"thr phai la vo huong hoac vector [K-1]={p.shape[1]}, nhan shape {thr.shape}"
+    return (p > thr).sum(axis=1).astype(np.int64)
 
 
 def decode_cumdiff(p) -> np.ndarray:
@@ -265,6 +281,73 @@ def off_by_rate(y_true, y_pred, n: int = 2) -> float:
     return float((d >= n).mean())
 
 
+def confusion(y_true, y_pred, n_classes: int) -> np.ndarray:
+    """Ma tran nham lan [K,K]: hang = lop THAT, cot = lop DOAN. Thuan numpy (bincount)."""
+    y = np.asarray(y_true, np.int64).reshape(-1)
+    yp = np.asarray(y_pred, np.int64).reshape(-1)
+    return np.bincount(y * n_classes + yp, minlength=n_classes * n_classes).reshape(n_classes, n_classes)
+
+
+def per_class_prf(y_true, y_pred, n_classes: int) -> dict:
+    """precision / recall / f1 / support tung lop, moi mang [K].
+
+    Cung ket qua voi sklearn precision_recall_fscore_support(labels=range(K), zero_division=0)
+    (test_per_class_prf_matches_sklearn) nhung thuan numpy: nhanh ~200 lan, dung duoc TRONG
+    vong tim diem cat. Truoc day S7/S8 moi notebook goi sklearn inline mot ban - gop ve MOT.
+    """
+    cm = confusion(y_true, y_pred, n_classes).astype(np.float64)
+    tp = np.diag(cm)
+    support = cm.sum(axis=1)
+    predicted = cm.sum(axis=0)
+    recall = np.divide(tp, support, out=np.zeros(n_classes), where=support > 0)
+    precision = np.divide(tp, predicted, out=np.zeros(n_classes), where=predicted > 0)
+    denom = precision + recall
+    f1 = np.divide(2.0 * precision * recall, denom, out=np.zeros(n_classes), where=denom > 0)
+    return dict(precision=precision, recall=recall, f1=f1, support=support.astype(np.int64))
+
+
+def per_class_recall(y_true, y_pred, n_classes: int) -> np.ndarray:
+    return per_class_prf(y_true, y_pred, n_classes)["recall"]
+
+
+def macro_recall(y_true, y_pred, n_classes: int) -> float:
+    return float(per_class_recall(y_true, y_pred, n_classes).mean())
+
+
+def macro_f1(y_true, y_pred, n_classes: int) -> float:
+    return float(per_class_prf(y_true, y_pred, n_classes)["f1"].mean())
+
+
+#: Muc tieu cho tang quyet dinh (fit_cutpoints / fit_threshold_cuts / bootstrap_delta).
+#: Cung chu ky (y_true, y_pred, n_classes) -> float, cao hon = tot hon.
+OBJECTIVES = {"qwk": qwk, "macro_recall": macro_recall, "macro_f1": macro_f1}
+
+
+def bootstrap_delta(y_true, yp_a, yp_b, metric, n_classes: int, n_boot: int = 2000,
+                    seed: int = 0, alpha: float = 0.05) -> dict:
+    """CI bootstrap cho hieu metric(b) - metric(a) tren CUNG tap test, resample CHI SO ca.
+
+    Khac metrics.paired_bootstrap: ham do resample hieu TUNG CA, chi hop metric phan ra theo
+    ca (Dice/ASSD). QWK hay macro-recall la metric cap TAP, phai tinh LAI tren moi lan
+    resample. `metric`: ten trong OBJECTIVES hoac callable (y_true, y_pred, n_classes).
+    Tra dict delta, ci_low, ci_high, n_boot. CI khong chua 0 => khac biet vuot nhieu resample.
+    Cho n_test ~250: QWK ~0.65 ms/lan => 2000 lan x 2 ~ 3 s.
+    """
+    f = OBJECTIVES[metric] if isinstance(metric, str) else metric
+    y = np.asarray(y_true, np.int64).reshape(-1)
+    a = np.asarray(yp_a, np.int64).reshape(-1)
+    b = np.asarray(yp_b, np.int64).reshape(-1)
+    n = len(y)
+    rng = np.random.default_rng(seed)
+    boots = np.empty(n_boot)
+    for i in range(n_boot):
+        idx = rng.integers(0, n, size=n)
+        boots[i] = f(y[idx], b[idx], n_classes) - f(y[idx], a[idx], n_classes)
+    delta = f(y, b, n_classes) - f(y, a, n_classes)
+    lo, hi = np.quantile(boots, [alpha / 2.0, 1.0 - alpha / 2.0])
+    return dict(delta=float(delta), ci_low=float(lo), ci_high=float(hi), n_boot=int(n_boot))
+
+
 def threshold_auc(p, t) -> np.ndarray:
     """AUC tung nguong P(y>k) vs t_k; NaN neu nguong chi co 1 lop."""
     p, t = np.asarray(p), np.asarray(t)
@@ -344,36 +427,213 @@ class FrankHall:
 # ------------------------------------------------------------ 2. diem cat tren hoi quy
 
 def apply_cutpoints(scores, cuts) -> np.ndarray:
-    return np.digitize(np.asarray(scores, np.float64), np.asarray(cuts, np.float64)).astype(np.int64)
+    cuts = np.asarray(cuts, np.float64)
+    # np.digitize nhan bins GIAM DAN ma khong keu -> mot bug sinh cut khong don dieu se cho rac.
+    assert (np.diff(cuts) >= 0).all(), f"diem cat phai khong giam, nhan {cuts}"
+    return np.digitize(np.asarray(scores, np.float64), cuts).astype(np.int64)
 
 
-def fit_cutpoints(scores, y_idx, n_classes: int, n_pass: int = 3, n_grid: int = 41) -> np.ndarray:
-    """Toi uu K-1 diem cat theo QWK bang coordinate descent (khoi tao k+0.5).
+def _coordinate_descent(objective, init, bounds, n_pass: int, n_grid: int):
+    """Leo doi tung toa do tren luoi. Tra (x, best).
 
-    PHAI fit tren diem HONEST (out-of-fold trong tap train), khong phai diem train cua model
-    da fit - neu khong diem cat bi lech theo overfit. Notebook S7 dung cross_val_predict.
+    `objective(x) -> float`: cao hon = tot hon; -inf = bat kha thi.
+    `bounds(k, x) -> (left, right)`: khoang luoi cho toa do k tai trang thai x hien tai.
+    GIU NGUYEN tung chi tiet cua vong lap fit_cutpoints cu (linspace, le 1e-3 do bounds cap,
+    chap nhan khi > best + 1e-9, dung khi mot pass khong cai thien) - test golden bao ve.
     """
-    s = np.asarray(scores, np.float64)
-    y = np.asarray(y_idx)
-    cuts = np.arange(n_classes - 1) + 0.5
-    lo, hi = s.min() - 1.0, s.max() + 1.0
-    best = qwk(y, apply_cutpoints(s, cuts), n_classes)
+    x = np.array(init, np.float64)
+    best = objective(x)
     for _ in range(n_pass):
         improved = False
-        for k in range(len(cuts)):
-            left = cuts[k - 1] + 1e-3 if k > 0 else lo
-            right = cuts[k + 1] - 1e-3 if k + 1 < len(cuts) else hi
+        for k in range(len(x)):
+            left, right = bounds(k, x)
             if right <= left:
                 continue
             for c in np.linspace(left, right, n_grid):
-                trial = cuts.copy()
+                trial = x.copy()
                 trial[k] = c
-                q = qwk(y, apply_cutpoints(s, trial), n_classes)
-                if q > best + 1e-9:
-                    best, cuts, improved = q, trial, True
+                v = objective(trial)
+                if v > best + 1e-9:
+                    best, x, improved = v, trial, True
         if not improved:
             break
+    return x, best
+
+
+def _resolve_objective(objective, n_classes: int):
+    """Ten trong OBJECTIVES -> callable (y_true, y_pred); callable thi giu nguyen."""
+    if isinstance(objective, str):
+        if objective not in OBJECTIVES:
+            raise ValueError(f"objective phai la mot trong {list(OBJECTIVES)} hoac callable, nhan {objective!r}")
+        f = OBJECTIVES[objective]
+        return lambda yt, yp: f(yt, yp, n_classes)
+    return objective
+
+
+def _fit_decision(y, decode, init, bounds, n_classes, objective, min_recall, qwk_slack,
+                  n_pass, n_grid, who: str) -> np.ndarray:
+    """Loi chung cua fit_cutpoints va fit_threshold_cuts.
+
+    Khong rang buoc: mot lan leo doi theo `objective`.
+    qwk_slack   : toi da `objective` s.t. qwk >= qwk_best - slack. HAI PASS: pass 1 tim diem
+                  toi uu QWK (qwk_best), pass 2 KHOI DAU TU diem do - kha thi theo cau truc -
+                  roi leo doi theo `objective` chi qua cac diem con thoa rang buoc.
+    min_recall  : loai moi vector co lop nao recall < san. Khoi dau co the bat kha thi (-inf);
+                  khi do bat ky diem kha thi nao tren luoi deu duoc nhan. Khong tim thay diem
+                  kha thi => CANH BAO va tra ket qua KHONG rang buoc (bang tham chieu).
+    """
+    f = _resolve_objective(objective, n_classes)
+    obj = lambda x: f(y, decode(x))
+    x_unc, best_unc = _coordinate_descent(obj, init, bounds, n_pass, n_grid)
+    if min_recall is None and qwk_slack is None:
+        return x_unc
+
+    start, q_floor = x_unc, None
+    if qwk_slack is not None:
+        if objective == "qwk":
+            x_q, q_best = x_unc, best_unc
+        else:
+            x_q, q_best = _coordinate_descent(lambda x: qwk(y, decode(x), n_classes),
+                                              init, bounds, n_pass, n_grid)
+        q_floor, start = q_best - qwk_slack, x_q
+
+    def constrained(x):
+        yp = decode(x)
+        if min_recall is not None and per_class_recall(y, yp, n_classes).min() < min_recall:
+            return -np.inf
+        if q_floor is not None and qwk(y, yp, n_classes) < q_floor:
+            return -np.inf
+        return f(y, yp)
+
+    x_c, best_c = _coordinate_descent(constrained, start, bounds, n_pass, n_grid)
+    if not np.isfinite(best_c):
+        print(f"CANH BAO {who}: khong co diem nao thoa rang buoc (min_recall={min_recall}, "
+              f"qwk_slack={qwk_slack}) -> tra ve ket qua KHONG rang buoc")
+        return x_unc
+    return x_c
+
+
+def fit_cutpoints(scores, y_idx, n_classes: int, objective="qwk", min_recall=None, qwk_slack=None,
+                  n_pass: int = 3, n_grid: int = 41) -> np.ndarray:
+    """Toi uu K-1 diem cat bang coordinate descent (khoi tao k+0.5). Mac dinh = QWK, khong rang buoc.
+
+    PHAI fit tren diem HONEST (inner out-of-fold trong tap train), khong phai diem train cua
+    model da fit - neu khong diem cat bi lech theo overfit. Dung inner_oof de lay diem do.
+
+    objective  : "qwk" | "macro_recall" | "macro_f1" | callable (y_true, y_pred) -> float.
+    min_recall : san recall cho MOI lop (None = khong rang buoc).
+    qwk_slack  : cho phep QWK thap hon toi uu toi da `slack` de doi lay `objective`.
+    Mac dinh (objective="qwk", khong rang buoc) BYTE-IDENTICAL voi ban truoc: xem
+    test_fit_cutpoints_default_is_byte_identical. CANH BAO: objective="macro_recall" khong
+    rang buoc overfit vi tri cat tren ~80 ca lop hiem (do tren tong hop: 2/4 seed te hon ca hai
+    mat tren held-out). Uu tien quantile_cutpoints hoac qwk_slack.
+    """
+    s = np.asarray(scores, np.float64).reshape(-1)
+    y = np.asarray(y_idx, np.int64).reshape(-1)
+    init = np.arange(n_classes - 1) + 0.5
+    lo, hi = s.min() - 1.0, s.max() + 1.0
+
+    def bounds(k, x):
+        left = x[k - 1] + 1e-3 if k > 0 else lo
+        right = x[k + 1] - 1e-3 if k + 1 < len(x) else hi
+        return left, right
+
+    return _fit_decision(y, lambda x: apply_cutpoints(s, x), init, bounds, n_classes, objective,
+                         min_recall, qwk_slack, n_pass, n_grid, who="fit_cutpoints")
+
+
+def quantile_cutpoints(scores, y_idx, n_classes: int) -> np.ndarray:
+    """Diem cat theo PHAN VI: marginal du doan tren train == marginal that. KHONG co tham so de fit.
+
+    VI SAO. QWK quadratic = 2 Cov(y, yp) / (Var y + Var yp + (mean y - mean yp)^2), tuc he so
+    tuong hop Lin. Diem hoi quy bi CO ve trung binh (Var score < Var y), nen diem cat toi uu
+    QWK NOI hai bin ngoai cung de bom Var(yp) len: co y doan THUA lop dau/cuoi va BOP lop giua
+    (S8: C recall KL3 48% thap nhat, KL4 81% cao nhat, precision KL4 72%). Dat cut sao cho ty
+    le du doan = ty le that thi Var(yp) ~ Var(y) ma khong phai fit gi. Tren diem co tong hop
+    (test_quantile_beats_variance_inflation_on_shrunk_scores): thang cut-QWK ca ve QWK
+    held-out lan recall thap nhat, 4/4 seed.
+
+    Chinh xac khi diem khong trung nhau (tie tai diem cat roi len bin tren). Lop vang trong y
+    => hai cut bang nhau => lop do khong bao gio duoc doan (dung y).
+    """
+    s = np.asarray(scores, np.float64).reshape(-1)
+    y = np.asarray(y_idx, np.int64).reshape(-1)
+    n = len(s)
+    ss = np.sort(s)
+    cum = np.cumsum(np.bincount(y, minlength=n_classes))[:-1]
+    cuts = np.empty(n_classes - 1)
+    for k, c in enumerate(cum):
+        if c <= 0:
+            cuts[k] = ss[0] - 1.0
+        elif c >= n:
+            cuts[k] = ss[-1] + 1.0
+        else:
+            cuts[k] = 0.5 * (ss[c - 1] + ss[c])
     return cuts
+
+
+def fit_threshold_cuts(p, y_idx, n_classes: int, objective="qwk", min_recall=None, qwk_slack=None,
+                       n_pass: int = 3, n_grid: int = 19, lo: float = 0.05, hi: float = 0.95) -> np.ndarray:
+    """Muc quyet dinh RIENG tung nguong thr[K-1] thay cho 0.5 co dinh; giai ma decode_count(p, thr).
+
+    Nham dung nguong cuoi: ca KL4 that co P(KL>3) trung binh 0.46-0.57 (S7) nen gan mot nua
+    thua vach 0.5, trong khi AUC cua chinh nguong do la 0.952 - cao nhat trong bon. Tuc phan
+    biet duoc, chi hieu chinh sai. Fit tren p INNER-OOF cua tap train (nhu fit_cutpoints).
+    Luoi 19 diem tren [0.05, 0.95] chua dung 0.5 => in-sample khong bao gio te hon 0.5 co dinh.
+
+    KHONG ep thr don dieu: toi uu do duoc tren tong hop la [0.65, 0.35, 0.55, 0.20]; ep se chan
+    dung cai can sua. He qua la dem co the nhan mau nhu [1,0,1,0] - do bang
+    monotonic_violation_rate((p > thr).astype(float)) va BAO CAO, khong chan.
+    Tuong duong `tau` cua OrdinalMLP(learn_thresholds=True): thr_k = sigmoid(tau_k).
+    """
+    pp = np.asarray(p, np.float64)
+    y = np.asarray(y_idx, np.int64).reshape(-1)
+    init = np.full(pp.shape[1], 0.5)
+    return _fit_decision(y, lambda x: decode_count(pp, thr=x), init, lambda k, x: (lo, hi),
+                         n_classes, objective, min_recall, qwk_slack, n_pass, n_grid,
+                         who="fit_threshold_cuts")
+
+
+# ------------------------------------------------------------ 2b. diem honest & trong so lop
+
+def inner_oof(fit_predict, X, y_idx, groups, n_splits: int = 4, row_kwargs: "dict | None" = None) -> np.ndarray:
+    """Diem HONEST (out-of-fold) tren chinh tap train, cho scorer BAT KY (FrankHall, MLP torch...).
+
+    `fit_predict(Xtr, ytr, Xte, **kw) -> diem cho Xte` (1-D hoac [n, d]). Moi phan tu cua
+    `row_kwargs` la mang theo HANG (vd sample_weight, oa_target), duoc cat theo tr roi truyen.
+    GroupKFold KHONG shuffle => trung fold voi cross_val_predict(cv=GroupKFold(n)) ma S7/S8
+    dang dung cho C, nen C tai lap bit-doi-bit (test_inner_oof_no_leakage_and_matches_sklearn).
+    Khong hang nao duoc cham diem boi model da thay no.
+    """
+    from sklearn.model_selection import GroupKFold
+
+    X = np.asarray(X)
+    y = np.asarray(y_idx)
+    g = np.asarray(groups)
+    row_kwargs = {k: np.asarray(v) for k, v in (row_kwargs or {}).items()}
+    out = None
+    for tr, te in GroupKFold(n_splits=n_splits).split(X, y, g):
+        kw = {k: v[tr] for k, v in row_kwargs.items()}
+        pred = np.asarray(fit_predict(X[tr], y[tr], X[te], **kw), np.float64)
+        if out is None:
+            out = np.full((len(X),) + pred.shape[1:], np.nan)
+        out[te] = pred
+    assert out is not None and not np.isnan(out).any(), "inner_oof: con hang chua duoc cham diem"
+    return out
+
+
+def class_balanced_weights(y_idx, n_classes: int) -> np.ndarray:
+    """w_i = N / (K' * n_{y_i}) voi K' = so lop CO MAT: tong trong so moi lop bang nhau, mean w = 1.
+
+    Truc KHAC voi tang quyet dinh: doi DIEM (bo hoi quy bot co ve trung binh o lop hiem), khong
+    doi diem cat. Danh gia rieng, dung tron voi cac quy tac cat khi doc bang.
+    """
+    y = np.asarray(y_idx, np.int64).reshape(-1)
+    cnt = np.bincount(y, minlength=n_classes).astype(np.float64)
+    present = cnt > 0
+    w_cls = np.zeros(n_classes)
+    w_cls[present] = len(y) / (present.sum() * cnt[present])
+    return w_cls[y]
 
 
 # ------------------------------------------------------------ 3. MLP voi loss cua slide

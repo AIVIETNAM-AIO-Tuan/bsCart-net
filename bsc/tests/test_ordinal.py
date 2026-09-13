@@ -192,6 +192,37 @@ def test_frank_hall_handles_degenerate_threshold():
     assert fh.predict(X).max() <= 2
 
 
+# ------------------------------------------------------------ metric theo lop
+
+def test_per_class_prf_matches_sklearn():
+    """Ban numpy phai trung KHIT sklearn, ke ca khi mot lop khong bao gio duoc doan."""
+    from sklearn.metrics import precision_recall_fscore_support
+
+    rng = np.random.default_rng(7)
+    y = rng.integers(0, K, size=300)
+    yp = rng.integers(0, K - 1, size=300)                  # lop 4 khong bao gio duoc doan
+    pr, rc, f1, sup = precision_recall_fscore_support(y, yp, labels=list(range(K)), zero_division=0)
+    m = ORD.per_class_prf(y, yp, K)
+    assert np.allclose(m["precision"], pr) and np.allclose(m["recall"], rc)
+    assert np.allclose(m["f1"], f1) and np.array_equal(m["support"], sup)
+    assert ORD.macro_recall(y, yp, K) == pytest.approx(rc.mean())
+    assert ORD.macro_f1(y, yp, K) == pytest.approx(f1.mean())
+    assert np.array_equal(ORD.per_class_recall(y, yp, K), m["recall"])
+
+    cm = ORD.confusion(y, yp, K)
+    assert cm.shape == (K, K) and cm.sum() == len(y)
+    assert (cm[:, 4] == 0).all()                           # cot lop khong duoc doan
+    assert ORD.per_class_recall(y, y, K).tolist() == [1.0] * K
+
+
+def test_bootstrap_delta_ci_brackets_zero_and_real_gap():
+    y = np.random.default_rng(3).integers(0, K, size=250)
+    same = ORD.bootstrap_delta(y, y, y, "qwk", K, n_boot=300)
+    assert same["delta"] == 0.0 and same["ci_low"] <= 0 <= same["ci_high"]
+    gap = ORD.bootstrap_delta(y, np.zeros_like(y), y, "qwk", K, n_boot=300)
+    assert gap["delta"] > 0 and gap["ci_low"] > 0, gap
+
+
 # ------------------------------------------------------------ diem cat
 
 def test_fit_cutpoints_beats_naive_rounding_on_biased_scores():
@@ -203,6 +234,200 @@ def test_fit_cutpoints_beats_naive_rounding_on_biased_scores():
     fitted = ORD.qwk(y, ORD.apply_cutpoints(scores, cuts), K)
     assert fitted > naive + 0.05, (fitted, naive)
     assert (np.diff(cuts) > 0).all()
+
+
+def test_fit_cutpoints_default_is_byte_identical():
+    """Refactor sang _coordinate_descent KHONG duoc doi mot chu so nao cua duong mac dinh.
+
+    Con so vang duoi day lay tu ban TRUOC refactor, tren dung du lieu cua test phia tren.
+    Moi con so S7/S8 da bao cao deu sinh ra tu duong nay, nen no la hop dong.
+    """
+    rng = np.random.default_rng(0)
+    y = rng.integers(0, K, size=600)
+    scores = y + 0.7 + rng.normal(scale=0.3, size=600)
+    gold = np.array([1.13266468, 2.22593294, 3.30818994, 4.15042206])
+    assert np.allclose(ORD.fit_cutpoints(scores, y, K), gold, atol=1e-8)
+
+
+def make_shrunk(seed, n=600):
+    """Diem bi CO ve trung binh - dung tinh huong cua bo hoi quy XGB o model C.
+
+    Var(s) < Var(y) => diem cat toi uu QWK se noi hai bin ngoai cung de bom Var(yp) len.
+    """
+    r = np.random.default_rng(seed)
+    y = r.choice(K, size=n, p=[.23, .19, .24, .25, .09])
+    s = 0.6 * (y - 2) + 2 + r.normal(scale=0.45, size=n)
+    return y, s
+
+
+def test_quantile_cutpoints_reproduce_train_marginal():
+    y, s = make_shrunk(0)
+    cuts = ORD.quantile_cutpoints(s, y, K)
+    assert (np.diff(cuts) >= 0).all()
+    assert np.array_equal(np.bincount(ORD.apply_cutpoints(s, cuts), minlength=K),
+                          np.bincount(y, minlength=K)), "marginal du doan khac marginal that"
+
+    # Lop vang mat: hai cut trung nhau => lop do khong bao gio duoc doan, khong duoc nem loi
+    y2 = np.where(y == 3, 2, y)
+    c2 = ORD.quantile_cutpoints(s, y2, K)
+    assert 3 not in set(ORD.apply_cutpoints(s, c2).tolist())
+
+
+def test_quantile_beats_variance_inflation_on_shrunk_scores():
+    """Diem cat phan vi (0 tham so) danh bai diem cat toi uu QWK tren HELD-OUT.
+
+    Day la bang chung cho luan diem trung tam: trade-off "QWK cao <-> recall lop giua thap"
+    den tu MUC TIEU dat diem cat, khong phai tu bo hoi quy. Tim QWK tren ~400 hang con
+    overfit vi tri cat, nen bo cai tim kiem di lai duoc CA HAI mat.
+    """
+    y, s = make_shrunk(0)
+    tr, te = slice(0, 400), slice(400, 600)
+    c_qwk = ORD.fit_cutpoints(s[tr], y[tr], K)
+    c_qnt = ORD.quantile_cutpoints(s[tr], y[tr], K)
+    yq, yn = ORD.apply_cutpoints(s[te], c_qwk), ORD.apply_cutpoints(s[te], c_qnt)
+    m_qwk, m_qnt = ORD.per_class_recall(y[te], yq, K).min(), ORD.per_class_recall(y[te], yn, K).min()
+    assert m_qnt >= m_qwk + 0.2, (m_qwk, m_qnt)                      # do duoc: 0.135 -> 0.486
+    assert ORD.qwk(y[te], yn, K) >= ORD.qwk(y[te], yq, K) - 0.03     # do duoc: +0.021
+
+    # Tren nhieu seed: recall thap nhat KHONG BAO GIO te hon, va QWK trung binh khong te hon
+    d_q = []
+    for seed in range(6):
+        y, s = make_shrunk(seed)
+        a = ORD.apply_cutpoints(s[te], ORD.fit_cutpoints(s[tr], y[tr], K))
+        b = ORD.apply_cutpoints(s[te], ORD.quantile_cutpoints(s[tr], y[tr], K))
+        assert ORD.per_class_recall(y[te], b, K).min() >= ORD.per_class_recall(y[te], a, K).min() - 1e-9
+        d_q.append(ORD.qwk(y[te], b, K) - ORD.qwk(y[te], a, K))
+    assert np.mean(d_q) > -0.01, d_q
+
+
+def test_fit_cutpoints_objective_and_slack_guarantees():
+    """Chi kiem tinh chat BAO DAM in-sample. Khong claim held-out cho macro_recall: no bat on."""
+    y, s = make_shrunk(0)
+    dec = lambda c: ORD.apply_cutpoints(s, c)
+    c_qwk = ORD.fit_cutpoints(s, y, K)
+    c_mr = ORD.fit_cutpoints(s, y, K, objective="macro_recall")
+    assert ORD.macro_recall(y, dec(c_mr), K) >= ORD.macro_recall(y, dec(c_qwk), K) - 1e-9
+
+    q_best = ORD.qwk(y, dec(c_qwk), K)
+    c_sl = ORD.fit_cutpoints(s, y, K, objective="macro_recall", qwk_slack=0.02)
+    assert ORD.qwk(y, dec(c_sl), K) >= q_best - 0.02 - 1e-9, "vi pham tran QWK"
+    # Pass 2 khoi dau TU diem toi uu QWK nen khong the te hon no ve macro_recall
+    assert ORD.macro_recall(y, dec(c_sl), K) >= ORD.macro_recall(y, dec(c_qwk), K) - 1e-9
+
+    # objective callable
+    c_cb = ORD.fit_cutpoints(s, y, K, objective=lambda a, b: -ORD.mae(a, b))
+    assert (np.diff(c_cb) > 0).all()
+    with pytest.raises(ValueError, match="objective"):
+        ORD.fit_cutpoints(s, y, K, objective="khong_ton_tai")
+
+
+def test_fit_cutpoints_min_recall_feasible_and_fallback(capsys):
+    y, s = make_shrunk(0)
+    c0 = ORD.fit_cutpoints(s, y, K)
+    assert ORD.per_class_recall(y, ORD.apply_cutpoints(s, c0), K).min() < 0.50   # san 0.5 co RANG BUOC
+
+    c = ORD.fit_cutpoints(s, y, K, min_recall=0.50)
+    assert ORD.per_class_recall(y, ORD.apply_cutpoints(s, c), K).min() >= 0.50
+    assert "CANH BAO" not in capsys.readouterr().out
+
+    c_bad = ORD.fit_cutpoints(s, y, K, min_recall=0.60)                          # bat kha thi
+    assert "CANH BAO" in capsys.readouterr().out
+    assert np.array_equal(c_bad, c0), "fallback phai tra ve DUNG ket qua khong rang buoc"
+
+
+def test_apply_cutpoints_rejects_nonmonotone():
+    """np.digitize nhan bins giam dan ma khong keu - phai chan o day."""
+    with pytest.raises(AssertionError, match="khong giam"):
+        ORD.apply_cutpoints(np.array([1.0, 2.0]), np.array([3.0, 1.0]))
+
+
+# ------------------------------------------------------------ nguong quyet dinh tung k
+
+def make_underconfident(seed, n=600):
+    """p hop le nhung nguong CUOI bi thieu tu tin - dung trieu chung do duoc o S7."""
+    r = np.random.default_rng(seed)
+    y = r.choice(K, size=n, p=[.23, .19, .24, .25, .09])
+    z = 2.0 * (y[:, None] - np.arange(K - 1)[None, :] - 0.5) + r.normal(scale=1.2, size=(n, K - 1))
+    p = ORD.monotone_cummin(1.0 / (1.0 + np.exp(-z)))
+    p[:, 3] *= 0.6
+    return y, p
+
+
+def test_fit_threshold_cuts_recover_underconfident_last_threshold():
+    y, p = make_underconfident(0)
+    tr, te = slice(0, 400), slice(400, 600)
+    thr = ORD.fit_threshold_cuts(p[tr], y[tr], K, objective="macro_recall")
+    assert thr.shape == (K - 1,) and (thr >= 0.05).all() and (thr <= 0.95).all()
+    assert thr[-1] < 0.5, "khong ha duoc nguong cuoi du no bi thieu tu tin"
+
+    y_fix = ORD.decode_count(p[te])
+    y_tun = ORD.decode_count(p[te], thr=thr)
+    r_fix = ORD.per_class_recall(y[te], y_fix, K)
+    r_tun = ORD.per_class_recall(y[te], y_tun, K)
+    assert r_tun[-1] >= r_fix[-1] + 0.3, (r_fix[-1], r_tun[-1])     # do duoc: 0.20 -> 1.00
+    assert ORD.qwk(y[te], y_tun, K) >= ORD.qwk(y[te], y_fix, K) - 0.02
+
+    # Luoi khong chua 0.5 nen in-sample khong bao gio te hon vach co dinh
+    assert ORD.qwk(y[tr], ORD.decode_count(p[tr], thr=thr), K) >= ORD.qwk(y[tr], ORD.decode_count(p[tr]), K) - 1e-9
+    # thr KHONG bi ep don dieu (co y): dem co the nhan mau nhu [1,0,1,0] - do va BAO CAO
+    assert 0.0 <= ORD.monotonic_violation_rate((p[te] > thr).astype(float)) <= 1.0
+
+
+def test_decode_count_vector_thr_and_shape_guard():
+    p = np.array([[0.9, 0.8, 0.4, 0.3], [0.9, 0.2, 0.1, 0.05]])
+    assert ORD.decode_count(p, thr=np.array([0.5, 0.5, 0.5, 0.5])).tolist() == ORD.decode_count(p).tolist()
+    assert ORD.decode_count(p, thr=np.array([0.5, 0.5, 0.35, 0.25])).tolist() == [4, 1]
+    for bad in (np.array([0.5, 0.5]), np.full(K, 0.5)):             # (N,) voi N==K-1, va (K,)
+        with pytest.raises(AssertionError, match="vector"):
+            ORD.decode_count(p, thr=bad)
+
+
+# ------------------------------------------------------------ diem honest & trong so lop
+
+def test_inner_oof_no_leakage_and_matches_sklearn():
+    from sklearn.linear_model import Ridge
+    from sklearn.model_selection import GroupKFold, cross_val_predict
+
+    rng = np.random.default_rng(7)
+    X = rng.normal(size=(200, 5))
+    y = rng.normal(size=200)
+    g = rng.integers(0, 40, size=200)
+
+    # Fold PHAI trung cross_val_predict(GroupKFold(4)) - neu khong, dong C cua S7/S8 se doi so
+    a = ORD.inner_oof(lambda Xa, ya, Xb: Ridge().fit(Xa, ya).predict(Xb), X, y, g)
+    b = cross_val_predict(Ridge(), X, y, groups=g, cv=GroupKFold(n_splits=4))
+    assert np.allclose(a, b, atol=1e-12)
+
+    # Ro ri: scorer nho moi hang da thay va tra +100 cho no
+    def memoriser(Xa, ya, Xb):
+        seen = {r.tobytes() for r in Xa}
+        return np.array([100.0 if r.tobytes() in seen else 0.0 for r in Xb])
+    assert ORD.inner_oof(memoriser, X, y, g).max() == 0.0, "co hang duoc cham diem boi model da thay no"
+
+    # Dau ra 2-D (p_thr cua FrankHall / MLP)
+    p = ORD.inner_oof(lambda Xa, ya, Xb: np.zeros((len(Xb), K - 1)), X, y, g)
+    assert p.shape == (200, K - 1) and np.isfinite(p).all()
+
+    # row_kwargs phai duoc cat theo train cua tung fold
+    w = np.arange(200, dtype=float)
+    def check_w(Xa, ya, Xb, w=None):
+        assert w is not None and len(w) == len(Xa)
+        return np.zeros(len(Xb))
+    ORD.inner_oof(check_w, X, y, g, row_kwargs={"w": w})
+
+
+def test_class_balanced_weights_equalise_class_mass():
+    y, _ = make_shrunk(0)
+    w = ORD.class_balanced_weights(y, K)
+    assert w.mean() == pytest.approx(1.0)
+    mass = [w[y == k].sum() for k in range(K)]
+    assert np.allclose(mass, mass[0]), mass                 # tong trong so moi lop bang nhau
+    assert w[y == 4].max() > w[y == 3].max()                # lop hiem duoc nang len
+
+    # Lop vang mat khong duoc lam hong chuan hoa
+    y2 = np.where(y == 4, 3, y)
+    w2 = ORD.class_balanced_weights(y2, K)
+    assert w2.mean() == pytest.approx(1.0) and np.isfinite(w2).all()
 
 
 # ------------------------------------------------------------ MLP voi loss cua slide
