@@ -375,3 +375,111 @@ fusion **chưa vượt nhiễu**.
 4. Chạy phép kiểm nhận dạng `alpha` (gate khởi tạo −2 / +2).
 5. Sửa ba lỗi trình bày: đánh dấu ba dòng `0.000` của I là "không áp dụng", in `tau` ở mục 7,
    cập nhật con số 0.26–0.38 thành 0.46–0.57.
+
+## 2026-09-13 — Tầng quyết định: trade-off recall của C nằm ở MỤC TIÊU đặt điểm cắt, không phải ở bộ hồi quy
+
+### Context
+Người dùng nhận xét model C (XGB hồi quy + điểm cắt) đang hoạt động tốt và hỏi có cách nào giảm
+đánh đổi để giữ recall cho mọi lớp. Số đo trên `s6_all_plus_radiomics`, n_test = 246: C có **QWK cao
+nhất bảng 0.803** và off-by≥2 thấp 6.1%, nhưng **recall KL3 48.3% — thấp nhất trong 10 model** và
+recall KL4 80.8% — cao nhất, với precision KL4 chỉ 72.4%. S7 15 fold cho cùng hình: recall KL2 32.9,
+KL3 42.1, KL4 77.4, macro-F1 49.0 thấp nhất trong 6 model.
+
+### Change
+Không sửa bộ hồi quy. Thêm một **tầng quyết định** vào `bsc/ordinal.py`, dùng chung cho S7 và S8:
+
+- `confusion` / `per_class_prf` / `per_class_recall` / `macro_recall` / `macro_f1` / `OBJECTIVES` /
+  `bootstrap_delta`. Trước đây S7 và S8 mỗi cái giữ một bản gọi sklearn inline; gộp về MỘT định
+  nghĩa. Bản numpy nhanh ~200 lần nên dùng được **trong** vòng tìm điểm cắt.
+- `_coordinate_descent` tách ra dùng chung; `fit_cutpoints` thêm `objective` / `min_recall` /
+  `qwk_slack`. Đường mặc định **byte-identical** (test golden khoá lại con số
+  `[1.13266468, 2.22593294, 3.30818994, 4.15042206]`).
+- `quantile_cutpoints` — cắt sao cho tỉ lệ dự đoán bằng tỉ lệ thật, **không có tham số nào để fit**.
+- `fit_threshold_cuts` — `thr[K-1]` thay vạch 0.5 cố định cho B/D/E. **Không ép đơn điệu**, vì tối ưu
+  đo được là `[0.65, 0.35, 0.55, 0.20]` và ép sẽ chặn đúng cái cần sửa.
+- `inner_oof` — điểm honest cho scorer bất kỳ (FrankHall, MLP torch), `GroupKFold(4)` không shuffle
+  nên trùng khít `cross_val_predict` cũ và C tái lập bit-đối-bit.
+- `class_balanced_weights` + chốt hình dạng ở `decode_count` và `apply_cutpoints`.
+
+S8 thêm mục 4b (tầng quyết định), 4c (cổng thăng hạng), 4d (chẩn đoán S6), model C2 (hồi quy có
+trọng số lớp), và ghi vào `s8_holdout_v2/`. Test 24 → 36.
+
+### Evidence / Result
+**Cơ chế đã chứng minh bằng đại số, không phải phỏng đoán.** QWK quadratic bằng
+`2·Cov(y,ŷ) / (Var y + Var ŷ + (μy−μŷ)²)`, tức hệ số tương hợp Lin. Điểm hồi quy luôn **co về trung
+bình**, `Var(score) < Var(y)`. Cách rẻ nhất để đẩy phân số đó lên là **bơm Var(ŷ)**, và cách bơm là
+nới rộng hai bin ngoài cùng — tức cố ý đoán thừa KL0/KL4 và bóp KL2/KL3. Thuật toán không hỏng; nó
+đang tối ưu đúng cái ta bảo nó tối ưu.
+
+**Đo trên điểm co tổng hợp** (`s = 0.6·(y−2)+2 + N(0,0.45)`, fit 400 / held-out 200):
+
+| seed | QWK: cắt-QWK → phân vị | min recall: cắt-QWK → phân vị |
+|---|---|---|
+| 0 | 0.813 → **0.834** | 0.135 → **0.486** |
+| 1 | 0.866 → 0.868 | 0.535 → 0.535 |
+| 2 | 0.866 → **0.871** | 0.389 → **0.522** |
+| 3 | 0.858 → **0.867** | 0.286 → **0.381** |
+| 4 | 0.837 → 0.822 | 0.459 → **0.468** |
+| 5 | 0.885 → **0.887** | 0.324 → **0.491** |
+
+Điểm cắt phân vị **không bao giờ làm recall thấp nhất tệ đi** (6/6) và thắng QWK ở 5/6 seed. Nghĩa
+là bỏ hẳn bước tìm kiếm lại được **cả hai mặt** — vì tìm QWK trên ~400 hàng đang overfit vị trí cắt.
+
+**Ngược lại, tối ưu thẳng `macro_recall` BẤT ỔN:** 2/4 seed tệ hơn trên *cả hai* mặt ở held-out
+(seed 0: marginal dự đoán `[92,116,35,108,49]` so với thật `[94,78,94,98,36]` — nó bóp hẳn lớp giữa).
+Với ~80 ca KL4 để đặt điểm cắt, tìm kiếm tham lam trên hàm bậc thang chỉ đang đuổi theo nhiễu.
+
+**`min_recall` bất khả thi là chuyện thật**, 1/4 seed ở sàn 0.45 với 400 hàng. Nhánh lùi in cảnh báo
+và trả về đúng kết quả không ràng buộc.
+
+**`fit_threshold_cuts` trên p có ngưỡng cuối thiếu tự tin** (`p[:,3] *= 0.6`), 5 seed: recall lớp
+cuối 0.08–0.39 → 0.78–1.00, QWK cũng tăng ở cả 5. Ngưỡng tìm được **không đơn điệu** ở 5/5.
+
+**Chạy thử toàn bộ cell mới của S8 trên dữ liệu tổng hợp:** mọi assert đậu, và trên feature set có
+radiomics, `quantile` cho QWK 0.887 → 0.914, macro-recall 0.638 → 0.697, min-recall 0.176 → 0.471,
+off-by≥2 0.017 → 0.000, optimism 0.139 → 0.060. Đúng chiều đã dự đoán.
+
+**Chưa có số trên dữ liệu thật** — S8 v2 chưa chạy trên Colab.
+
+### Significance
+- **Đây là cải tiến rẻ nhất còn lại.** Không train lại gì: scorer fit một lần, giữ điểm honest
+  inner-OOF, rồi áp nhiều quy tắc lên cùng bộ điểm. Tám quy tắc chỉ tốn vài giây mỗi cái.
+- **Nó cũng nhắm đúng vấn đề của B/D/E**, vốn là cùng một bệnh soi gương: ca KL4 thật chỉ đạt
+  P(KL>3) trung bình 0.46–0.57 so với vạch 0.5, trong khi AUC của chính ngưỡng đó là 0.952 — cao
+  nhất trong bốn. Phân biệt được nhưng không hiệu chỉnh được, và cái thứ hai rẻ hơn nhiều để sửa.
+- **Thay thế hướng ASL.** Tinh chỉnh ngưỡng hậu kiểm nhắm cùng mục tiêu với chi phí huấn luyện bằng 0,
+  nên không cần sửa `asymmetric_loss` thành `gamma_neg` theo ngưỡng nữa.
+
+### Risks / Open Questions
+- **`macro_recall` không ràng buộc overfit vị trí cắt** — đã đo. Giảm nhẹ: `quantile` là ứng viên
+  chính (0 tham số), `qwk_slack` / `min_recall` là bản có điều tiết, cột `optimism` phơi bày trực
+  tiếp, và S7 15 fold là trọng tài cuối.
+- **`min_recall` có thể bất khả thi trên fold nhỏ** → nhánh lùi làm nó im lặng bằng tham chiếu. Khi
+  đưa sang S7 phải **đếm số fold khả thi** và báo cáo.
+- **Ngưỡng không đơn điệu** khiến phép đếm nhận mẫu kiểu `[1,0,1,0]`. Đo bằng
+  `inconsistent_pattern` và **báo cáo**, không chặn — chặn sẽ hủy đúng phần sửa được.
+- **`macro_recall` bỏ qua precision**, có thể mua recall KL4 bằng recall KL3. `macro_f1` đã có sẵn
+  trong `OBJECTIVES` nếu bảng frontier cho thấy vậy.
+- **C2 là scorer khác, không phải quy tắc quyết định.** Nó có điểm cắt của riêng nó; đọc tách.
+- **`graphify update .` không chạy được** — không có `graphify-out/` trong checkout và CLI không nằm
+  trong PATH. Chưa chặn việc gì.
+
+### Decision
+Theo lựa chọn của người dùng: **giữ QWK gần tối đa, để recall lớp giữa hồi phục "miễn phí"**. Cổng
+thăng hạng đặt ở macro-recall ≥ ref + 0.05, QWK ≥ ref − 0.02, off-by≥2 ≤ ref + 0.02, optimism ≤ 0.05,
+và CI bootstrap của hiệu macro-recall không chứa 0 — phải đạt trên **cả hai** feature set có
+radiomics. `macro_recall` và `minrec0.40` chỉ để hiện frontier, **không thăng hạng từ S8 một mình**.
+
+Về S6: **giữ nguyên cột, chưa đầu tư vùng con / atlas** cho tới khi đo xong độ tin cậy FCL từ mask AI
+(mục B2). Chỉ thêm cell chẩn đoán 4d để biết cột S6 nào sống sót qua LASSO và đóng góp gain bao nhiêu.
+
+### Consequence
+1. Chạy S8 v2 trên Colab (~8–9 phút), qua các cổng ở mục 4c.
+2. Quy tắc nào đạt thì chạy dưới CV 15 fold của S7 (`s7_ordinal_v2`), xác nhận bằng
+   Δmacro-recall ≥ +0.03 với Δqwk ≥ −0.015 trên OOF gộp 3 seed.
+3. **Không** sửa `asymmetric_loss` thành gamma theo ngưỡng nữa — mục đích đó đã được tầng quyết định
+   phục vụ với chi phí thấp hơn. G vẫn là kết quả âm tính có giải thích.
+4. Việc kế tiếp, theo thứ tự giá/lợi: đo độ tin cậy FCL từ mask AI (B2, chặn mọi công bố từ S6);
+   kiểm nhận dạng `alpha` của I (gate khởi tạo −2/+2); ensemble điểm liên tục
+   C + Σp(B) + Σp(D) rồi một bộ điểm cắt, dùng lại chính `inner_oof`; CORAL/CORN nếu tỉ lệ vi phạm
+   đơn điệu của E (16.6%) hóa ra quan trọng.

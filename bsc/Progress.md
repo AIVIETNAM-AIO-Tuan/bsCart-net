@@ -14,8 +14,23 @@ Ghi theo ngày, chỉ giữ thông tin cần để tiếp tục công việc. Qu
 - **S8 chạy xong** với 10 model × 5 feature set, holdout một lần n_test=246, 3,6 phút.
 - Thêm `s6_surface_only` vào S8 cho khớp bộ feature set của S7 (`61317e9`).
 - Sổ tay giải thích S6 + S7: https://claude.ai/code/artifact/ad58bf9c-96ef-42b5-bd90-86eba3cfd980
+- **Tầng quyết định** viết xong trong `bsc/ordinal.py` và nối vào S8 (`d629de8`, notebook kế
+  tiếp). Test 24 → 36, đậu hết. **Chưa chạy trên Colab.** Chi tiết ở `Event.md` mục 13/9 thứ hai.
 
 ### Critical Changes
+- **`fit_cutpoints` thêm `objective` / `min_recall` / `qwk_slack`; đường mặc định giữ nguyên
+  BYTE-IDENTICAL** (test golden khoá lại `[1.13266468, 2.22593294, 3.30818994, 4.15042206]`).
+  Mọi con số S7/S8 đã báo cáo đều sinh từ đường đó nên nó là hợp đồng.
+- **`m_xgb_reg` đổi từ `cross_val_predict` sang `ORD.inner_oof`.** Cùng fold (`GroupKFold(4)`
+  không shuffle) nên C tái lập bit-đối-bit; S8 mục 4 **assert** điều đó so với lần chạy 13/9.
+  Gỡ luôn phụ thuộc vào sklearn ≥ 1.4 cho `cross_val_predict(params=)`.
+- **`decode_count` và `apply_cutpoints` giờ chốt hình dạng.** `decode_count` với `thr` shape
+  `(N,)` khi `N == K-1` trước đây broadcast SAI trục mà numpy không kêu; `np.digitize` nhận bins
+  giảm dần cũng không kêu. Hai assert mới chặn cả hai.
+- **Per-class P/R/F1 gộp về một định nghĩa** trong `ordinal.py`. Trước đó S7 và S8 mỗi cái giữ một
+  bản gọi sklearn inline.
+- S8 ghi vào **`s8_holdout_v2/`**, không đè `s8_holdout/`; mục 2 assert phép chia trùng khít bản
+  đã ghim.
 - `bsc/ordinal.py` thêm ba thành phần dùng chung: `asymmetric_loss`, `TwoBranchTrunk`
   (α + β = 1 bảo đảm theo cấu trúc), và thành phần loss `exp` (expected-count) — đường
   gradient **duy nhất** tới `tau`. Ai bật `learn_thresholds` đều phải bật kèm `exp`.
@@ -41,6 +56,13 @@ Ghi theo ngày, chỉ giữ thông tin cần để tiếp tục công việc. Qu
   thấp nhất trong toàn bộ 50 ô của S8. Nhưng chỉ trên 1 trong 2 feature set áp dụng được.
 - `tab_*` **tăng +16%** theo KL thay vì sụp. Phép kiểm an toàn đạt, nhưng là bằng chứng gián
   tiếp của nhiễm gai xương.
+- **Trade-off recall của C nằm ở mục tiêu đặt điểm cắt, không phải ở bộ hồi quy.** QWK quadratic
+  là hệ số tương hợp Lin, mà điểm hồi quy co về trung bình, nên cách rẻ nhất để tăng QWK là nới
+  rộng hai bin ngoài cùng — đúng cái đang làm KL3 tụt còn KL4 phình.
+- **Điểm cắt phân vị (0 tham số) thắng điểm cắt tối ưu QWK trên held-out tổng hợp**: min-recall
+  không bao giờ tệ hơn ở 6/6 seed, QWK tốt hơn ở 5/6. Bỏ bước tìm kiếm lại được cả hai mặt.
+- **Tối ưu thẳng macro-recall thì bất ổn**: 2/4 seed tệ hơn cả hai mặt trên held-out. Với ~80 ca
+  KL4 để đặt điểm cắt, tìm kiếm tham lam chỉ đuổi theo nhiễu.
 
 ### Failures / Risks
 - **Độ tin cậy của FCL tính từ mask AI CHƯA ĐO.** Đây là điều kiện cần trước khi công bố bất
@@ -70,17 +92,26 @@ Ghi theo ngày, chỉ giữ thông tin cần để tiếp tục công việc. Qu
 ### Current State
 - **Verified working:** S6 toàn cohort; S7 15 fold, 6 feature set; S8 holdout 10 model.
   `holdout_split.csv` đã ghim, mọi thí nghiệm sau phải đọc file đó thay vì chia lại.
-- **Likely working but unverified:** `alpha` của nhánh fusion (chưa kiểm nhận dạng);
-  `tau` của H (chưa in ra bao giờ).
+  Tầng quyết định: 36 test đậu cục bộ, và toàn bộ cell mới của S8 đã chạy thử end-to-end trên
+  dữ liệu tổng hợp (mọi assert đậu).
+- **Likely working but unverified:** tầng quyết định **trên dữ liệu thật** — S8 v2 chưa chạy
+  Colab; `alpha` của nhánh fusion (chưa kiểm nhận dạng); `tau` của H (giờ đã in ra, chưa đọc).
 - **Known limitation:** FCL là **cận dưới** — phép đóng chỉ bắt được ổ bị sụn còn lại bao
   quanh, mất sụn ở rìa mảng không được đếm. `fem_med` / `fem_lat` không phải cMF chuẩn. Không
   đo được sụn bánh chè vì mask không có xương bánh chè.
 
 ### Next
-1. **Đo độ tin cậy FCL từ mask AI** (ICC + Bland-Altman). Chặn mọi việc công bố. Dữ liệu sẵn.
-2. **Dò ngưỡng hậu kiểm trên validation** thay vì cố định 0,5 — AUC 0,952 nói vấn đề nằm ở
-   vạch cắt, không ở khả năng phân biệt. Rẻ nhất trong các hướng còn lại.
-3. **Chạy I dưới cross-validation của S7**, cộng phép kiểm nhận dạng `alpha` (gate −2 / +2).
-4. **Xác nhận nhiễm gai xương** bằng điểm gai xương trong `KXR_SQ_BU00.txt`; khung đã dựng
+1. **Chạy S8 v2 trên Colab** (~8–9 phút), đọc bảng frontier ở mục 4b và các cổng ở mục 4c.
+   Quy tắc nào đạt trên cả hai feature set có radiomics thì đem sang S7.
+2. **Đo độ tin cậy FCL từ mask AI** (ICC + Bland-Altman). Chặn mọi việc công bố. Dữ liệu sẵn.
+3. **Chạy quy tắc thắng dưới CV 15 fold của S7** (`s7_ordinal_v2`): Δmacro-recall ≥ +0,03 với
+   Δqwk ≥ −0,015 trên OOF gộp 3 seed, và đếm số fold khả thi cho quy tắc có `min_recall`.
+4. **Kiểm nhận dạng `alpha`** của I: chạy lại với gate khởi tạo −2 và +2. Nếu cả hai hội tụ về
+   ~0,40 thì `alpha` có nghĩa; nếu bám gần giá trị khởi tạo thì bỏ mọi diễn giải.
+5. **Xác nhận nhiễm gai xương** bằng điểm gai xương trong `KXR_SQ_BU00.txt`; khung đã dựng
    sẵn ở S6 mục 7, chỉ cần đặt `KL_FILE`.
-5. Sửa ba lỗi trình bày của S8 (dòng `0.000` của I, in `tau`, con số 0,26–0,38 đã cũ).
+6. Ensemble điểm liên tục C + Σp(B) + Σp(D) rồi một bộ điểm cắt — dùng lại chính `inner_oof`.
+
+### Ghi chú công cụ
+`graphify update .` **không chạy được** trong checkout này: không có `graphify-out/` và CLI không
+nằm trong PATH. Chưa chặn việc gì; nếu cần thì phải dựng graph lần đầu trước.
