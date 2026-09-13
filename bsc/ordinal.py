@@ -96,6 +96,62 @@ def monotonic_violation_rate(p, eps: float = 1e-6) -> float:
 
 # ------------------------------------------------------------ metric
 
+def stratified_group_split(y_idx, groups, test_size: float = 0.2, seed: int = 42):
+    """Chia train/test VUA phan tang theo lop VUA khong tach mot subject ra hai phia.
+
+    Tra (train_idx, test_idx).
+
+    VI SAO KHONG DUNG StratifiedGroupKFold CUA SKLEARN
+    ---------------------------------------------------
+    Do tren dung cohort nay (1229 ca / 1215 subject, KL4 chi 106 ca), so ca KL4 roi vao fold
+    test:
+
+        GroupShuffleSplit      21.6 +- 4.0    (khong phan tang gi ca)
+        StratifiedGroupKFold   20.7 +- 4.0    <-- gan nhu KHONG cai thien
+        StratifiedKFold        21.2 +- 0.39   (phan tang tot, nhung LAM RO RI subject)
+
+    Trong MOT lan chia 5 fold, so ca KL4 cua StratifiedGroupKFold chay tu 16 den 25.
+    Ly do: tieu chi tham lam cua no lay TRUNG BINH do lech tren MOI lop, nen lop hiem gan
+    nhu khong anh huong den quyet dinh va bi hy sinh de can bang cac lop lon.
+
+    CACH O DAY: gop ca theo subject, gan cho moi subject MOT nhan dai dien, roi phan tang
+    tren SUBJECT bang StratifiedShuffleSplit. Khong subject nao bi tach doi, va lop hiem
+    duoc phan bo dung ty le.
+
+    Nhan dai dien = lop CAO NHAT trong cac ca cua subject do. Chon cao nhat vi lop nang moi
+    la thu hiem va can duoc rai deu; lay trung binh hay lay ca dau tien deu lam loang no.
+    Trong cohort nay chi 14/1215 subject co hon mot ca nen lua chon do it anh huong.
+    """
+    from sklearn.model_selection import StratifiedShuffleSplit
+
+    y = np.asarray(y_idx, np.int64)
+    g = np.asarray(groups)
+    uniq, inv = np.unique(g, return_inverse=True)
+
+    lab = np.zeros(len(uniq), np.int64)
+    np.maximum.at(lab, inv, y)                    # nhan dai dien moi subject
+
+    # Phan tang can moi lop co it nhat 2 subject. Tren cohort that thi thoa (106 subject
+    # KL4), nhung tren tap con nho - vd sensitivity chi tren ca tin cay cao - co the khong.
+    # Luc do lui ve chia theo nhom khong phan tang, va NOI RO, thay vi de no nem ValueError.
+    counts = np.bincount(lab, minlength=int(lab.max()) + 1)
+    if (counts[counts > 0] < 2).any():
+        from sklearn.model_selection import GroupShuffleSplit
+        hiem = [int(k) for k, c in enumerate(counts) if 0 < c < 2]
+        print(f"CANH BAO stratified_group_split: lop {hiem} chi co 1 subject nen KHONG phan "
+              f"tang duoc -> lui ve GroupShuffleSplit. Ty trong lop trong tap test se ngau nhien.")
+        gss = GroupShuffleSplit(n_splits=1, test_size=test_size, random_state=seed)
+        tr, te = next(gss.split(np.zeros((len(y), 1)), y, g))
+        return tr, te
+
+    sss = StratifiedShuffleSplit(n_splits=1, test_size=test_size, random_state=seed)
+    _, te_subj = next(sss.split(np.zeros((len(uniq), 1)), lab))
+    te_mask = np.isin(inv, te_subj)
+    tr, te = np.flatnonzero(~te_mask), np.flatnonzero(te_mask)
+    assert not (set(g[tr]) & set(g[te])), "subject bi tach ra hai phia"
+    return tr, te
+
+
 def select_features(X, y, max_corr: float = 0.9, min_keep: int = 10,
                     max_keep: "int | None" = None, seed: int = 0) -> np.ndarray:
     """Chon dac trung khi so cot >> so ca. Tra CHI SO cac cot duoc giu.

@@ -64,6 +64,56 @@ def test_qwk_penalises_far_errors_more():
     assert ORD.qwk(y, y, K) == pytest.approx(1.0)
 
 
+# ------------------------------------------------------------ chia train/test
+
+def test_stratified_group_split_keeps_ratio_and_subjects():
+    """Phan tang dung ty le lop, va khong subject nao bi tach ra hai phia."""
+    rng = np.random.default_rng(0)
+    n_case, n_subj = 1229, 1215
+    kl = [284, 233, 295, 311, 106]
+    subj = np.array(list(range(n_subj)) + list(rng.choice(n_subj, n_case - n_subj, replace=False)))
+    y = np.repeat(np.arange(5), kl)
+    rng.shuffle(y)
+
+    tr, te = ORD.stratified_group_split(y, subj, test_size=0.2, seed=42)
+    assert len(tr) + len(te) == n_case
+    assert not (set(subj[tr]) & set(subj[te])), "subject bi tach doi"
+    assert 0.17 < len(te) / n_case < 0.23
+
+    for k in range(5):
+        p_all = (y == k).mean()
+        p_te = (y[te] == k).mean()
+        assert abs(p_te - p_all) < 0.02, f"KL{k} lech ty trong: {p_te:.3f} vs {p_all:.3f}"
+
+    # Lop hiem phai ON DINH qua nhieu seed - day la dieu StratifiedGroupKFold KHONG lam duoc
+    # (do duoc: sd 3.8 so voi 0.23 cua ham nay).
+    c = [int((y[ORD.stratified_group_split(y, subj, 0.2, seed=s)[1]] == 4).sum())
+         for s in range(30)]
+    assert np.std(c) < 1.0, f"so ca KL4 dao dong sd={np.std(c):.2f}"
+
+
+def test_stratified_group_split_handles_multi_case_subject():
+    """Subject nhieu ca khac lop: khong bi tach, nhan dai dien la lop CAO NHAT."""
+    n = 12
+    subj = np.array([f"s{i//2:02d}" for i in range(2 * n)])       # moi subject dung 2 ca
+    y = np.concatenate([np.array([0, k]) for k in np.repeat([0, 1, 2, 3, 4], n // 5 + 1)[:n]])
+    tr, te = ORD.stratified_group_split(y, subj, test_size=0.34, seed=0)
+    assert not (set(subj[tr]) & set(subj[te]))
+    for s in np.unique(subj):                       # moi subject phai nam tron mot phia
+        i = np.flatnonzero(subj == s)
+        assert set(i) <= set(tr) or set(i) <= set(te), f"subject {s} bi tach doi"
+
+
+def test_stratified_group_split_falls_back_when_class_too_rare(capsys):
+    """Lop chi co 1 subject thi khong phan tang duoc: phai LUI VE chia nhom, khong duoc sap."""
+    subj = np.array([f"s{i}" for i in range(20)])
+    y = np.array([0] * 10 + [1] * 9 + [4])          # lop 4 chi 1 subject
+    tr, te = ORD.stratified_group_split(y, subj, test_size=0.3, seed=0)
+    assert len(tr) + len(te) == len(y)
+    assert not (set(subj[tr]) & set(subj[te]))
+    assert "CANH BAO" in capsys.readouterr().out
+
+
 # ------------------------------------------------------------ chon dac trung
 
 def test_select_features_drops_duplicates_and_noise():
