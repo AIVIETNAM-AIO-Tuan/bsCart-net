@@ -53,31 +53,52 @@ def _left_bar(par, hexcolor="1F4D66"):
 
 
 # ------------------------------------------------------------------ dinh dang trong dong
-TOKEN = re.compile(r"(\*\*.+?\*\*|(?<!\*)\*[^*]+?\*(?!\*)|`[^`]+?`)", re.S)
+CODE_RE = re.compile(r"`([^`]+?)`", re.S)
+#: `(?!\*)` o dau dong la BAT BUOC. Voi `**dam chua *nghieng***`, cum dong la ba dau sao
+#: lien nhau: mot dau dong cua nghieng roi hai dau dong cua dam. Khong co chan nay thi regex
+#: an hai dau SAM NHAT, cat mat dau dong cua nghieng va de lai mot dau sao thua.
+BOLD_RE = re.compile(r"\*\*(.+?)\*\*(?!\*)", re.S)
+ITAL_RE = re.compile(r"(?<!\*)\*([^*]+?)\*(?!\*)", re.S)
+_PATS = (("code", CODE_RE), ("bold", BOLD_RE), ("ital", ITAL_RE))
 
 
-def add_runs(par, text, *, size=None, italic=False, color=None):
-    """Tach **dam** / *nghieng* / `ma` roi them tung run. Xu ly ** truoc * de khong nham."""
-    for piece in TOKEN.split(text):
-        if not piece:
-            continue
-        b = i = code = False
-        if piece.startswith("**") and piece.endswith("**") and len(piece) > 4:
-            piece, b = piece[2:-2], True
-        elif piece.startswith("`") and piece.endswith("`") and len(piece) > 2:
-            piece, code = piece[1:-1], True
-        elif piece.startswith("*") and piece.endswith("*") and len(piece) > 2:
-            piece, i = piece[1:-1], True
-        r = par.add_run(piece)
-        r.bold, r.italic = b, i or italic
-        r.font.name = MONO_FONT if code else BODY_FONT
-        if size:
-            r.font.size = Pt(size)
-        if code:
-            r.font.size = Pt((size or 10.5) - 1)
-            r.font.color.rgb = ACCENT
-        elif color:
-            r.font.color.rgb = color
+def _run(par, txt, size, italic, bold, color, code=False):
+    if not txt:
+        return
+    r = par.add_run(txt)
+    r.bold, r.italic = bold, italic
+    r.font.name = MONO_FONT if code else BODY_FONT
+    if size:
+        r.font.size = Pt(size)
+    if code:
+        r.font.size = Pt((size or 10.5) - 1)
+        r.font.color.rgb = ACCENT
+    elif color:
+        r.font.color.rgb = color
+
+
+def add_runs(par, text, *, size=None, italic=False, bold=False, color=None):
+    """Tach **dam** / *nghieng* / `ma`, DE QUY nen long nhau van dung.
+
+    Ban truoc dung mot regex tach phang nen `**dam chua *nghieng* ben trong**` bi vo:
+    `.+?\\*\\*` an mat mot dau sao cua cum `***` o cuoi, de lai dau sao thua trong file .docx.
+    O day lay cum khop SOM NHAT trong ba mau roi de quy vao ruot no.
+    """
+    while text:
+        found = [(m.start(), i, kind, m)
+                 for i, (kind, pat) in enumerate(_PATS) if (m := pat.search(text))]
+        if not found:
+            _run(par, text, size, italic, bold, color)
+            return
+        pos, _, kind, m = min(found, key=lambda t: (t[0], t[1]))
+        _run(par, text[:pos], size, italic, bold, color)
+        if kind == "code":
+            _run(par, m.group(1), size, italic, bold, color, code=True)
+        elif kind == "bold":
+            add_runs(par, m.group(1), size=size, italic=italic, bold=True, color=color)
+        else:
+            add_runs(par, m.group(1), size=size, italic=True, bold=bold, color=color)
+        text = text[m.end():]
 
 
 # ------------------------------------------------------------------ khoi
@@ -203,17 +224,24 @@ def convert(md_path: Path, docx_path: Path):
             add_runs(p, " ".join(buf), size=10)
             continue
 
-        # --- chu thich hinh/bang: ca dong nam trong *...*
-        if s.startswith("*") and s.endswith("*") and not s.startswith("**"):
-            buf = [s]
-            while i + 1 < n and lines[i + 1].strip() and not re.match(
-                    r"^([#>|\-]|!\[|\d+\.\s)", lines[i + 1].strip()):
+        # --- chu thich hinh/bang: ca khoi nam trong *...*, CO THE NHIEU DONG
+        # Ban truoc doi dong DAU vua mo vua dong bang dau sao, nen chu thich dai nhieu dong
+        # roi thang xuong nhanh doan van thuong va de lo dau sao trong file .docx.
+        if s.startswith("*") and not s.startswith("**"):
+            buf, closed = [], False
+            while i < n and lines[i].strip():
+                cur = lines[i].strip()
+                buf.append(cur)
                 i += 1
-                buf.append(lines[i].strip())
+                if cur.endswith("*") and not cur.endswith("**"):
+                    closed = True
+                    break
+            txt = " ".join(buf)[1:]                 # bo dau sao MO
+            if closed:
+                txt = txt[:-1]                      # bo dau sao DONG
             p = doc.add_paragraph()
             p.paragraph_format.space_after = Pt(11)
-            add_runs(p, " ".join(buf).strip("*"), size=9, italic=True, color=MUTED)
-            i += 1
+            add_runs(p, txt, size=9, italic=True, color=MUTED)
             continue
 
         # --- danh sach gach dau dong / danh so
@@ -245,6 +273,22 @@ def convert(md_path: Path, docx_path: Path):
     ftr = sec.footer.paragraphs[0]
     ftr.alignment = WD_ALIGN_PARAGRAPH.LEFT
     add_runs(ftr, f"{md_path.stem}  ·  sinh tu {md_path.name}", size=8, color=MUTED)
+
+    # Canh gac: dau sao con sot NGOAI cac run ma nghia la mot khoi markdown khong duoc nhan
+    # dien. Bo qua run ma, vi ten cot kieu `fcl_*_pct` co dau sao la noi dung that.
+    def _leftover(par):
+        bad = "".join(r.text for r in par.runs if r.font.name != MONO_FONT)
+        return par.text[:70] if "*" in bad or "`" in bad else None
+
+    leftover = [t for t in (_leftover(p) for p in doc.paragraphs) if t]
+    leftover += [t for t in (_leftover(p) for tb in doc.tables for row in tb.rows
+                             for c in row.cells for p in c.paragraphs) if t]
+    if leftover:
+        print(f"CANH BAO: {len(leftover)} doan con dau markdown chua duoc xu ly:")
+        for x in leftover[:8]:
+            print("   ", repr(x))
+    else:
+        print("khong con dau markdown sot lai")
 
     doc.save(docx_path)
     return docx_path

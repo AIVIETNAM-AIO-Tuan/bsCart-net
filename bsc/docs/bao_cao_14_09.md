@@ -71,9 +71,16 @@ thực sự** của bảng S3, mọi kết quả cũ chạy lại đều ra đú
 
 ![Hình 1](figs/fig1_s6_fcl.png)
 
-*Hình 1. Cột mới bắt được mất sụn, cột cũ thì không. `denuded_ratio_tibial` chỉ đạt ρ = 0,105 và
-trung vị của nó nhích từ 0,858 lên 0,864 khi đi từ gối lành sang gối nặng nhất — đó không phải tín
-hiệu yếu mà là không có tín hiệu.*
+*Hình 1. **Bảng a** tách thành hai cụm rời hẳn nhau. Năm cột FCL nằm sát nhau trong dải 0,371–0,433,
+rồi có một khoảng trống 0,209 trước khi tới cột kế tiếp; hai cột cũ nằm ép sát vạch 0, một trong đó
+còn mang dấu âm, tức đo ngược chiều bệnh. Đáng chú ý là ba cột dẫn đầu chỉ lệch nhau 0,010 dù đo ba
+thứ khác hẳn nhau — diện tích ổ lớn nhất, số ổ, và phần trăm diện tích — nghĩa là tín hiệu nằm ở bản
+thân hiện tượng mất sụn chứ không phải ở cách tổng hợp con số.
+**Bảng b** cho ba đường cùng một hình dạng: đi ngang, thậm chí chúc nhẹ xuống ở chặng KL0 sang KL1,
+uốn lên từ KL2, rồi dốc đứng ở chặng cuối. Riêng chặng KL3 sang KL4 chiếm 56–78% toàn bộ mức tăng của
+cả thang. Thứ tự ba khoang không đổi ở bất kỳ mức nào, và khoảng cách giữa sụn đùi với mâm chày ngoài
+giãn ra gấp 3,5 lần từ KL0 tới KL4 — mất sụn không chỉ nhiều hơn mà còn lệch về một khoang rõ hơn khi
+bệnh nặng lên.*
 
 Hai điều đáng chú ý ở bảng bên phải. **KL0 và KL1 phẳng, thậm chí hơi nghịch chiều** — đúng với định
 nghĩa lâm sàng, vì hai mức này chưa có hẹp khe khớp rõ nên chưa nên có mất sụn toàn bề dày; con số
@@ -125,7 +132,13 @@ Sáu mô hình khác nhau **đúng một chỗ**: cách xử lý thứ tự.
 
 ![Hình 2](figs/fig2_s7_qwk.png)
 
-*Hình 2. QWK out-of-fold trên cả 1.229 ca, trung bình 3 seed. Độ lệch chuẩn qua seed 0,002–0,015.*
+*Hình 2. Hai điều đọc được theo hai hướng khác nhau. Theo chiều ngang trong mỗi nhóm, thứ tự ba cột
+màu không đổi ở cả sáu mô hình: thêm đặc trưng luôn tăng, mức tăng từ bảng cũ lên bộ đầy đủ là +0,117
+tới +0,196. Theo chiều dọc giữa các nhóm, **khoảng biến thiên giữa các mô hình co lại khi đặc trưng
+tốt lên**: rộng 0,090 trên bảng cũ, 0,081 khi thêm S6, chỉ còn 0,037 trên bộ đầy đủ. Nói cách khác,
+chọn mô hình nào là chuyện quan trọng khi đặc trưng nghèo và gần như hết quan trọng khi đặc trưng
+giàu. Vùng tô xám bên trái là hai mô hình không dùng thứ tự; chúng bị bỏ xa ở cột xanh dương nhưng
+bắt kịp ở cột xanh lục.*
 
 | Bộ đặc trưng | Số cột | A (nền) | Tốt nhất | Mô hình | MAE tốt nhất |
 |---|---|---|---|---|---|
@@ -170,17 +183,25 @@ tốn thời gian tranh luận cây hay mạng; **loss ordinal mới là phần 
 
 ![Hình 3](figs/fig3_s7_confusion.png)
 
-*Hình 3. Ma trận nhầm lẫn out-of-fold trên cả 1.229 ca, bộ đặc trưng đầy đủ. Ô tô đậm theo tỷ lệ
-trong hàng; số là đếm ca; viền xanh là đoán đúng.*
+*Hình 3. Ô tô đậm theo tỷ lệ trong hàng, số là đếm ca, viền xanh là đoán đúng. Cả hai ma trận có khối
+đậm chạy dọc đường chéo và lan sang đúng một ô hai bên, còn **hai góc đối diện thì trống hoàn toàn**:
+không một ca KL0 nào bị gọi thành KL4 và ngược lại, ở cả hai mô hình. Điểm khác nhau giữa hai bảng gọn
+trong một phép đánh đổi. B đọc đúng 115 trên 233 ca KL1 còn D chỉ 89, nhưng ở hàng cuối thì ngược lại:
+D bắt được 63 trên 106 ca KL4 còn B chỉ 52. Nhìn hàng KL4 của B thấy rõ vì sao — 52 ca bị đẩy sang ô
+KL3 ngay bên cạnh, **đúng bằng** số ca nó gọi đúng.*
 
-Cả hai mô hình gần như không còn ca lệch từ 3 bậc trở lên. Sai số tập trung ở cận-chéo, đúng tinh
-thần của thang thứ tự.
+Sai số của cả hai tập trung ở cận chéo, đúng tinh thần của thang thứ tự, và gần như không còn ca lệch
+từ 3 bậc trở lên.
 
 ### 3.4. Recall và F1 theo từng lớp
 
 ![Hình 4](figs/fig4_s7_f1.png)
 
-*Hình 4. F1 theo từng độ KL, bộ đặc trưng đầy đủ, out-of-fold n = 1.229.*
+*Hình 4. Cả ba mô hình vẽ ra cùng một đường gấp khúc hình chữ M: cao ở KL0, sụt sâu ở KL1, hồi một
+phần ở KL2, đạt đỉnh ở KL3 rồi lại tụt ở KL4. Hố KL1 sâu 21–28 điểm so với đỉnh KL3 ngay cạnh nó,
+và nó là hố duy nhất không mô hình nào lấp được. Ở bốn lớp còn lại ba cột gần bằng nhau, chênh lệch
+giữa các mô hình dồn hết vào hai lớp: tại KL1 thì B dẫn trước A tới 9 điểm, còn tại KL4 thì D dẫn
+trước A 8 điểm. Baseline A chỉ thắng ở đúng một chỗ là KL0, và thua ở mọi chỗ khác.*
 
 | Độ KL | A (S4 gốc) | B (Frank-Hall) | D (MLP ordinal) | E (MLP slide) |
 |---|---|---|---|---|
@@ -256,15 +277,23 @@ bơm là nới rộng hai bin ngoài cùng. Thuật toán không hỏng — nó 
 
 ![Hình 5](figs/fig5_s8_confusion.png)
 
-*Hình 5. Cùng một bộ hồi quy, chỉ đổi quy tắc đặt điểm cắt. Điểm cắt phân vị đặt cắt sao cho tỷ lệ dự
-đoán bằng tỷ lệ thật và **không có tham số nào để fit**; nó trả lại 7 điểm phần trăm recall cho KL3.*
+*Hình 5. Hai ma trận đến từ **cùng một bộ hồi quy đã huấn luyện**, khác nhau duy nhất ở chỗ đặt bốn
+điểm cắt. So hai hàng cuối thấy ngay cái giá của quy tắc tối ưu QWK: bảng trái đẩy được 21 ca KL4 vào
+đúng ô, nhưng hàng KL3 ngay trên đó chỉ còn 28 ca đúng và để 8 ca trôi sang KL4. Bảng phải làm ngược
+lại, KL3 lên 32 và KL4 xuống 18. Cột KL4 của bảng trái dài hơn hẳn cột tương ứng bên phải — đó chính
+là hình ảnh của việc nới rộng bin ngoài cùng. Điểm cắt phân vị đặt cắt sao cho tỷ lệ dự đoán bằng tỷ
+lệ thật và **không có tham số nào để fit**.*
 
 ### 4.3. Hiệu ứng tái lập được: ngưỡng dò đổi precision KL4 lấy recall KL4
 
 ![Hình 6](figs/fig6_s8_threshold.png)
 
-*Hình 6. Sáu cặp = 3 mô hình (B, D, E) × 2 bộ đặc trưng có radiomics. Không một cặp nào đi ngược
-chiều.*
+*Hình 6. Sáu cặp là 3 mô hình (B, D, E) nhân 2 bộ đặc trưng có radiomics. **Không một đoạn nối nào
+bắt chéo hướng chung**: sáu đoạn bên trái đều đi lên, sáu đoạn bên phải đều đi xuống. Độ dốc thì rất
+khác nhau — cặp thấp nhất ở bảng a nhảy từ 0,39 lên 0,89 trong khi cặp cao nhất chỉ đi từ 0,54 lên
+0,65, tức **mô hình nào đang bỏ sót KL4 nhiều nhất thì được lợi nhiều nhất**. Ở bảng b, năm trong sáu
+điểm xuất phát chụm trong dải 0,83–0,88 rồi tỏa ra thành 0,63–0,83, cho thấy cái giá phải trả không
+đồng đều giữa các mô hình.*
 
 | | Recall KL4 | Precision KL4 |
 |---|---|---|
@@ -296,7 +325,13 @@ khác nhau. Tách ba trạng thái thì thấy rõ.
 
 ![Hình 7](figs/fig7_s6_usage.png)
 
-*Hình 7. Bộ 926 cột, gain đọc từ mô hình A (XGB softmax).*
+*Hình 7. **Bảng a** nhìn thoáng thì radiomics áp đảo, nhưng phải đọc kèm dòng chữ nhỏ dưới mỗi cột:
+78,4% gain đó trải trên 89 cột, còn 15,5% của S6 chỉ trải trên 13 cột. Quy về từng cột thì thứ tự đảo
+ngược — bảng cũ 1,24%, S6 1,19%, radiomics 0,88%. Chiều dài cột cam nói lên số lượng chứ không nói
+lên chất lượng.
+**Bảng b** cho thấy ba cột dẫn đầu của S6 đều thuộc họ FCL, và hai cột đứng đầu chính là hai cột đã
+qua ngưỡng 5 mm². Gain giảm đều từ 2,47% xuống 1,00% mà không có bậc hụt nào, tức không phải một cột
+duy nhất gánh toàn bộ đóng góp của S6.*
 
 | Họ đặc trưng | Cột vào | LASSO bỏ | Giữ và có gain | Tỷ trọng gain | Gain / cột |
 |---|---|---|---|---|---|
