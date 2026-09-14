@@ -8,6 +8,34 @@ Ghi chú: `tAB` = total area of subchondral bone (footprint), `cAB` = cartilage-
 
 ---
 
+## 0. Bài PHƯƠNG PHÁP gốc — chính là ý tưởng ở mục 2.1 của báo cáo
+
+**Wirth W, Eckstein F (2008).** *A technique for regional analysis of femorotibial cartilage thickness
+based on quantitative magnetic resonance imaging.* IEEE Trans Med Imaging 27(6):737–44.
+[DOI](https://doi.org/10.1109/TMI.2007.907323) · PMID 18541481
+
+> **Đây là bài phải trích cho ý tưởng "neo vào bề mặt xương", không phải bài thuật ngữ 2006.**
+
+Phần tóm tắt của họ nói thẳng: mâm chày được chia thành vùng trung tâm của **tổng diện tích xương dưới
+sụn (tAB)** cùng các vùng trước, sau, trong, ngoài bao quanh, và **khoảng cách Euclid giữa tAB với bề
+mặt sụn được dùng để xác định độ dày sụn**. Đó đúng là hệ quy chiếu mà S6 đang dùng: lấy mặt xương làm
+gốc rồi đo lên, chứ không lấy mảng sụn làm gốc.
+
+Bài cũng cho **sai số độ lặp lại** — thứ ta đang thiếu mốc để so:
+
+| | Giá trị của họ |
+|---|---|
+| Sai số độ lặp lại, độ dày sụn trung bình theo vùng | 19 µm (1,5%) tới 84 µm (4,7%) |
+| Độ ổn định diện tích vùng con khi đặt lại tư thế | độ lệch chuẩn 0,0–0,3% |
+| Cỡ mẫu | 12 người test-retest (6 lành, 6 thoái hóa) |
+
+> **Một khác biệt phải nói rõ khi trích.** Họ đo bằng **khoảng cách Euclid** từ tAB tới mặt sụn; S6 của
+> ta **bắn tia dọc pháp tuyến** rồi lấy đoạn liên tục đầu tiên. Hai cách trùng nhau khi mảng sụn gần
+> song song với mặt xương, nhưng lệch ở vùng cong. Nên câu đúng để viết là "theo tinh thần của
+> Wirth & Eckstein 2008", **không phải** "cài đặt lại phương pháp của Wirth & Eckstein 2008".
+
+---
+
 ## 1. Bài định nghĩa thuật ngữ — nền của toàn bộ họ cột S6
 
 **Eckstein F, Ateshian G, Burgkart R, và cs. (2006).** *Proposal for a nomenclature for magnetic
@@ -170,12 +198,30 @@ Cho thấy dAB đủ chín để làm tiêu chí đánh giá lâm sàng, không 
 
 ---
 
+## Nên trích bài nào cho mục nào của báo cáo 14/9
+
+| Câu trong báo cáo | Trích bài |
+|---|---|
+| **2.1** "neo vào bề mặt xương, không neo vào sụn" | **Wirth & Eckstein 2008** (mục 0) — bài phương pháp |
+| **2.1** tên `tAB` / `cAB` / `dAB` / `ThC.tAB` | Eckstein 2006 (mục 1) — bài thuật ngữ |
+| **2.1** "tính lỗ là 0, đó là chỗ cột cũ mù" | Eckstein 2006 + Buck 2010 (mục 3) |
+| **2.1** vì sao chỉ cần ba họ cột | Buck 2010 (mục 3) |
+| **2.2** mốc để chấm độ tin cậy | Wirth & Eckstein 2008 (1,5–4,7%) và 2025 (tAB −0,4 tới 4,3%) |
+| **2.3** kỳ vọng footprint không sụp ở KL4 | Eckstein 2011 (mục 6) |
+| **2.3** nghi vấn nhiễm gai xương | Frobell 2010 (mục 2) — 61% dAB là gai xương |
+| **7.2** chia vùng con | Eckstein 2008 (mục 8) + ngưỡng 10% của Cotofana 2013 (mục 4) |
+| **7.4** hướng atlas | Wirth & Eckstein 2025 (mục 5) |
+
+**Nếu chỉ được trích một bài cho mục 2:** lấy **Wirth & Eckstein 2008**. Nó là bài phương pháp, đúng
+hai tác giả, và mô tả đúng hệ quy chiếu mà S6 dùng. Bài 2006 chỉ đặt tên, không đặt ra cách đo.
+
 ## Thứ tự nên đọc
 
-1. **Wirth & Eckstein 2025** (mục 5) — trùng bài toán kỹ thuật của ta nhất, và miễn phí toàn văn.
-2. **Frobell 2010** (mục 2) — con số dAB theo KL để đối chiếu với S6, và cảnh báo 61% là gai xương.
-3. **Eckstein 2006** (mục 1) — chốt lại cách đặt tên cột.
-4. **Buck 2010** (mục 3) — biện minh cho ba họ cột.
+1. **Wirth & Eckstein 2008** (mục 0) — nguồn của ý tưởng mục 2.1.
+2. **Wirth & Eckstein 2025** (mục 5) — trùng bài toán kỹ thuật của ta nhất, và miễn phí toàn văn.
+3. **Frobell 2010** (mục 2) — con số dAB theo KL để đối chiếu với S6, và cảnh báo 61% là gai xương.
+4. **Eckstein 2006** (mục 1) — chốt lại cách đặt tên cột.
+5. **Buck 2010** (mục 3) — biện minh cho ba họ cột.
 
 Bốn bài còn lại đọc khi cần lập luận cụ thể.
 
