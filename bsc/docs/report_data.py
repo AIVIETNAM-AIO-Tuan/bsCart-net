@@ -44,9 +44,9 @@ S6_RHO = [
 
 # muc 5: trung vi phan tram footprint bi tro, theo KL
 S6_FCL_BY_KL = {
-    "Sun dui":        [1.110, 1.073, 1.248, 1.628, 2.995],
-    "Mam chay trong": [0.856, 0.804, 0.966, 1.185, 2.336],
-    "Mam chay ngoai": [0.659, 0.654, 0.735, 0.984, 1.397],
+    "Sụn đùi":        [1.110, 1.073, 1.248, 1.628, 2.995],
+    "Mâm chày trong": [0.856, 0.804, 0.966, 1.185, 2.336],
+    "Mâm chày ngoài": [0.659, 0.654, 0.735, 0.984, 1.397],
 }
 
 # muc 5 + Event.md B3: trung vi dien tich footprint mm2 - phep kiem an toan
@@ -62,7 +62,7 @@ S7 = dict(n_combo=540, minutes=41.3, n_splits=5, seeds=[0, 1, 2], n_folds=15)
 S7_MODELS = ["A_xgb_softmax", "A2_mlp_softmax", "B_xgb_frankhall",
              "C_xgb_reg_cutpoints", "D_mlp_ordinal_only", "E_mlp_slide_multitask"]
 S7_MODEL_SHORT = {"A_xgb_softmax": "A\nXGB softmax", "A2_mlp_softmax": "A2\nMLP softmax",
-                  "B_xgb_frankhall": "B\nFrank-Hall", "C_xgb_reg_cutpoints": "C\nhoi quy+cat",
+                  "B_xgb_frankhall": "B\nFrank-Hall", "C_xgb_reg_cutpoints": "C\nhồi quy + cắt",
                   "D_mlp_ordinal_only": "D\nMLP ordinal", "E_mlp_slide_multitask": "E\nMLP slide"}
 
 # muc 4, bang "out-of-fold gop": QWK trung binh qua 3 seed
@@ -82,9 +82,9 @@ S7_MAE = {
 }
 S7_N_FEATURES = {"legacy_s3": 15, "s6_surface_only": 55, "s6_all": 70,
                  "s5_radiomics": 871, "s6_all_plus_radiomics": 926}
-S7_FS_LABEL = {"legacy_s3": "Bang cu (15 cot)", "s6_surface_only": "Be mat S6 (55)",
-               "s6_all": "Cu + S6 (70)", "s5_radiomics": "Cu + radiomics (871)",
-               "s6_all_plus_radiomics": "Tat ca (926)"}
+S7_FS_LABEL = {"legacy_s3": "Bảng cũ (15 cột)", "s6_surface_only": "Bề mặt S6 (55)",
+               "s6_all": "Cũ + S6 (70)", "s5_radiomics": "Cũ + radiomics (871)",
+               "s6_all_plus_radiomics": "Tất cả (926)"}
 
 # muc 5b: F1 theo lop (%), bo s6_all_plus_radiomics, seed 0, out-of-fold n=1229
 S7_F1 = {
@@ -146,23 +146,23 @@ S8_DEFAULT = {
 # muc 4b: nhung dong TOT NHAT cua tang quyet dinh
 S8_BEST = [
     # (nhan, bo dac trung, qwk, macro_recall, off2, recall_KL4, precision_KL4, ghi chu)
-    ("E @ nguong do",  "Tat ca (926)",        0.814, 0.614, 0.077, 0.769, 0.690, "cao nhat bang"),
-    ("C @ san recall", "Tat ca (926)",        0.805, 0.571, 0.057, 0.808, 0.724, ""),
-    ("D @ nguong do",  "Tat ca (926)",        0.805, 0.565, 0.049, 0.731, 0.826, ""),
-    ("C @ mac dinh",   "Tat ca (926)",        0.803, 0.571, 0.061, 0.808, 0.724, "mac dinh tot nhat"),
-    ("B @ nguong do",  "Cu + radiomics (871)",0.798, 0.610, 0.089, 0.885, 0.676, ""),
-    ("E @ mac dinh",   "Tat ca (926)",        0.797, 0.564, 0.073, 0.500, 0.867, ""),
+    ("E @ ngưỡng dò",  "Tất cả (926)",        0.814, 0.614, 0.077, 0.769, 0.690, "cao nhất bảng"),
+    ("C @ sàn recall", "Tất cả (926)",        0.805, 0.571, 0.057, 0.808, 0.724, ""),
+    ("D @ ngưỡng dò",  "Tất cả (926)",        0.805, 0.565, 0.049, 0.731, 0.826, ""),
+    ("C @ mặc định",   "Tất cả (926)",        0.803, 0.571, 0.061, 0.808, 0.724, "mặc định tốt nhất"),
+    ("B @ ngưỡng dò",  "Cũ + radiomics (871)",0.798, 0.610, 0.089, 0.885, 0.676, ""),
+    ("E @ mặc định",   "Tất cả (926)",        0.797, 0.564, 0.073, 0.500, 0.867, ""),
 ]
 
 # muc 4b: hieu ung do nguong len lop KL4. 6 cap (model x bo dac trung), vach 0.5 -> nguong do.
 S8_THR_EFFECT = [
     # (model, bo dac trung, recall co dinh, recall do, precision co dinh, precision do)
-    ("B", "Tat ca",         0.423, 0.731, 0.846, 0.704),
-    ("D", "Tat ca",         0.538, 0.731, 0.875, 0.826),
-    ("E", "Tat ca",         0.500, 0.731, 0.867, 0.731),
-    ("B", "Cu + radiomics", 0.385, 0.885, 0.833, 0.676),
-    ("D", "Cu + radiomics", 0.538, 0.654, 0.875, 0.630),
-    ("E", "Cu + radiomics", 0.538, 0.731, 0.933, 0.655),
+    ("B", "Tất cả",         0.423, 0.731, 0.846, 0.704),
+    ("D", "Tất cả",         0.538, 0.731, 0.875, 0.826),
+    ("E", "Tất cả",         0.500, 0.731, 0.867, 0.731),
+    ("B", "Cũ + radiomics", 0.385, 0.885, 0.833, 0.676),
+    ("D", "Cũ + radiomics", 0.538, 0.654, 0.875, 0.630),
+    ("E", "Cũ + radiomics", 0.538, 0.731, 0.933, 0.655),
 ]
 
 # muc 6: ma tran nham lan tren tap test n=246, bo s6_all_plus_radiomics
@@ -178,8 +178,8 @@ S8_CONFUSION = {
 # muc 4d: cot S6 co duoc classifier dung khong, bo s6_all_plus_radiomics
 S8_S6_USAGE = {
     # ho: (so cot vao, LASSO bo, giu va co gain, ty trong gain %)
-    "Be mat S6": (55, 42, 13, 15.5),
-    "Bang cu":   (15, 10, 5, 6.2),
+    "Bề mặt S6": (55, 42, 13, 15.5),
+    "Bảng cũ":   (15, 10, 5, 6.2),
     "Radiomics": (856, 767, 89, 78.4),
 }
 S8_S6_TOP = [("fcl_fem_maxdef_mm2", 2.467), ("fcl_mt_ndef", 2.180), ("fcl_lt_mm2", 1.828),
