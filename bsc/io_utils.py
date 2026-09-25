@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import glob
 import os
+import posixpath
 import zipfile
 
 import numpy as np
@@ -89,18 +90,50 @@ def unzip_multipart(zip_glob: str, dest: str) -> int:
     return n
 
 
-def assert_drive_first(path: str) -> str:
-    """Bat loi ghi vao /content/ RAM Colab. Tra lai path neu hop le.
+def _is_colab_local(p: str) -> bool:
+    return p.startswith("/content/") and not p.startswith("/content/drive/")
+
+
+def assert_drive_first(path):
+    """Bat loi ghi SAN PHAM vao /content/ RAM Colab. Tra lai path neu hop le.
 
     Xem track._assert_drive_first - lap lai o day de notebook goi truc tiep.
+    Kiem ca abspath (duong tuong doi tren Colab nam trong /content) LAN chuoi POSIX da chuan
+    hoa (de test chay duoc tren Windows, noi abspath('/content/x') thanh 'C:\\content\\x').
+    /content/input_cache (bo dem DOC du lieu dau vao, ngoai le duoc duyet 24/09/2026) KHONG
+    duoc dung cho san pham - no cung bi chan o day.
     """
-    ap = os.path.abspath(path)
-    if ap.startswith("/content/") and not ap.startswith("/content/drive/"):
+    s = os.fspath(path)
+    raw = posixpath.normpath(s.replace("\\", "/"))
+    if _is_colab_local(os.path.abspath(s)) or _is_colab_local(raw):
         raise ValueError(
-            f"'{path}' nam trong /content/ RAM Colab - MAT khi ngat phien. "
+            f"'{s}' nam trong /content/ RAM Colab - MAT khi ngat phien. "
             f"Ghi vao /content/drive/MyDrive/bsc/. Day la loi da lam mat 544 prediction."
         )
     return path
+
+
+def resolve_path(p, remaps=(), must_exist: bool = True):
+    """Tim duong ton tai cho `p`: chinh no, roi thay tien to theo `remaps` [(cu, moi), ...].
+
+    Dung cho `dess_path` cua manifest da cu (vd nnUNet_raw chuyen vao MyDrive/OAI_seg/).
+    Thu theo thu tu; tien to phai khop NGUYEN thanh phan duong (ket thuc bang '/').
+    must_exist=False => tra None khi khong thay (de audit dem); mac dinh => FileNotFoundError.
+    """
+    s = os.fspath(p)
+    tried = [s]
+    if os.path.exists(s):
+        return s
+    for old, new in remaps:
+        old_d = old.rstrip("/") + "/"
+        if s.startswith(old_d):
+            cand = new.rstrip("/") + "/" + s[len(old_d):]
+            tried.append(cand)
+            if os.path.exists(cand):
+                return cand
+    if must_exist:
+        raise FileNotFoundError(f"khong thay {s}; da thu {tried}")
+    return None
 
 
 def list_cases(images_dir: str, suffix: str = "_0000.nii.gz") -> list:

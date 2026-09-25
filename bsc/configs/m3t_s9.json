@@ -1,0 +1,73 @@
+{
+  "schema": "m3t_s9/v1",
+  "plan": "docs/ke_hoach_m3t_cls.md",
+  "status": "DRAFT",
+  "status_note": "DRAFT = chua dang ky truoc. Chi doi thanh REGISTERED trong commit dang ky truoc (sau khi chay S9 muc 0-7 va ghi Event.md). Notebook S9 muc 8 tu choi train khi status != REGISTERED.",
+  "train": {
+    "seed": 20260925,
+    "batch_size": 2,
+    "lr": 0.0001,
+    "max_epochs": 300,
+    "min_epochs": 60,
+    "patience": 30,
+    "min_delta": 0.005,
+    "window": 5,
+    "num_workers": 8,
+    "allow_tf32": true,
+    "cudnn_benchmark": true,
+    "augment": "knee_testing_v3_cell8",
+    "model": {}
+  },
+  "train_note": "Cong thuc dang ky: seed, batch_size, lr, max/min_epochs, patience, min_delta, window, augment, model ({} = M3T_CFG cua cell 20). num_workers/allow_tf32/cudnn_benchmark la num van hanh: doi TRUOC epoch 0 khong vi pham dang ky (ghi Event.md); doi giua chung bi chan vi nam trong cfg_hash.",
+  "inputs": {
+    "zip_name": "SAG_3D_DESS_v2_full.zip",
+    "zip_size": 31742995379,
+    "zip_n_npz": 9444,
+    "zip_index_md5": "24b25c8d3681a449781c0f7389a2b49e",
+    "zip_gdrive_id": "1k4EUOURlK6IxnmlYOV1vVmI4UFwIaym8",
+    "labels_name": "unified_xray_mri_label.csv",
+    "labels_md5": "224c6afb8ba1282e1307d0c2defbb3ba",
+    "labels_gdrive_id": "1GTXX5qt89wMY4NuwAJzCiveyx6APR8yL",
+    "leaky_weights_gdrive_id": "1SdVwDQmWPu2KbQbtwitAdU_bYCl4h2j5",
+    "torchio_version": "1.2.1"
+  },
+  "gates": {
+    "g0": {"n_test": 1636, "correct": 1073, "tol": 2},
+    "pool_kl4_train_min": 84,
+    "epoch30": {"epoch": 29, "min_smoothed_val_qwk": 0.5},
+    "sanity": {"max_abs_d_acc": 0.05, "max_abs_d_qwk": 0.05},
+    "image": {"r_median": 0.99, "r_p01": 0.97, "margin": 0.1, "slope_lo": 0.95, "slope_hi": 1.05},
+    "cls": {"nn_self": 0.98, "dist_ratio": 0.25, "head_agree": 0.95, "d_ekl": 0.1},
+    "fingerprint_hit_r": 0.97,
+    "design_n_cases": 300,
+    "design_broad_n_cases": 12
+  },
+  "evaluation": {
+    "primary": {
+      "model": "B_xgb_frankhall",
+      "a": "m3t_only__nosel",
+      "b": "s6_all_plus_m3t__nosel",
+      "n_cols_a": 128,
+      "n_cols_b": 198
+    },
+    "estimand": "trung binh qua 3 seed chia fold cua QWK(b) - QWK(a) tren OOF gop tung seed",
+    "min_delta": 0.02,
+    "levels": "ordinal.classify_delta: vuot_nguong L>delta | duoi_nguong L>0 va U<delta | te_hon U<0 | chua_du con lai (ke ca cham bien)",
+    "bootstrap": {"n_boot": 10000, "seed": 0, "alpha": 0.05, "groups": "subject", "shape": "(N, S)"},
+    "cv": {"n_splits": 5, "seeds": [0, 1, 2], "splitter": "StratifiedGroupKFold(shuffle=True, random_state=seed), groups=subject"},
+    "downstream_model": {"xgb": "XGB_KW cua S7 (n_estimators=300, max_depth=4, learning_rate=0.05, subsample=0.8, colsample_bytree=0.8, random_state=42)", "decode": "decode_count @0.5, monotone cummin", "threshold_tuning": false, "feature_selection_primary": false},
+    "also_report": ["mae", "off_by_2", "kl4_recall", "kl4_precision", "delta_per_seed"],
+    "secondary": [
+      {"a": "legacy_plus_m3t__nosel", "b": "s6_all_plus_m3t__nosel", "question": "gia tri rieng cua bien so be mat S6"},
+      {"a": "m3t_head", "b": "s6_all_plus_m3t__nosel", "question": "so voi mo hinh anh ban dau"},
+      {"a": "m3t_head", "b": "m3t_only__nosel", "question": "doi chung hoc lai bo phan loai + thich nghi nguon nhan"},
+      {"a": "s6_all", "b": "s6_all_plus_m3t__nosel", "question": "gia tri cua anh ben canh biomarker"},
+      {"a": "s6_all_plus_radiomics", "b": "s6_all_plus_m3t", "question": "phu: doi chieu pipeline radiomics"},
+      {"a": "rad_only", "b": "m3t_only", "question": "phu: doi chieu radiomics dung rieng"},
+      {"a": "s6_all_plus_m3t", "b": "s6_all_plus_radiomics_plus_m3t", "question": "phu: ket hop ca ba nguon"}
+    ],
+    "checkpoint_sensitivity": {"window": "trailing 5 epoch cua select_epoch", "rerun": "chi cap B __nosel chinh, giu fold/config", "report": "delta tung checkpoint, min/max, so checkpoint cung chieu; khong chon checkpoint tot nhat"},
+    "pilot": {"model": "B_xgb_frankhall", "a": "s6_all", "b": "s6_all_plus_radiomics", "source": "s7_ordinal/oof_predictions_seed0.csv", "note": "kiem do chinh xac dat duoc; MOT seed vi artifact cu chi luu seed 0; KHONG dung de dinh nghia delta"},
+    "holdout_direction_rule": "S10: khi delta S7 > 0, delta holdout > 0 la cung chieu (bang chung ho tro yeu, khong can CI loai 0)"
+  }
+}
