@@ -5,6 +5,48 @@ Ghi theo ngày, chỉ giữ thông tin cần để tiếp tục công việc. Qu
 
 ---
 
+## 2026-09-25
+
+### Completed
+- Triển khai `docs/ke_hoach_m3t_cls.md` bước (1)–(4), xem `Event.md` 2026-09-25 (hai mục):
+  `ordinal.bootstrap_delta(groups=)` + `seed_deltas` + `classify_delta`; `bsc/m3t.py`; `bsc/m3t_train.py`;
+  `configs/m3t_s9.json` (DRAFT); `io_utils.resolve_path`, `assert_drive_first` kiểm chuỗi POSIX, `load_nii` nhận
+  NIfTI 4D có chiều cuối 1; notebook `biomarker_s9_m3t` (mục 0–12) và `biomarker_s10_oaizib_holdout` (mục 0–2).
+- Kiểm port cục bộ trên trọng số thật: softmax ghi trong notebook gốc tái lập đúng; `minmax01` bit-đối-bit torchio.
+- Hiệu chỉnh ngưỡng dấu vân tay trên npz thật → 0,90.
+- Chạy thử S9 và S10 end-to-end bằng harness cục bộ trên dữ liệu tổng hợp (script trong scratchpad, không commit).
+
+### Critical Changes
+- `bootstrap_delta`: tham số mới chỉ có từ khoá `groups=`; đầu vào NaN / -1 / sai shape giờ **báo lỗi** thay vì ép
+  kiểu im lặng. Đường 1D không groups byte-identical (test so với bản sao nguyên văn).
+- `m3t.load_m3t` / `extract` **chặn** trọng số rò rỉ trừ khi `allow_leaky=True`.
+- `m3t_train.fit` từ chối chạy tiếp khi cfg/pool/torchio khác, và **không train lại từ đầu** khi có checkpoint hỏng.
+
+### Findings
+- Zip M3T có 56 gối với **hai** lần chụp → npz không chỉ V00; ghép theo subject+bên phải cờ mơ hồ.
+- Dấu vân tay thô tách được cùng gối (0,96) khỏi khác subject (≤ 0,85) nhưng **không** tách được mọi cặp khác lần chụp.
+- `torch.__version__` là lớp con của `str` → làm hỏng `torch.load(weights_only=True)` nếu lưu thẳng vào checkpoint.
+
+### Failures / Risks
+- Chưa chạy Colab: mọi cổng S9 (G0, KL4, chuyển đổi, trùng ảnh, epoch 30, sanity) và audit S10 chưa có số thật.
+- Mô hình segmentation sinh mask 09_09 chưa xác nhận (giả định d20 fold 0).
+- Việc cũ còn treo: sửa Hình 1 (`docs/make_figs.py`, `docs/report_data.py` chưa commit); ghi Event.md về quantile
+  cutpoints thua trên dữ liệu thật.
+
+### Decisions
+- Mục tiêu mới + train lại không rò rỉ + ngoại lệ `/content/input_cache`: `Event.md` 2026-09-25.
+
+### Current State
+- **Verified working (cục bộ):** code + test; harness tổng hợp S9/S10.
+- **Unverified:** mọi thứ trên dữ liệu thật; thời gian train RTX 6000.
+
+### Next
+1. Chạy S9 mục 0–7 và S10 mục 0–2 trên Colab, gửi output.
+2. Commit đăng ký trước (config REGISTERED + Event.md), rồi train S9 mục 8.
+3. Sau S9 mục 11: sửa S8 → S7 với feature set `m3t_` và phép so chính.
+
+---
+
 ## 2026-09-13
 
 ### Completed

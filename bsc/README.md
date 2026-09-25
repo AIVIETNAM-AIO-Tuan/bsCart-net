@@ -47,7 +47,10 @@ thứ ROI cascade đã không có:
 | `track.py` | exp_id, git sha, config, metric per-case (§7) | — |
 | `io_utils.py` | I/O Colab (nibabel), giải nén baseline | — (chạy trên Colab) |
 | `biomarkers.py` | Biomarker từ mask 8-class: legacy S3 (vol/thickness proxy/denuded/extrusion) + **bề mặt xương: độ dày theo pháp tuyến, footprint closing trắc địa, FCL/dAB, ThC.tAB** | `test_biomarkers.py` (14) |
-| `ordinal.py` | KL ordinal: Frank & Hall, điểm cắt QWK, MLP với loss slide (ngưỡng + mono + softmax + OA), giải mã + chẩn đoán p_k | `test_ordinal.py` (9) |
+| `ordinal.py` | KL ordinal: Frank & Hall, điểm cắt QWK, MLP với loss slide (ngưỡng + mono + softmax + OA), giải mã + chẩn đoán p_k; `bootstrap_delta` theo subject × seed, `classify_delta` bốn mức | `test_ordinal.py` |
+| `m3t.py` | M3T (port nguyên văn `knee_testing_v3.ipynb`), trích CLS, chặn trọng số rò rỉ, chuyển đổi NIfTI → M3T, dấu vân tay ảnh | `test_m3t.py` |
+| `m3t_train.py` | Huấn luyện lại M3T không rò rỉ: pool loại subject cohort, đọc npz trong zip, `fit` chạy tiếp nhiều phiên, chọn epoch trailing | `test_m3t_train.py` |
+| `configs/m3t_s9.json` | Cấu hình đăng ký trước của S9 (công thức train, đầu vào đã ghim, ngưỡng cổng, giao thức đánh giá) | `test_m3t_train.py` |
 | `make_splits.py` | Khôi phục + ghim splits, sửa rò rỉ V00/V01 | — |
 | `splits/*.json` | Splits đã ghim (immutable) | — |
 
@@ -60,6 +63,9 @@ Chạy test local: `python -m pytest bsc/tests -v` (không cần data, không c�
 | `biomarker_s1..s5` | cohort, inference d20, biomarker voxel, XGB, radiomics (bản gốc) | `knee_biomarkers/` |
 | `biomarker_s6_fcl` | biomarker bề mặt + **FCL**, superset bảng S3, QC + sanity theo KL | `masks/` → `s6_fcl/biomarker_table_v2.csv` |
 | `biomarker_s7_ordinal` | nominal (S4) vs 4 cách ordinal, CV theo subject × 3 seed, chẩn đoán head ngưỡng | `s6_fcl/…v2.csv` → `s7_ordinal/` |
+| `biomarker_s8_holdout` | holdout một lần như báo cáo, tầng quyết định | `s6_fcl/…v2.csv` → `s8_holdout_v2/` |
+| `biomarker_s9_m3t` | M3T train lại không rò rỉ (trừ mọi subject cohort), chuyển đổi NIfTI → M3T có cổng, trích CLS 128 chiều | zip M3T + manifest → `s9_m3t/run_<cfg>/m3t_cls.csv` |
+| `biomarker_s10_oaizib_holdout` | 96 ca holdout OAI-ZIB: ghim manifest, audit phơi nhiễm của mô hình segmentation (các bước sau chưa làm) | manifest → `s10_oaizib_holdout/` |
 
 Đã đo bằng phantom (`test_biomarkers.py`): `thickness_*` cũ = thể tích / tiếp xúc **mù với mất sụn toàn bề dày**
 (giảm 2.8% khi mất 8.5% diện tích), `thc_tab` giảm đúng bằng phần mất; `denuded_ratio` cũ có mẫu số là *toàn bộ*
@@ -71,6 +77,9 @@ phải báo cáo.
 Mọi artifact nằm dưới `BSC_ROOT = /content/drive/MyDrive/bsc/`. **Không bao giờ ghi vào
 `/content/`** — đó là lý do 544 prediction đã mất một lần. `track._assert_drive_first`
 và `io_utils.assert_drive_first` ném lỗi nếu ai đó vi phạm.
+
+Ngoại lệ duy nhất (duyệt 24/09/2026): `m3t_train.stage_input` chép zip đầu vào M3T 29,5 GB vào
+`/content/input_cache` làm **bộ đệm đọc**. Chỉ dữ liệu đầu vào; `assert_drive_first` vẫn chặn mọi sản phẩm ở đó.
 
 ```
 BSC_ROOT/
