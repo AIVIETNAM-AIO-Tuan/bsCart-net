@@ -323,29 +323,200 @@ def macro_f1(y_true, y_pred, n_classes: int) -> float:
 OBJECTIVES = {"qwk": qwk, "macro_recall": macro_recall, "macro_f1": macro_f1}
 
 
+_MISSING_IDS = {"", "nan", "none", "<na>", "nat"}
+
+
+def _as_labels(x, name: str, n_classes: int, ndims: tuple) -> np.ndarray:
+    """Nhan/du doan -> int64, BAO LOI thay vi ep im lang.
+
+    np.asarray(float NaN, int64) ra -9223372036854775808 ma khong bao gi; S7 danh dau du doan
+    thieu bang -1. Ca hai la "du doan thieu" va phai lam hong phep so, khong lot vao QWK.
+    """
+    arr = np.asarray(x)
+    if arr.ndim not in ndims:
+        raise ValueError(f"{name}: can ndim {ndims}, nhan shape {arr.shape} (khong tu flatten)")
+    if arr.dtype.kind == "f":
+        if not np.isfinite(arr).all():
+            raise ValueError(f"{name}: co NaN/inf - nhan hoac du doan bi thieu")
+        if not np.array_equal(arr, np.round(arr)):
+            raise ValueError(f"{name}: co gia tri khong nguyen")
+    elif arr.dtype.kind not in "iu":
+        raise ValueError(f"{name}: kieu {arr.dtype} khong phai nhan so nguyen")
+    arr = arr.astype(np.int64)
+    if arr.size and (arr.min() < 0 or arr.max() >= n_classes):
+        raise ValueError(f"{name}: nhan ngoai [0, {n_classes - 1}] (-1 = du doan thieu?)")
+    return arr
+
+
+def _as_groups(groups, n: int) -> np.ndarray:
+    g = np.asarray(groups)
+    if g.shape != (n,):
+        raise ValueError(f"groups: can shape ({n},), nhan {g.shape}")
+    if g.dtype.kind == "f" and not np.isfinite(g).all():
+        raise ValueError("groups: co NaN - subject bi thieu")
+    if g.dtype.kind in "OUS":
+        bad = [v for v in g.tolist() if v is None or (isinstance(v, float) and v != v)
+               or str(v).strip().lower() in _MISSING_IDS]
+        if bad:
+            raise ValueError(f"groups: {len(bad)} ID thieu, vd {bad[:3]} "
+                             "(astype(str) bien NaN thanh 'nan')")
+    return g
+
+
+def _paired_inputs(y_true, yp_a, yp_b, n_classes: int):
+    """(y [N], A [N,S], B [N,S]); 1D duoc nang thanh MOT cot seed."""
+    y = _as_labels(y_true, "y_true", n_classes, (1,))
+    a = _as_labels(yp_a, "yp_a", n_classes, (1, 2))
+    b = _as_labels(yp_b, "yp_b", n_classes, (1, 2))
+    if a.shape != b.shape:
+        raise ValueError(f"yp_a {a.shape} va yp_b {b.shape} phai cung shape")
+    if a.shape[0] != len(y):
+        raise ValueError(f"du doan co {a.shape[0]} dong, y_true co {len(y)}")
+    if a.ndim == 2 and a.shape[1] < 1:
+        raise ValueError("du doan 2 chieu can it nhat 1 cot seed")
+    return y, a, b
+
+
+def _cluster_index(groups):
+    """(order, starts, counts): dong cua cum g la order[starts[g] : starts[g] + counts[g]].
+
+    Cum danh so theo np.unique (thu tu sap xep cua ID), khong theo thu tu xuat hien.
+    """
+    _, codes = np.unique(groups, return_inverse=True)
+    codes = codes.reshape(-1)
+    order = np.argsort(codes, kind="stable")
+    counts = np.bincount(codes)
+    starts = np.concatenate([[0], np.cumsum(counts)[:-1]])
+    return order, starts, counts
+
+
+def _cluster_rows(order, starts, counts, picked) -> np.ndarray:
+    """Moi cum trong `picked` dong gop TOAN BO dong cua no, boc k lan thi vao k lan."""
+    lens = counts[picked]
+    first = np.repeat(starts[picked] - (np.cumsum(lens) - lens), lens)
+    return order[first + np.arange(lens.sum())]
+
+
+def seed_deltas(y_true, yp_a, yp_b, metric, n_classes: int) -> np.ndarray:
+    """Hieu metric(b) - metric(a) TUNG seed [S] tren toan mau, khong resample.
+
+    `yp_*` [N] hoac [N,S] (truc 1 = seed chia fold). Diem uoc luong cua bootstrap_delta la
+    trung binh mang nay: metric tinh LAI tren OOF gop cua tung seed, khong gop N x S dong.
+    """
+    f = OBJECTIVES[metric] if isinstance(metric, str) else metric
+    y, a, b = _paired_inputs(y_true, yp_a, yp_b, n_classes)
+    A, B = a.reshape(len(y), -1), b.reshape(len(y), -1)
+    return np.array([f(y, B[:, s], n_classes) - f(y, A[:, s], n_classes)
+                     for s in range(A.shape[1])], dtype=np.float64)
+
+
 def bootstrap_delta(y_true, yp_a, yp_b, metric, n_classes: int, n_boot: int = 2000,
-                    seed: int = 0, alpha: float = 0.05) -> dict:
-    """CI bootstrap cho hieu metric(b) - metric(a) tren CUNG tap test, resample CHI SO ca.
+                    seed: int = 0, alpha: float = 0.05, *, groups=None) -> dict:
+    """CI bootstrap cho hieu metric(b) - metric(a) tren CUNG tap test.
 
     Khac metrics.paired_bootstrap: ham do resample hieu TUNG CA, chi hop metric phan ra theo
     ca (Dice/ASSD). QWK hay macro-recall la metric cap TAP, phai tinh LAI tren moi lan
     resample. `metric`: ten trong OBJECTIVES hoac callable (y_true, y_pred, n_classes).
     Tra dict delta, ci_low, ci_high, n_boot. CI khong chua 0 => khac biet vuot nhieu resample.
     Cho n_test ~250: QWK ~0.65 ms/lan => 2000 lan x 2 ~ 3 s.
+
+    Mo rong (ke_hoach_m3t_cls.md muc 2b), khong doi tham so cu, mac dinh, chieu hieu, schema:
+      * `yp_a`, `yp_b` [N,S]: truc 1 = seed chia fold (OOF gop cua tung seed). Moi lan
+        resample tinh metric TUNG seed tren mau bootstrap roi lay TRUNG BINH hieu qua seed.
+        Khong gop N x S quan sat - lam vay la dem mot ca S lan va CI hep gia.
+      * `groups` [N]: boc co hoan lai G subject trong G subject; subject boc k lan thi MOI
+        dong cua no vao k lan. Cung chi so cho hai nhanh va moi seed.
+      * [N] + groups=None: duong cu, byte-identical voi ban truoc khi cung seed.
+    Sai shape, NaN, -1 (du doan thieu) hoac ID subject thieu => ValueError.
+    Hieu tung seed: seed_deltas(). Phan muc ket luan: classify_delta().
     """
+    if int(n_boot) < 1:
+        raise ValueError(f"n_boot phai >= 1, nhan {n_boot}")
+    if not 0.0 < alpha < 1.0:
+        raise ValueError(f"alpha phai trong (0, 1), nhan {alpha}")
     f = OBJECTIVES[metric] if isinstance(metric, str) else metric
-    y = np.asarray(y_true, np.int64).reshape(-1)
-    a = np.asarray(yp_a, np.int64).reshape(-1)
-    b = np.asarray(yp_b, np.int64).reshape(-1)
+    y, a, b = _paired_inputs(y_true, yp_a, yp_b, n_classes)
     n = len(y)
     rng = np.random.default_rng(seed)
     boots = np.empty(n_boot)
-    for i in range(n_boot):
-        idx = rng.integers(0, n, size=n)
-        boots[i] = f(y[idx], b[idx], n_classes) - f(y[idx], a[idx], n_classes)
-    delta = f(y, b, n_classes) - f(y, a, n_classes)
+    if a.ndim == 1 and groups is None:
+        for i in range(n_boot):
+            idx = rng.integers(0, n, size=n)
+            boots[i] = f(y[idx], b[idx], n_classes) - f(y[idx], a[idx], n_classes)
+        delta = f(y, b, n_classes) - f(y, a, n_classes)
+    else:
+        A, B = a.reshape(n, -1), b.reshape(n, -1)
+        n_seeds = A.shape[1]
+        if groups is None:
+            def draw():
+                return rng.integers(0, n, size=n)
+        else:
+            order, starts, counts = _cluster_index(_as_groups(groups, n))
+            n_groups = len(counts)
+
+            def draw():
+                return _cluster_rows(order, starts, counts, rng.integers(0, n_groups, size=n_groups))
+        for i in range(n_boot):
+            idx = draw()
+            yi = y[idx]
+            boots[i] = np.mean([f(yi, B[idx, s], n_classes) - f(yi, A[idx, s], n_classes)
+                                for s in range(n_seeds)])
+        delta = float(np.mean(seed_deltas(y, A, B, f, n_classes)))
     lo, hi = np.quantile(boots, [alpha / 2.0, 1.0 - alpha / 2.0])
     return dict(delta=float(delta), ci_low=float(lo), ci_high=float(hi), n_boot=int(n_boot))
+
+
+#: Bon muc ket luan cua ke_hoach_m3t_cls.md muc 6 - MOT dinh nghia, S7/S8 chi goi.
+DELTA_LEVELS = {
+    "vuot_nguong": "Cai thien vuot nguong",
+    "duoi_nguong": "Cai thien duoi nguong",
+    "te_hon": "Lam te hon",
+    "chua_du": "Chua du bang chung de phan muc",
+}
+
+
+def classify_delta(result: dict, min_delta: float = 0.02) -> dict:
+    """Phan muc hieu (b - a) theo CI [L, U] va nguong van hanh delta, bat dang thuc NGHIEM.
+
+      vuot_nguong : L > delta
+      duoi_nguong : L > 0 va U < delta
+      te_hon      : U < 0
+      chua_du     : moi truong hop con lai, KE CA cham bien (L == 0, U == 0, L == delta, ...)
+
+    `note` noi bat dinh nam o DAU hay o DO LON. Truong hop 0 < L <= delta <= U DA co bang chung
+    cai thien, chi chua biet co vuot delta - khong duoc viet thanh "chua thay cai thien".
+    Khong suy muc tu chuoi hien thi; notebook doc `level`.
+    """
+    if min_delta <= 0:
+        raise ValueError(f"min_delta phai > 0, nhan {min_delta}")
+    try:
+        d, lo, hi = (float(result[k]) for k in ("delta", "ci_low", "ci_high"))
+    except KeyError as e:
+        raise ValueError(f"result thieu khoa {e} - can dict cua bootstrap_delta") from None
+    if not np.isfinite([d, lo, hi]).all():
+        raise ValueError(f"delta/CI co NaN: {(d, lo, hi)}")
+    if lo > hi:
+        raise ValueError(f"ci_low {lo} > ci_high {hi}")
+    touches = [name for name, v in (("0", 0.0), ("delta", min_delta)) if v in (lo, hi)]
+    if lo > min_delta:
+        level, note = "vuot_nguong", f"L > {min_delta:g}: loi lon hon nguong"
+    elif lo > 0 and hi < min_delta:
+        level, note = "duoi_nguong", f"0 < L va U < {min_delta:g}: loi duong nhung nho hon nguong"
+    elif hi < 0:
+        level, note = "te_hon", "U < 0: co bang chung hieu am"
+    else:
+        level = "chua_du"
+        if lo > 0:
+            note = (f"DA co bang chung cai thien (L > 0) nhung chua xac dinh duoc co vuot "
+                    f"{min_delta:g}: bat dinh o DO LON")
+        elif hi < min_delta:
+            note = f"bat dinh o DAU; loai duoc muc loi >= {min_delta:g}"
+        else:
+            note = f"bat dinh o DAU lan DO LON (CI chua ca 0 va {min_delta:g})"
+        if touches:
+            note += f"; cham bien {', '.join(touches)}"
+    return dict(level=level, label=DELTA_LEVELS[level], note=note, delta=d, ci_low=lo,
+                ci_high=hi, min_delta=float(min_delta))
 
 
 def threshold_auc(p, t) -> np.ndarray:

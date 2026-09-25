@@ -223,6 +223,180 @@ def test_bootstrap_delta_ci_brackets_zero_and_real_gap():
     assert gap["delta"] > 0 and gap["ci_low"] > 0, gap
 
 
+# ------------------------------------------------------------ bootstrap theo subject + seed
+
+def _bootstrap_delta_v1(y_true, yp_a, yp_b, metric, n_classes, n_boot=2000, seed=0, alpha=0.05):
+    """Ban CU nguyen van (truoc 25/09/2026) - chuan de khoa duong 1D khong groups."""
+    f = ORD.OBJECTIVES[metric] if isinstance(metric, str) else metric
+    y = np.asarray(y_true, np.int64).reshape(-1)
+    a = np.asarray(yp_a, np.int64).reshape(-1)
+    b = np.asarray(yp_b, np.int64).reshape(-1)
+    n = len(y)
+    rng = np.random.default_rng(seed)
+    boots = np.empty(n_boot)
+    for i in range(n_boot):
+        idx = rng.integers(0, n, size=n)
+        boots[i] = f(y[idx], b[idx], n_classes) - f(y[idx], a[idx], n_classes)
+    delta = f(y, b, n_classes) - f(y, a, n_classes)
+    lo, hi = np.quantile(boots, [alpha / 2.0, 1.0 - alpha / 2.0])
+    return dict(delta=float(delta), ci_low=float(lo), ci_high=float(hi), n_boot=int(n_boot))
+
+
+def _pair(n=300, seed=11):
+    rng = np.random.default_rng(seed)
+    y = rng.integers(0, K, n)
+    a = np.clip(y + rng.integers(-1, 2, n), 0, K - 1)
+    b = np.clip(y + rng.integers(-1, 1, n), 0, K - 1)
+    return y, a, b
+
+
+def _seeded(n_subj=120, n_seeds=3, seed=0):
+    """y theo subject (vai subject co 2-3 dong), du doan KHAC NHAU giua cac seed."""
+    rng = np.random.default_rng(seed)
+    reps = rng.choice([1, 1, 1, 2, 3], size=n_subj)
+    groups = np.repeat([f"s{i:04d}" for i in range(n_subj)], reps)
+    y = rng.integers(0, K, len(groups))
+    A = np.column_stack([np.clip(y + rng.integers(-2, 2, len(y)), 0, K - 1) for _ in range(n_seeds)])
+    B = np.column_stack([np.clip(y + rng.integers(-1, 2, len(y)), 0, K - 1) for _ in range(n_seeds)])
+    return y, A, B, groups
+
+
+@pytest.mark.parametrize("metric", ["qwk", "macro_recall"])
+def test_bootstrap_delta_1d_path_is_byte_identical_to_v1(metric):
+    y, a, b = _pair()
+    new = ORD.bootstrap_delta(y, a, b, metric, K, n_boot=400, seed=3)
+    assert new == _bootstrap_delta_v1(y, a, b, metric, K, n_boot=400, seed=3)
+    assert list(new) == ["delta", "ci_low", "ci_high", "n_boot"]          # schema giu nguyen
+
+
+def test_bootstrap_delta_1d_golden_values_pinned_before_extension():
+    # ghim tu ban cu ngay 25/09/2026 (numpy 2.2.6, sklearn 1.7.2), TRUOC khi mo rong
+    y, a, b = _pair()
+    r = ORD.bootstrap_delta(y, a, b, "qwk", K, n_boot=400, seed=3)
+    assert r["delta"] == pytest.approx(0.026828992268487784, abs=1e-12)
+    assert r["ci_low"] == pytest.approx(0.008937967830654429, abs=1e-12)
+    assert r["ci_high"] == pytest.approx(0.046151037785287674, abs=1e-12)
+
+
+def test_bootstrap_delta_one_seed_column_and_singleton_groups_reduce_to_1d():
+    y, a, b = _pair()
+    ref = ORD.bootstrap_delta(y, a, b, "qwk", K, n_boot=300, seed=5)
+    assert ORD.bootstrap_delta(y, a[:, None], b[:, None], "qwk", K, n_boot=300, seed=5) == ref
+    # moi subject 1 dong, ID da sap xep => cung chuoi boc voi duong cu
+    assert ORD.bootstrap_delta(y, a, b, "qwk", K, n_boot=300, seed=5, groups=np.arange(len(y))) == ref
+
+
+def test_cluster_rows_take_whole_cluster_and_repeat_it_k_times():
+    g = np.array(["s3", "s1", "s1", "s2", "s1", "s3"])
+    order, starts, counts = ORD._cluster_index(g)
+    assert counts.tolist() == [3, 1, 2]                                   # s1, s2, s3 theo np.unique
+    rows = ORD._cluster_rows(order, starts, counts, np.array([0, 0, 2]))
+    assert rows.tolist() == [1, 2, 4, 1, 2, 4, 0, 5]                      # s1 hai lan, s3 mot lan, s2 khong
+
+
+def test_grouped_bootstrap_widens_ci_when_rows_are_clustered():
+    # moi subject 2 dong GIONG HET: boc theo dong dem mot subject nhu 2 quan sat doc lap
+    y, a, b = _pair(n=150, seed=4)
+    y2, a2, b2 = np.repeat(y, 2), np.repeat(a, 2), np.repeat(b, 2)
+    g = np.repeat(np.arange(150), 2)
+    rows = ORD.bootstrap_delta(y2, a2, b2, "qwk", K, n_boot=1500, seed=0)
+    subj = ORD.bootstrap_delta(y2, a2, b2, "qwk", K, n_boot=1500, seed=0, groups=g)
+    assert subj["delta"] == rows["delta"]
+    w_rows, w_subj = rows["ci_high"] - rows["ci_low"], subj["ci_high"] - subj["ci_low"]
+    assert w_subj > 1.2 * w_rows, (w_subj, w_rows)                         # ly thuyet ~ sqrt(2)
+
+
+def test_bootstrap_delta_averages_per_seed_metric_not_pooled_rows():
+    y, A, B, g = _seeded()
+    A[:, 0] = 2          # seed 0 cua nhanh a doan hang => QWK 0; gop dong se lech xa trung binh
+    per_seed = np.array([ORD.qwk(y, B[:, s], K) - ORD.qwk(y, A[:, s], K) for s in range(3)])
+    assert np.allclose(ORD.seed_deltas(y, A, B, "qwk", K), per_seed, atol=0, rtol=0)
+    r = ORD.bootstrap_delta(y, A, B, "qwk", K, n_boot=200, seed=0, groups=g)
+    assert r["delta"] == pytest.approx(per_seed.mean(), abs=1e-15)
+    pooled = ORD.qwk(np.tile(y, 3), B.T.reshape(-1), K) - ORD.qwk(np.tile(y, 3), A.T.reshape(-1), K)
+    assert abs(pooled - per_seed.mean()) > 0.05                            # test co phan biet duoc
+
+
+def test_duplicating_a_seed_column_does_not_narrow_the_ci():
+    y, A, B, g = _seeded()
+    one = ORD.bootstrap_delta(y, A[:, :1], B[:, :1], "qwk", K, n_boot=300, seed=0, groups=g)
+    dup = ORD.bootstrap_delta(y, np.repeat(A[:, :1], 3, 1), np.repeat(B[:, :1], 3, 1), "qwk", K,
+                              n_boot=300, seed=0, groups=g)
+    assert dup == one
+
+
+def test_same_draw_for_both_branches_and_every_seed():
+    y, A, B, g = _seeded()
+    same = ORD.bootstrap_delta(y, A, A.copy(), "qwk", K, n_boot=200, seed=0, groups=g)
+    assert same["delta"] == 0.0 and same["ci_low"] == 0.0 and same["ci_high"] == 0.0
+    r = ORD.bootstrap_delta(y, A, B, "qwk", K, n_boot=400, seed=0, groups=g)
+    s = ORD.bootstrap_delta(y, B, A, "qwk", K, n_boot=400, seed=0, groups=g)
+    assert s["delta"] == pytest.approx(-r["delta"], abs=1e-12)
+    assert s["ci_low"] == pytest.approx(-r["ci_high"], abs=1e-12)
+    assert s["ci_high"] == pytest.approx(-r["ci_low"], abs=1e-12)
+
+
+def test_bootstrap_delta_rejects_bad_shapes_missing_predictions_and_ids():
+    y, A, B, g = _seeded()
+    with pytest.raises(ValueError, match="cung shape"):
+        ORD.bootstrap_delta(y, A, B[:, :2], "qwk", K, n_boot=5, groups=g)
+    with pytest.raises(ValueError, match="dong"):
+        ORD.bootstrap_delta(y[:-1], A, B, "qwk", K, n_boot=5)
+    with pytest.raises(ValueError, match="ndim"):
+        ORD.bootstrap_delta(y, A[..., None], B[..., None], "qwk", K, n_boot=5)
+    with pytest.raises(ValueError, match="ndim"):
+        ORD.bootstrap_delta(y[:, None], A, B, "qwk", K, n_boot=5)
+    miss = A.astype(float)
+    miss[3, 1] = np.nan
+    with pytest.raises(ValueError, match="NaN"):
+        ORD.bootstrap_delta(y, miss, B, "qwk", K, n_boot=5, groups=g)
+    neg = A.copy()
+    neg[0, 0] = -1                                                          # S7: -1 = chua co du doan
+    with pytest.raises(ValueError, match="ngoai"):
+        ORD.bootstrap_delta(y, neg, B, "qwk", K, n_boot=5, groups=g)
+    with pytest.raises(ValueError, match="groups"):
+        ORD.bootstrap_delta(y, A, B, "qwk", K, n_boot=5, groups=g[:-1])
+    for bad in (None, "nan", ""):
+        gg = g.astype(object)
+        gg[7] = bad
+        with pytest.raises(ValueError, match="ID thieu"):
+            ORD.bootstrap_delta(y, A, B, "qwk", K, n_boot=5, groups=gg)
+    gf = np.arange(len(y), dtype=float)
+    gf[2] = np.nan
+    with pytest.raises(ValueError, match="NaN"):
+        ORD.bootstrap_delta(y, A, B, "qwk", K, n_boot=5, groups=gf)
+
+
+@pytest.mark.parametrize("lo,hi,level,note", [
+    (0.03, 0.08, "vuot_nguong", "L > 0.02"),
+    (0.005, 0.015, "duoi_nguong", "nho hon nguong"),
+    (-0.05, -0.01, "te_hon", "hieu am"),
+    (-0.01, 0.01, "chua_du", "DAU; loai duoc"),                 # cat 0, loai duoc loi >= delta
+    (0.01, 0.05, "chua_du", "DA co bang chung cai thien"),     # cat delta: 0 < L <= delta <= U
+    (-0.01, 0.05, "chua_du", "DAU lan DO LON"),                # cat ca hai
+    (0.0, 0.01, "chua_du", "cham bien 0"),                     # L == 0
+    (-0.03, 0.0, "chua_du", "cham bien 0"),                    # U == 0
+    (0.02, 0.05, "chua_du", "cham bien delta"),                # L == delta
+    (0.01, 0.02, "chua_du", "cham bien delta"),                # U == delta
+])
+def test_classify_delta_four_levels_with_strict_boundaries(lo, hi, level, note):
+    r = ORD.classify_delta(dict(delta=(lo + hi) / 2, ci_low=lo, ci_high=hi), min_delta=0.02)
+    assert r["level"] == level, r
+    assert note in r["note"], r
+    assert r["label"] == ORD.DELTA_LEVELS[level]
+
+
+def test_classify_delta_rejects_invalid_results():
+    with pytest.raises(ValueError, match="NaN"):
+        ORD.classify_delta(dict(delta=np.nan, ci_low=0.0, ci_high=0.1))
+    with pytest.raises(ValueError, match="ci_low"):
+        ORD.classify_delta(dict(delta=0.0, ci_low=0.1, ci_high=-0.1))
+    with pytest.raises(ValueError, match="thieu khoa"):
+        ORD.classify_delta(dict(delta=0.0, ci_low=0.0))
+    with pytest.raises(ValueError, match="min_delta"):
+        ORD.classify_delta(dict(delta=0.0, ci_low=0.0, ci_high=0.1), min_delta=0.0)
+
+
 # ------------------------------------------------------------ diem cat
 
 def test_fit_cutpoints_beats_naive_rounding_on_biased_scores():
