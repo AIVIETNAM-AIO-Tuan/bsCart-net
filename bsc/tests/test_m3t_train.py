@@ -177,6 +177,36 @@ def test_exposure_table_barcode_first_then_subject_side_with_flags():
     assert ex.loc["a", "knee_in_csv"] and ex.loc["a", "m3t_kl"] == 1
 
 
+def test_barcode_candidates_handle_8_and_12_digit_forms():
+    assert T.barcode_candidates("/d/OAI_DESS/10424412.nii.gz") == ["10424412"]
+    assert T.barcode_candidates("/d/OAI_DESS/016610424412.nii.gz") == ["10424412"]
+    assert T.barcode_candidates("/0.C.2/9000099/20040909/10249506/x") == ["20040909", "10249506"]
+    assert T.barcode_candidates("/d/9001104_V00_R_0000.nii.gz") == []        # 7 chu so = subject
+    assert T.barcode_candidates(None) == [] and T.barcode_candidates(float("nan")) == []
+
+
+def test_image_family_from_path():
+    assert T.image_family("/content/drive/MyDrive/OAI_seg/nnUNet_raw/Dataset001_KneeOA/imagesTr/oaizib_001_0000.nii.gz") == "D001_oaizib"
+    assert T.image_family("/content/drive/MyDrive/nnUNet_raw/Dataset012_iMorphics/imagesTr/9001104_V00_R_0000.nii.gz") == "D012_imorphics"
+    assert T.image_family("/content/drive/MyDrive/OAI_DESS/10424412.nii.gz") == "OAI_DESS"
+    assert T.image_family(r"C:\x\OAI_DESS\1.nii.gz") == "OAI_DESS"
+    assert T.image_family("/x/OAI_DESS_old/1.nii.gz") == "OAI_DESS"
+    assert T.image_family("/x/y.nii.gz") == "other" and T.image_family("nan") == "other"
+
+
+def test_fingerprint_bank_matches_single_fingerprints(tmp_path):
+    knees = [(f"90000{i:02d}", f"100000{i:02d}", "LEFT") for i in range(5)]
+    zp = make_zip(tmp_path / "z.zip", knees)
+    idx = T.npz_index(zp)
+    reader = T.ZipNpzReader(zp)
+    bank = T.fingerprint_bank(idx.member, reader, batch_size=2)
+    assert bank.shape == (5, int(np.prod(m3t.FP_SHAPE)))
+    assert np.allclose(bank[3], m3t.fingerprint(reader.read(idx.member[3])))
+    r, i = m3t.max_corr(bank[3], bank)
+    assert i == 3 and r == pytest.approx(1.0, abs=1e-5)
+    assert T.fingerprint_bank([], reader).shape == (0, bank.shape[1])
+
+
 # ------------------------------------------------------------ 14. chon epoch + dung som
 
 def _hist(q):
@@ -342,6 +372,12 @@ def test_write_once_is_idempotent_for_identical_content(tmp_path):
     T.write_once_csv(df.copy(), p)                                       # giong het => bo qua
     with pytest.raises(FileExistsError, match="KHAC"):
         T.write_once_csv(df.assign(v=[0.1, 0.3]), p)
+    j = tmp_path / "t.json"
+    T.write_once_json(dict(n=np.int64(3), r=np.float32(0.5), ok=np.bool_(True), a=np.arange(2),
+                           counts=pd.Series(["a", "a", "b"]).value_counts().to_dict()), j)
+    assert json.loads(j.read_text(encoding="utf-8")) == dict(n=3, r=0.5, ok=True, a=[0, 1], counts=dict(a=2, b=1))
+    with pytest.raises(TypeError):
+        T.write_once_json(dict(x=object()), tmp_path / "u.json")
 
 
 # ------------------------------------------------------------ 17-18. config + evaluate
@@ -355,7 +391,10 @@ def test_repo_config_is_complete_and_matches_the_plan():
     assert g["image"] == dict(r_median=0.99, r_p01=0.97, margin=0.1, slope_lo=0.95, slope_hi=1.05)
     assert g["cls"] == dict(nn_self=0.98, dist_ratio=0.25, head_agree=0.95, d_ekl=0.1)
     assert set(g["image"]) == set(m3t.IMAGE_GATE_KEYS) and set(g["cls"]) == set(m3t.CLS_GATE_KEYS)
-    assert g["g0"] == dict(n_test=1636, correct=1073, tol=2) and g["pool_kl4_train_min"] == 84
+    assert (g["g0"]["n_test"], g["g0"]["correct"], g["g0"]["tol"]) == (1636, 1073, 2)
+    assert g["g0"]["weights_hash"] in m3t.LEAKY_HASHES and g["pool_kl4_train_min"] == 84
+    cm = np.array(g["g0"]["confusion"])
+    assert cm.sum() == 1636 and np.trace(cm) == 1073                  # khop acc 0.6559 da ghi
     ev = raw["evaluation"]
     assert ev["primary"] == dict(model="B_xgb_frankhall", a="m3t_only__nosel", b="s6_all_plus_m3t__nosel",
                                  n_cols_a=128, n_cols_b=198)

@@ -218,6 +218,30 @@ def test_search_recovers_known_orientation_and_resize():
         m3t.nifti_to_m3t(src, spacing, "p012_f000|area", shape=target)
 
 
+def test_dst_axis_generalizes_the_slice_axis_assumption(tmp_path):
+    src = _phantom()                                      # truc lat cat = 2
+    spacing = (0.3646, 0.3646, 0.70)
+    target = (6, 10, 8)
+    orient = "p021_f010"                                  # truc 2 cua src roi vao truc 1 cua M3T
+    assert m3t.dst_axis_of(orient, 2) == 1
+    npz = m3t.resize3d(m3t.reorient(src, orient), target, "trilinear")
+    df = m3t.search_conversion([("c", src, spacing, npz)], shape=target, dst_axis=1)
+    assert m3t.summarize_conversion(df).iloc[0].orient == orient
+    spec = m3t.spec_name(orient, "trilinear")
+    assert np.allclose(m3t.nifti_to_m3t(src, spacing, spec, shape=target, dst_axis=1), npz)
+    with pytest.raises(ValueError, match="truc lat cat"):
+        m3t.nifti_to_m3t(src, spacing, spec, shape=target)            # mac dinh dst_axis=0
+    wide = m3t.search_conversion([("c", src, spacing, npz)], orients=list(m3t.ORIENTATIONS),
+                                 methods=("trilinear",), shape=target)
+    assert len(wide) == 48 and m3t.summarize_conversion(wide).iloc[0].orient == orient
+    nib = pytest.importorskip("nibabel")
+    arr_xyz = np.transpose(src, (2, 1, 0))                # load_nii dao (X,Y,Z) -> (Z,Y,X)
+    img = nib.Nifti1Image(arr_xyz, np.diag([0.70, 0.3646, 0.3646, 1.0]))
+    nib.save(img, str(tmp_path / "c.nii.gz"))
+    out = m3t.convert_case(tmp_path / "c.nii.gz", spec, dst_axis=1, shape=target)
+    assert np.allclose(out, npz, atol=1e-4)
+
+
 def test_pick_best_tag_keeps_the_matching_side_only():
     from scipy.ndimage import gaussian_filter
     src = _phantom()

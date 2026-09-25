@@ -57,7 +57,19 @@ CACHE_ROOT = "/content/input_cache"
 KL_CLASSES = 5
 SUBSETS = ("train", "val", "test")
 _NPZ_RE = re.compile(r"(?:^|/)(\d+)_(\d{8})_(LEFT|RIGHT)\.npz$")
-_BARCODE_RE = re.compile(r"(?<!\d)(\d{8})(?!\d)")
+_DIGITS_RE = re.compile(r"\d{8,}")
+
+
+def barcode_candidates(path) -> list:
+    """Chuoi 8 chu so co the la barcode trong duong dan: moi day >= 8 chu so, lay nguyen day
+    (dung 8) hoac 8 chu so CUOI (barcode OAI 12 chu so, vd 016610424412 -> 10424412).
+    Ngay thang 8 chu so (20040909) cung ra ung vien nhung khong trung npz nao nen vo hai."""
+    out = []
+    for run in _DIGITS_RE.findall(str(path)):
+        c = run if len(run) == 8 else run[-8:]
+        if c not in out:
+            out.append(c)
+    return out
 _SIDE = {"L": "L", "LEFT": "L", "R": "R", "RIGHT": "R"}
 LAST, PREV = "last.pt", "last_prev.pt"
 
@@ -273,6 +285,20 @@ def pool_md5(pool) -> str:
     return hashlib.md5("\n".join(lines).encode()).hexdigest()
 
 
+_FAMILIES = (("Dataset001", "D001_oaizib"), ("Dataset012", "D012_imorphics"),
+             ("Dataset020", "D020_union"), ("OAI_DESS", "OAI_DESS"))
+
+
+def image_family(path) -> str:
+    """Ho file NIfTI theo DUONG sinh ra no (cong cu ghi NIfTI co the khac huong truc) - 'nguon'
+    cua cong chuyen doi. Khong trung ten nao => 'other'."""
+    s = "/" + str(path).replace("\\", "/").lstrip("/")
+    for key, name in _FAMILIES:
+        if f"/{key}/" in s or f"/{key}_" in s:
+            return name
+    return "other"
+
+
 def exposure_table(manifest, labels, index):
     """Moi ca cohort: goi nao cua M3T tuong ung, va subject do nam o dau trong split goc.
 
@@ -298,8 +324,7 @@ def exposure_table(manifest, labels, index):
     for r in manifest.to_dict("records"):
         subj = norm_subject(r["subject"], strict=False)
         side = norm_side(r["side"], strict=False)
-        tokens = list(dict.fromkeys(_BARCODE_RE.findall(str(r.get("dess_path") or ""))))
-        hits = [t for t in tokens if t in by_barcode.index]
+        hits = [t for t in barcode_candidates(r.get("dess_path") or "") if t in by_barcode.index]
         out = dict(case_id=str(r["case_id"]), subject=subj, side=side, visit=r.get("visit"),
                    source_dataset=r.get("source_dataset"), match="none", barcode=None, npz_name=None,
                    n_candidates=0, ambiguous=False, side_conflict=False, subject_conflict=False)
@@ -350,6 +375,28 @@ class NpzKLDataset(Dataset):
         else:
             x = np.asarray(self.transform(np.expand_dims(vol, 0)), dtype=np.float32)
         return torch.from_numpy(np.ascontiguousarray(x)), torch.tensor(self.labels[i], dtype=torch.long)
+
+
+class NpzFingerprints(Dataset):
+    """Dau van tay M3T.fingerprint cua tung npz - doc song song bang DataLoader (kiem trung anh)."""
+
+    def __init__(self, members, reader):
+        self.members, self.reader = [str(m) for m in members], reader
+
+    def __len__(self):
+        return len(self.members)
+
+    def __getitem__(self, i):
+        return torch.from_numpy(M3T.fingerprint(self.reader.read(self.members[i])))
+
+
+def fingerprint_bank(members, reader, num_workers: int = 0, batch_size: int = 16) -> np.ndarray:
+    """[len(members), D] float32, cung thu tu voi `members`."""
+    dl = DataLoader(NpzFingerprints(members, reader), batch_size=batch_size, shuffle=False,
+                    num_workers=num_workers)
+    if not len(members):
+        return np.zeros((0, int(np.prod(M3T.FP_SHAPE))), np.float32)
+    return torch.cat([b for b in dl]).numpy()
 
 
 def train_transform():
@@ -625,8 +672,22 @@ def write_once_csv(df, path, **kw) -> str:
     return write_once_text(df.to_csv(index=False, lineterminator="\n", **kw), path)
 
 
+def _json_default(o):
+    """numpy -> kieu Python (value_counts().to_dict() tra int64 - json khong ghi duoc)."""
+    if isinstance(o, np.bool_):
+        return bool(o)
+    if isinstance(o, np.integer):
+        return int(o)
+    if isinstance(o, np.floating):
+        return float(o)
+    if isinstance(o, np.ndarray):
+        return o.tolist()
+    raise TypeError(f"khong ghi JSON duoc kieu {type(o)}")
+
+
 def write_once_json(obj, path) -> str:
-    return write_once_text(json.dumps(obj, indent=2, sort_keys=True, ensure_ascii=False) + "\n", path)
+    text = json.dumps(obj, indent=2, sort_keys=True, ensure_ascii=False, default=_json_default)
+    return write_once_text(text + "\n", path)
 
 
 # ============================================================ fit

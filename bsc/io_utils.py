@@ -42,6 +42,10 @@ def load_nii(path: str):
     import nibabel as nib
     img = nib.load(path)
     arr = np.asanyarray(img.dataobj)                 # (X, Y, Z) theo nib
+    if arr.ndim == 4 and arr.shape[3] == 1:          # vai bo chuyen DICOM ghi (X,Y,Z,1)
+        arr = arr[..., 0]
+    if arr.ndim != 3:
+        raise ValueError(f"{path}: can khoi 3D, nhan shape {arr.shape}")
     arr = np.transpose(arr, (2, 1, 0))               # -> (Z, Y, X)
     zooms = img.header.get_zooms()[:3]               # (x, y, z)
     spacing = (float(zooms[2]), float(zooms[1]), float(zooms[0]))

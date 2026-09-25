@@ -32,13 +32,22 @@
     "torchio_version": "1.2.1"
   },
   "gates": {
-    "g0": {"n_test": 1636, "correct": 1073, "tol": 2},
+    "g0": {
+      "n_test": 1636,
+      "correct": 1073,
+      "tol": 2,
+      "weights_hash": "13b3b7839434133ee03cda4c494911527d7076469e7b42f63a6263e80b2e538d",
+      "weights_note": "best_model.pth [BEST] md5 e4ca502e - neu file tai tu Drive khac hash nay thi tai len ban nay vao s9_m3t/inputs/m3t_leaky_best_model.pth",
+      "confusion": [[549, 25, 60, 2, 0], [143, 36, 113, 4, 0], [57, 36, 304, 43, 0], [0, 1, 49, 152, 12], [0, 0, 1, 17, 32]],
+      "confusion_note": "ghi trong knee_testing_v3.ipynb cell 24 (hang = that, cot = doan); chi de doi chieu"
+    },
     "pool_kl4_train_min": 84,
     "epoch30": {"epoch": 29, "min_smoothed_val_qwk": 0.5},
     "sanity": {"max_abs_d_acc": 0.05, "max_abs_d_qwk": 0.05},
     "image": {"r_median": 0.99, "r_p01": 0.97, "margin": 0.1, "slope_lo": 0.95, "slope_hi": 1.05},
     "cls": {"nn_self": 0.98, "dist_ratio": 0.25, "head_agree": 0.95, "d_ekl": 0.1},
-    "fingerprint_hit_r": 0.97,
+    "fingerprint_hit_r": 0.90,
+    "fingerprint_note": "Hieu chinh 25/09/2026 tren npz that, FP_SHAPE (12,16,16): khac subject - max voi 3000 npz trung vi 0.796, p95 0.842, max 0.852; cung goi KHAC lan chup (55 cap) trung vi 0.957, p5 0.839; cung subject goi kia max 0.715. 0.90 bat phan lon cung-goi-khac-lan-chup, cao hon max khac subject. Trung = DUNG de xem tuong quan voxel, khong tu loai.",
     "design_n_cases": 300,
     "design_broad_n_cases": 12
   },

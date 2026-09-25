@@ -454,6 +454,11 @@ def orientations_for(src_slice_axis: int, dst_axis: int = 0) -> dict:
     return {k: v for k, v in ORIENTATIONS.items() if v[0][dst_axis] == src_slice_axis}
 
 
+def dst_axis_of(orient: str, src_slice_axis: int) -> int:
+    """Truc M3T ma truc lat cat cua src roi vao duoi huong `orient`."""
+    return list(ORIENTATIONS[orient][0]).index(int(src_slice_axis))
+
+
 def reorient(vol, orient) -> np.ndarray:
     perm, flips = ORIENTATIONS[orient] if isinstance(orient, str) else orient
     out = np.transpose(np.asarray(vol), perm)
@@ -501,18 +506,26 @@ def parse_spec(spec: str):
     return orient, method
 
 
-def nifti_to_m3t(arr, spacing, spec: str, shape=INPUT_SHAPE) -> np.ndarray:
+def nifti_to_m3t(arr, spacing, spec: str, shape=INPUT_SHAPE, dst_axis: int = 0) -> np.ndarray:
     """Mang NIfTI [Z,Y,X] (tu io_utils.load_nii) -> khoi M3T `shape` theo spec 'huong|resize'.
 
-    `spacing` chi de kiem: truc lat cat (0.70 mm) phai la truc ma spec dua ve truc 0.
+    `spacing` de kiem: truc lat cat (0.70 mm) phai la truc ma spec dua ve truc `dst_axis` cua
+    M3T (mac dinh 0; notebook S9 xac nhan bang do rong 48 huong o muc 5).
     """
     orient, method = parse_spec(spec)
     perm, _ = ORIENTATIONS[orient]
     ax = slice_axis(spacing)
-    if perm[0] != ax:
-        raise ValueError(f"spec {spec} dua truc {perm[0]} ve truc 0 nhung truc lat cat la {ax} "
-                         f"(spacing {tuple(spacing)})")
+    if perm[dst_axis] != ax:
+        raise ValueError(f"spec {spec} dua truc {perm[dst_axis]} ve truc {dst_axis} nhung truc lat cat "
+                         f"la {ax} (spacing {tuple(spacing)})")
     return resize3d(reorient(arr, orient), shape, method)
+
+
+def convert_case(path, spec: str, dst_axis: int = 0, shape=INPUT_SHAPE) -> np.ndarray:
+    """Doc NIfTI (io_utils.load_nii, can nibabel - co tren Colab) roi nifti_to_m3t."""
+    from .io_utils import load_nii
+    arr, spacing = load_nii(str(path))
+    return nifti_to_m3t(arr, spacing, spec, shape=shape, dst_axis=dst_axis)
 
 
 def _centered(vol):
@@ -538,12 +551,13 @@ def volume_corr(a, b):
     return float(r), float(slope)
 
 
-def search_conversion(pairs, orients=None, methods=RESIZE_METHODS, shape=INPUT_SHAPE):
+def search_conversion(pairs, orients=None, methods=RESIZE_METHODS, shape=INPUT_SHAPE, dst_axis: int = 0):
     """Dò (huong x resize) tren cac cap (case_id, mang NIfTI, spacing, npz[, tag]) -> DataFrame dai.
 
     `pairs` la iterable (generator doc tung ca - khong giu 300 khoi NIfTI trong RAM). `tag` tuy
     chon (vd ben goi cua npz dem so) di theo vao cot 'tag' - xem pick_best_tag.
-    `orients` None => 16 huong hop le theo truc lat cat cua TUNG ca. Moi hoan vi chi resize
+    `orients` None => 16 huong dua truc lat cat cua TUNG ca ve `dst_axis`; `orients` = list ten
+    (vd list(ORIENTATIONS) cho do rong 48 huong). Moi hoan vi chi resize
     MOT lan roi lat tren ket qua: lat giao hoan voi resize tuyen tinh/area; voi 'nearest' chi
     xap xi - cong cuoi phai do lai spec da chon bang nifti_to_m3t. npz chuan hoa MOT lan/cap.
     """
@@ -555,7 +569,8 @@ def search_conversion(pairs, orients=None, methods=RESIZE_METHODS, shape=INPUT_S
         if tuple(np.shape(npz)) != tuple(shape):
             raise ValueError(f"{case_id}: npz shape {np.shape(npz)} != {tuple(shape)}")
         y, vy = _centered(npz)
-        cand = orientations_for(slice_axis(spacing)) if orients is None else \
+        src_ax = slice_axis(spacing)
+        cand = orientations_for(src_ax, dst_axis) if orients is None else \
             {k: ORIENTATIONS[k] for k in orients}
         by_perm = {}
         for name, (perm, flips) in cand.items():
@@ -567,8 +582,8 @@ def search_conversion(pairs, orients=None, methods=RESIZE_METHODS, shape=INPUT_S
                 for name, flips in items:
                     v = np.flip(r0, axis=flips) if flips else r0
                     r, slope = _corr(*_centered(v), y, vy)
-                    rows.append(dict(case_id=case_id, tag=tag, orient=name, method=method,
-                                     r=float(r), slope=float(slope)))
+                    rows.append(dict(case_id=case_id, tag=tag, src_axis=src_ax, orient=name,
+                                     method=method, r=float(r), slope=float(slope)))
     return pd.DataFrame(rows)
 
 
