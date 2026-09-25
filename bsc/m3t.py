@@ -584,7 +584,8 @@ def search_conversion(pairs, orients=None, methods=RESIZE_METHODS, shape=INPUT_S
                     r, slope = _corr(*_centered(v), y, vy)
                     rows.append(dict(case_id=case_id, tag=tag, src_axis=src_ax, orient=name,
                                      method=method, r=float(r), slope=float(slope)))
-    return pd.DataFrame(rows)
+    # du cot ca khi rong (khong co cap nao doc duoc) -> CSV van co header, merge/groupby khong vo
+    return pd.DataFrame(rows, columns=["case_id", "tag", "src_axis", "orient", "method", "r", "slope"])
 
 
 def pick_best_tag(df):

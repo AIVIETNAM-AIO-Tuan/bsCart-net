@@ -1,8 +1,8 @@
 {
   "schema": "m3t_s9/v1",
   "plan": "docs/ke_hoach_m3t_cls.md",
-  "status": "DRAFT",
-  "status_note": "DRAFT = chua dang ky truoc. Chi doi thanh REGISTERED trong commit dang ky truoc (sau khi chay S9 muc 0-7 va ghi Event.md). Notebook S9 muc 8 tu choi train khi status != REGISTERED.",
+  "status": "REGISTERED",
+  "status_note": "Dang ky truoc ngay 26/09/2026, TRUOC khi chay S9 muc 5-7 va TRUOC moi ket qua M3T downstream (S7/S8): nguoi dung chon dang ky ngay de train qua dem. Moi nhanh cua muc 5-7 da dinh san: chuyen doi truot -> duong npz_intersection; KL4 pool v2 < 84 -> chap nhan; anh cohort trung pool -> chan train; pilot chi de tham khao. Sau commit nay KHONG sua cong thuc train, pool rule, nguong cong hay giao thuc danh gia; sai lech phai ghi thanh muc Event.md moi.",
   "train": {
     "seed": 20260925,
     "batch_size": 2,
@@ -30,6 +30,14 @@
     "labels_gdrive_id": "1GTXX5qt89wMY4NuwAJzCiveyx6APR8yL",
     "leaky_weights_gdrive_id": "1SdVwDQmWPu2KbQbtwitAdU_bYCl4h2j5",
     "torchio_version": "1.2.1"
+  },
+  "pool": {
+    "version": "v2",
+    "extra_npz": true,
+    "extra_label_member": "SAG_3D_DESS_v2_full/label.csv",
+    "extra_label_md5": "ad7e68a64575aed34836db2c8bb41654",
+    "extra_subset_rule": "subject da co trong CSV unified -> subset cua subject do; subject moi -> train",
+    "note": "Quyet dinh nguoi dung 26/09/2026: pool v1 (chi CSV unified) truot cong KL4 (65 < 84). v2 them 1295 npz ngoai CSV unified, nhan tu label.csv trong zip (trung KL 99.35% voi CSV unified tren 8149 goi chung), van loai moi subject cohort. KHONG dung train/validation/test.csv cua zip vi khong chia theo subject (2151 subject o nhieu tap). Neu v2 van duoi 84 thi chap nhan con so that, khong doi loss."
   },
   "gates": {
     "g0": {

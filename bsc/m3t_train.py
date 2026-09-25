@@ -260,6 +260,58 @@ def attach_members(df, index):
     return m
 
 
+ZIP_LABEL_MEMBER = "SAG_3D_DESS_v2_full/label.csv"
+
+
+def read_zip_csv(zip_path, member):
+    """(DataFrame, md5 cua byte goc) cua mot CSV nam TRONG zip."""
+    import pandas as pd
+    with zipfile.ZipFile(zip_path) as zf:
+        raw = zf.read(member)
+    return pd.read_csv(io.BytesIO(raw)), hashlib.md5(raw).hexdigest()
+
+
+def extra_labels(zip_labels, labels):
+    """Nhan cho npz KHONG co trong CSV unified, lay tu label.csv cua zip (co nhan cho ca 9444 npz).
+
+    Tap con gan THEO SUBJECT de giu split goc chia theo subject: subject da co trong `labels`
+    -> subset cua subject do; subject moi -> 'train'. KHONG dung train/validation/test.csv cua
+    zip: phep chia do khong theo subject (2151 subject nam o nhieu tap, kiem 26/09/2026).
+    Quyet dinh nguoi dung 26/09/2026 khi cong KL4 truot (65 < 84) voi pool chi tu CSV unified.
+    """
+    import pandas as pd
+    need = {"id", "side", "mri_path", "kl_grade"}
+    if need - set(zip_labels.columns):
+        raise ValueError(f"label.csv thieu cot {sorted(need - set(zip_labels.columns))}")
+    z = pd.DataFrame(dict(subject=zip_labels["id"].map(norm_subject), side=zip_labels["side"].map(norm_side),
+                          npz_name=zip_labels["mri_path"].astype(str).map(posixpath.basename),
+                          kl_grade=zip_labels["kl_grade"].astype(int)))
+    if z["npz_name"].duplicated().any():
+        raise ValueError("label.csv co npz trung")
+    if not z["kl_grade"].between(0, KL_CLASSES - 1).all():
+        raise ValueError("label.csv co kl_grade ngoai 0..4")
+    parsed = z["npz_name"].map(parse_npz_name)
+    if not ((parsed.str[0] == z["subject"]) & (parsed.str[2] == z["side"])).all():
+        raise ValueError("label.csv: ten npz khong khop subject/ben cua dong")
+    z = z[~z["npz_name"].isin(set(labels["npz_name"]))].copy()
+    z["subset"] = z["subject"].map(labels.groupby("subject")["subset"].first()).fillna("train")
+    z["label_src"] = "zip_label_csv"
+    return z.reset_index(drop=True)
+
+
+def combine_labels(labels, extra):
+    """CSV unified + npz them. Mot goi co the co HAI lan chup (hai npz), nhung moi npz mot dong
+    va moi subject van o MOT subset."""
+    import pandas as pd
+    out = pd.concat([labels.assign(label_src="unified"), extra], ignore_index=True)
+    if out["npz_name"].duplicated().any():
+        raise ValueError("npz trung giua CSV unified va phan them")
+    per = out.groupby("subject")["subset"].nunique()
+    if (per > 1).any():
+        raise ValueError(f"{int((per > 1).sum())} subject nam o nhieu subset sau khi ghep")
+    return out
+
+
 def build_pool(labels, exclude_subjects):
     """Bo MOI dong cua subject bi loai: ca hai goi, moi subset (train/val/test)."""
     excl = {norm_subject(s) for s in exclude_subjects}
@@ -708,10 +760,25 @@ def _set_backends(cfg) -> None:
     torch.backends.cudnn.benchmark = bool(cfg.cudnn_benchmark)
 
 
+GATE_FAILED = "GATE_FAILED.json"
+
+
+def _gate_value(history, gate, window):
+    """Diem truot val QWK tai epoch cua cong, hoac None neu chua toi."""
+    if gate is None or len(history) <= gate["epoch"]:
+        return None
+    return trailing_means([h["val_qwk"] for h in history], window)[gate["epoch"]]
+
+
 def fit(model, train_ds, val_ds, run_dir, cfg: M3TTrainConfig, pool_md5: str, device="cuda",
-        deadline=None, max_new_epochs=None, log=print) -> list:
+        deadline=None, max_new_epochs=None, gate=None, log=print) -> list:
     """Train/chay tiep toi khi should_stop, file STOP, het `deadline` (time.time()) hoac du
-    `max_new_epochs` trong phien nay. Tra history. Goi lai o phien sau de chay tiep."""
+    `max_new_epochs` trong phien nay. Tra history. Goi lai o phien sau de chay tiep.
+
+    `gate` = config['gates']['epoch30'] (epoch, min_smoothed_val_qwk): xong epoch do ma diem truot
+    duoi nguong => ghi GATE_FAILED.json va DUNG; moi lan goi sau tu choi chay tiep cho toi khi nguoi
+    dung xem va xoa file. De chay qua dem khong dot ca dem GPU vao mot lan train hong.
+    """
     run_dir = os.fspath(run_dir)
     assert_drive_first(run_dir)
     os.makedirs(run_dir, exist_ok=True)
@@ -754,6 +821,15 @@ def fit(model, train_ds, val_ds, run_dir, cfg: M3TTrainConfig, pool_md5: str, de
             break
         if os.path.exists(os.path.join(run_dir, "STOP")):
             log("DUNG: co file STOP")
+            break
+        gv = _gate_value(history, gate, cfg.window)
+        if os.path.exists(os.path.join(run_dir, GATE_FAILED)) or (
+                gv is not None and gv < gate["min_smoothed_val_qwk"]):
+            if not os.path.exists(os.path.join(run_dir, GATE_FAILED)):
+                write_once_json(dict(epoch=gate["epoch"], smoothed_val_qwk=gv, min=gate["min_smoothed_val_qwk"],
+                                     window=cfg.window), os.path.join(run_dir, GATE_FAILED))
+            log(f"DUNG: cong epoch {gate['epoch'] if gate else '?'} truot ({GATE_FAILED}) - xem roi xoa file "
+                "neu muon chay tiep")
             break
         if deadline is not None and history:
             est = float(np.median([h["seconds"] for h in history[-5:]]))

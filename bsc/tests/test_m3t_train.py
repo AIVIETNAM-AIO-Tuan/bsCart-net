@@ -39,12 +39,12 @@ def _npz_bytes(arr):
     return b.getvalue()
 
 
-def make_zip(path, knees, shape=SHAPE, seed=0, extra=()):
+def make_zip(path, knees, shape=SHAPE, seed=0, extra=(), label_csv="id,side\n"):
     """knees: [(subject, barcode, 'LEFT'|'RIGHT')]. Moi khoi khac nhau, uint16 nhu that."""
     rng = np.random.default_rng(seed)
     with zipfile.ZipFile(path, "w", compression=zipfile.ZIP_DEFLATED) as zf:
         zf.writestr("SAG_3D_DESS_v2_full/", "")
-        zf.writestr("SAG_3D_DESS_v2_full/label.csv", "id,side\n")
+        zf.writestr("SAG_3D_DESS_v2_full/label.csv", label_csv)
         for s, b, side in knees:
             zf.writestr(f"SAG_3D_DESS_v2_full/MRI_Numpy/{s}_{b}_{side}.npz",
                         _npz_bytes(rng.integers(0, 500, size=shape).astype(np.uint16)))
@@ -130,6 +130,38 @@ def test_load_labels_normalizes_and_validates():
     wrong = labels_frame([(9000001, "LEFT", "9000002_10000105_LEFT.npz", 1, "x", "train")])
     with pytest.raises(ValueError, match="khong khop"):
         T.load_labels(wrong)
+
+
+def test_extra_labels_assign_subset_by_subject_not_by_zip_split():
+    lab = _labels()                                   # 9000000..9000005 train, 06-07 val, 08-09 test
+    zl = pd.DataFrame([
+        dict(id=9000001, side="RIGHT", kl_grade=1, mri_path="9000001_10000112_RIGHT.npz"),   # da co -> bo
+        dict(id=9000001, side="RIGHT", kl_grade=4, mri_path="9000001_20000012_RIGHT.npz"),   # lan chup 2, train
+        dict(id=9000008, side="LEFT", kl_grade=4, mri_path="9000008_20000805_LEFT.npz"),     # subject test -> test
+        dict(id=9100000, side="LEFT", kl_grade=4, mri_path="9100000_30000005_LEFT.npz"),     # subject moi -> train
+    ])
+    ex = T.extra_labels(zl, lab)
+    assert ex.npz_name.tolist() == ["9000001_20000012_RIGHT.npz", "9000008_20000805_LEFT.npz",
+                                    "9100000_30000005_LEFT.npz"]
+    assert ex.subset.tolist() == ["train", "test", "train"] and set(ex.label_src) == {"zip_label_csv"}
+    both = T.combine_labels(lab, ex)
+    assert len(both) == len(lab) + 3 and int(both.duplicated(["subject", "side"]).sum()) == 2  # 2 goi co 2 lan chup
+    assert (both.groupby("subject").subset.nunique() == 1).all()
+    pool = T.build_pool(both, ["9100000"])
+    assert "9100000" not in set(pool.subject) and "9000001_20000012_RIGHT.npz" in set(pool.npz_name)
+    bad = zl.copy()
+    bad.loc[3, "mri_path"] = "9100001_30000005_LEFT.npz"                               # sai subject
+    with pytest.raises(ValueError, match="khong khop"):
+        T.extra_labels(bad, lab)
+    with pytest.raises(ValueError, match="trung"):
+        T.combine_labels(lab, ex.assign(npz_name=lab.npz_name.iloc[:3].tolist()))
+
+
+def test_read_zip_csv_returns_frame_and_md5(tmp_path):
+    zp = make_zip(tmp_path / "z.zip", [("9000001", "10000001", "LEFT")],
+                  label_csv="id,side,kl_grade,mri_path\n9000001,LEFT,2,9000001_10000001_LEFT.npz\n")
+    df, md5 = T.read_zip_csv(zp, T.ZIP_LABEL_MEMBER)
+    assert df.kl_grade.tolist() == [2] and len(md5) == 32
 
 
 def test_build_pool_drops_both_knees_in_every_subset_and_normalizes_ids():
@@ -327,6 +359,24 @@ def test_checkpoint_versions_are_plain_str():
         T._assert_plain(dict(v=torch.__version__))                      # TorchVersion la lop con cua str
 
 
+def test_epoch_gate_stops_training_and_blocks_resume(tmp_path, monkeypatch):
+    tr, va = _data()
+    log = lambda *_: None
+    real = T.evaluate
+    monkeypatch.setattr(T, "evaluate", lambda *a, **k: dict(real(*a, **k), qwk=0.1))   # hoc hong
+    c = cfg(max_epochs=6, min_epochs=5, window=1)
+    gate = dict(epoch=1, min_smoothed_val_qwk=0.5)
+    h = T.fit(_fresh(), tr, va, tmp_path / "g", c, "pool", device="cpu", gate=gate, log=log)
+    assert len(h) == 2                                                  # dung ngay sau epoch cua cong
+    info = json.loads((tmp_path / "g" / T.GATE_FAILED).read_text(encoding="utf-8"))
+    assert info["epoch"] == 1 and info["smoothed_val_qwk"] == pytest.approx(0.1)
+    assert len(T.fit(_fresh(), tr, va, tmp_path / "g", c, "pool", device="cpu", gate=gate, log=log)) == 2
+    monkeypatch.setattr(T, "evaluate", lambda *a, **k: dict(real(*a, **k), qwk=0.9))   # hoc tot
+    ok = T.fit(_fresh(), tr, va, tmp_path / "ok", cfg(max_epochs=3, min_epochs=3, window=1), "pool",
+               device="cpu", gate=gate, log=log)
+    assert len(ok) == 3 and not (tmp_path / "ok" / T.GATE_FAILED).exists()
+
+
 def test_checkpoint_state_must_be_weights_only_loadable(tmp_path):
     with pytest.raises(TypeError, match="weights_only"):
         T.save_checkpoint(tmp_path, dict(history=[dict(val_qwk=np.float64(0.5))]))
@@ -400,6 +450,9 @@ def test_repo_config_is_complete_and_matches_the_plan():
                                  n_cols_a=128, n_cols_b=198)
     assert ev["min_delta"] == 0.02 and ev["bootstrap"]["n_boot"] == 10000 and ev["cv"]["seeds"] == [0, 1, 2]
     assert raw["inputs"]["torchio_version"] == "1.2.1"
+    p = raw["pool"]
+    assert p["version"] == "v2" and p["extra_npz"] is True and p["extra_label_member"] == T.ZIP_LABEL_MEMBER
+    assert len(p["extra_label_md5"]) == 32
 
 
 def test_load_config_rejects_missing_or_unknown_fields(tmp_path):

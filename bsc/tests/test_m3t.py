@@ -257,6 +257,8 @@ def test_pick_best_tag_keeps_the_matching_side_only():
     assert verdict.iloc[0].r_best > 0.99 > verdict.iloc[0].r_other
     with pytest.raises(ValueError, match="npz shape"):
         m3t.search_conversion([("c0", src, spacing, right[:-1])], shape=target)
+    empty = m3t.search_conversion([], shape=target)                     # khong cap nao -> van du cot
+    assert len(empty) == 0 and list(empty.columns) == ["case_id", "tag", "src_axis", "orient", "method", "r", "slope"]
 
 
 def test_summarize_margin_is_against_a_different_orientation():

@@ -405,3 +405,21 @@ Không chỗ nào đổi phép so chính, δ, bootstrap hay quy tắc chọn che
 - **Mục 11 lưu thêm logit head của M3T rò rỉ** (`m3t_leaky_head.csv`, **không có CLS**) chỉ để đo độ lạc quan ở mục 12.
 - **Nhóm họ × bên có < 2 ca thiết kế** thì cổng CLS trượt ("không kiểm được") thay vì báo lỗi.
 - `fit` **không bao giờ train lại từ đầu** khi thư mục run có checkpoint mà không nạp được — dừng để kiểm file.
+
+## Cập nhật 26/09/2026 — cổng KL4 trượt, chuyển sang pool v2
+
+Chạy S9 trên Colab: loại 1.308 subject cohort thì pool (chỉ CSV unified) còn 5.772/8.149 gối (−29%), nhưng KL4 mất
+60% (244 → 97; **train 167 → 65 < 84**) — cohort lấy mẫu cân bằng KL đã lấy phần lớn gối KL4 của M3T.
+Kiểm thêm: `label.csv` **bên trong zip** có nhãn cho **cả 9.444 npz** (trùng KL 99,35% với CSV unified trên 8.149 gối
+chung; 53 gối lệch, chủ yếu KL0↔1), tức có thêm 1.295 npz / 701 subject, trong đó 74 gối KL4. Phép chia
+train/val/test đi kèm zip **không** chia theo subject (2.151 subject ở nhiều tập) nên không dùng.
+
+**Quyết định của người dùng (26/09):** pool v2 = CSV unified + 1.295 npz đó, nhãn từ `label.csv` (md5 ghim trong
+config), tập con gán theo subject (subject đã có giữ tập cũ; subject mới vào train), vẫn loại mọi subject cohort.
+Nếu v2 vẫn dưới 84 thì **chấp nhận con số thật, không đổi loss**. Pool v1 (`pool.csv`) giữ nguyên làm hồ sơ.
+Hệ quả: tập train của M3T mới **khác** tập train của M3T gốc (thêm dữ liệu); mục 9 so với M3T gốc vẫn trên tập test
+đã thu hẹp, nơi cả hai mô hình đều chưa thấy subject nào.
+
+**Đăng ký trước (26/09/2026):** theo quyết định người dùng để train qua đêm, config chuyển REGISTERED **trước** khi chạy
+mục 5–7 (thay vì sau khi Claude đọc output mục 0–7). Vẫn trước mọi kết quả S7/S8. Các nhánh mục 5–7 đã định sẵn;
+ảnh cohort trùng pool chặn train; cổng epoch 30 tự dừng train. Notebook chạy bằng `Run all` mỗi phiên.

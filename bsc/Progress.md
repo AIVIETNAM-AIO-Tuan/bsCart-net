@@ -5,6 +5,33 @@ Ghi theo ngày, chỉ giữ thông tin cần để tiếp tục công việc. Qu
 
 ---
 
+## 2026-09-26
+
+### Completed
+- S9 chạy trên Colab tới mục 4: **cổng KL4 trượt** (pool v1 chỉ CSV unified: KL4 train 65 < 84). Mục 0–3 đã chạy.
+- Phát hiện `label.csv` trong zip có nhãn cho cả 9.444 npz; phép chia train/val/test của zip không theo subject.
+- Pool v2: `m3t_train.read_zip_csv` / `extra_labels` / `combine_labels` + test; config thêm mục `pool` (vẫn DRAFT);
+  notebook S9 mục 4 viết pool ra `pool_v2.*`, giữ `pool.csv` v1 làm hồ sơ. Chạy lại harness tổng hợp.
+
+### Critical Changes
+- Tập train của M3T mới khác bản gốc (thêm tối đa 1.295 npz, trước khi loại subject cohort). Mọi mục sau mục 4 đọc
+  `POOL_CSV`/`POOL_JSON` (pool v2).
+
+- Chạy qua đêm: `fit(gate=)` tự dừng khi cổng epoch 30 trượt; notebook S9 chịu lỗi từng ca ở mục 5–6, mục 8 chặn
+  train khi có ảnh trùng pool, tự trả máy Colab khi phiên train dừng mà chưa xong.
+- **Đăng ký trước:** config REGISTERED (cfg_hash `a38f67eac206a9b2`, run dir `s9_m3t/run_a38f67eac206a9b2`).
+
+### Decisions
+- Người dùng chọn thêm 1.295 npz (26/09); nếu vẫn dưới 84 thì chấp nhận con số thật, không đổi loss. Xem `Event.md`.
+- Người dùng chọn đăng ký ngay để train qua đêm (26/09). Xem `Event.md`.
+
+### Next
+1. Colab: `Runtime → Run all` (mục 0–7 rồi train tới `SESSION_HOURS`). Sáng mai gửi output mục 4–8.
+2. S10 mục 0–2 khi rảnh (không cần GPU).
+3. Khi train xong: `Run all` đi tiếp mục 9–12; rồi sửa S8 → S7.
+
+---
+
 ## 2026-09-25
 
 ### Completed
