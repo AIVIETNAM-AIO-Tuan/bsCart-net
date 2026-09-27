@@ -423,3 +423,12 @@ Hệ quả: tập train của M3T mới **khác** tập train của M3T gốc (t
 **Đăng ký trước (26/09/2026):** theo quyết định người dùng để train qua đêm, config chuyển REGISTERED **trước** khi chạy
 mục 5–7 (thay vì sau khi Claude đọc output mục 0–7). Vẫn trước mọi kết quả S7/S8. Các nhánh mục 5–7 đã định sẵn;
 ảnh cohort trùng pool chặn train; cổng epoch 30 tự dừng train. Notebook chạy bằng `Run all` mỗi phiên.
+
+## Cập nhật 27/09/2026 — kết quả S9 và OAI-ZIB qua barcode
+
+S9 train xong (checkpoint epoch 94, val QWK trượt 0,718; sanity đạt). Chuyển đổi NIfTI → M3T trượt vì **npz là vùng
+crop sát quanh khớp**, không phải resize toàn khối → đường `npz_intersection` theo luật dự phòng. Ảnh OAI-ZIB không còn
+trên Drive nên lần đầu chỉ có CLS cho 846 ca. Metadata chính thức OAIZIB-CM (`subInfo`, `MRBarCode`) khớp barcode npz
+507/507, gối phải, baseline → S9 mục 13 đưa OAI-ZIB vào lại bằng **khớp barcode** (luật đã đăng ký, nguồn barcode mới)
+→ `m3t_cls_v2.csv` (~1.320 ca, có holdout). **S8/S7 dùng bản v2.** Ảnh holdout tải lại từ HuggingFace cho S10.
+

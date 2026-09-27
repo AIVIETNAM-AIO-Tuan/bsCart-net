@@ -5,6 +5,31 @@ Ghi theo ngày, chỉ giữ thông tin cần để tiếp tục công việc. Qu
 
 ---
 
+## 2026-09-27
+
+### Completed
+- S9 chạy xong trên Colab (git `5273e87`): G0 trùng khít, pool v2 KL4 train 111, train 100 epoch (9,3 phút/epoch,
+  RTX PRO 6000 Blackwell), checkpoint chính epoch 94, sanity đạt. Chi tiết: `Event.md` 2026-09-27.
+- Chẩn đoán chuyển đổi trượt: npz M3T là vùng crop sát quanh khớp (`docs/figs/s9_npz_crop_vs_nifti.png`, không commit).
+- `bsc/oaizib.py` + test; `exposure_table` nhận `mr_barcode`; S9 mục 13 (CLS v2 có OAI-ZIB); S10 tải ảnh holdout
+  từ HuggingFace, kiểm subject theo splits, kết luận `sach_theo_id`. Harness S10: 4 biến thể đúng.
+
+### Findings
+- Hai nguồn nhãn KL trùng 1203/1203; head M3T rò rỉ: QWK 0,851 (subject đã train) vs 0,779.
+- OAIZIB-CM `MRBarCode` khớp barcode npz 507/507, cả 507 gối phải, baseline.
+- Ảnh `OAI_DESS_Right_NIfTI` (766 ca) và ảnh OAI-ZIB không còn trên Drive.
+
+### Failures / Risks
+- Kiểm trùng ảnh (S9 mục 6) không chạy được ca nào (không có ảnh + chuyển đổi không làm được).
+- Pilot: nửa độ rộng CI ≈ 0,03 > δ = 0,02 (1 seed, 1229 ca).
+
+### Next
+1. Colab: S9 `Run all` (tới mục 13, ~15 phút sau khi chép zip) → gửi output mục 13.
+2. S10 mục 0–2 → gửi kết luận audit.
+3. Sửa S8 → S7 với `m3t_cls_v2.csv`.
+
+---
+
 ## 2026-09-26
 
 ### Completed

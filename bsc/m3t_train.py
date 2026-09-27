@@ -354,7 +354,8 @@ def image_family(path) -> str:
 def exposure_table(manifest, labels, index):
     """Moi ca cohort: goi nao cua M3T tuong ung, va subject do nam o dau trong split goc.
 
-    match  : 'barcode'            - so 8 chu so trong dess_path trung barcode mot npz (CUNG lan chup)
+    match  : 'barcode'            - barcode (cot `mr_barcode` neu co, roi so 8 chu so trong dess_path)
+                                    trung barcode mot npz (CUNG lan chup)
              'barcode_ambiguous'  - trung nhieu barcode
              'subject_side'       - khong co barcode; co npz cung subject + ben (co the KHAC lan kham)
              'subject_other_side' - subject co npz nhung chi o ben kia (ben trong manifest co the sai)
@@ -376,7 +377,9 @@ def exposure_table(manifest, labels, index):
     for r in manifest.to_dict("records"):
         subj = norm_subject(r["subject"], strict=False)
         side = norm_side(r["side"], strict=False)
-        hits = [t for t in barcode_candidates(r.get("dess_path") or "") if t in by_barcode.index]
+        # barcode tu cot mr_barcode (vd MRBarCode cua subInfo OAIZIB-CM) truoc, roi tu dess_path
+        src = f"{r.get('mr_barcode') if isinstance(r.get('mr_barcode'), str) else ''} {r.get('dess_path') or ''}"
+        hits = list(dict.fromkeys(t for t in barcode_candidates(src) if t in by_barcode.index))
         out = dict(case_id=str(r["case_id"]), subject=subj, side=side, visit=r.get("visit"),
                    source_dataset=r.get("source_dataset"), match="none", barcode=None, npz_name=None,
                    n_candidates=0, ambiguous=False, side_conflict=False, subject_conflict=False)
