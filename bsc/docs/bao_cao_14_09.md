@@ -3,13 +3,7 @@
 *Mô hình dự đoán độ nặng thoái hóa khớp gối (Kellgren - Lawrence) từ MRI DESS, biomarker sụn/xương
 và đặc trưng radiomics*
 
-**Nguồn dữ liệu:** OAI DESS knee MRI cohort
-
-**Người lập báo cáo:** Hoàng Xuân Bách, Ngô Đức Tuấn
-
-**Ngày lập báo cáo:** 27/09/2026
-
-## 0. Thay đổi chính so với báo cáo 13/9/2026
+## 1. Thay đổi chính so với báo cáo 13/9/2026
 
 Tuần này chưa có kết quả mới. Báo cáo chỉ gồm các phần đã làm xong nhưng chưa trình bày ở báo cáo
 13/9, cùng hai thí nghiệm đang chạy. Cohort giữ nguyên: 1.229 ca của 1.215 bệnh nhân.
@@ -25,9 +19,9 @@ Tuần này chưa có kết quả mới. Báo cáo chỉ gồm các phần đã 
 - **Biomarker bề mặt xương được mô hình dùng thật**, và tính theo từng biến còn hữu ích hơn radiomics.
 - **Đang chạy, chưa có kết quả:** mô hình ảnh M3T làm mô hình nền, và tập holdout OAI-ZIB 93 ca.
 
-## 1. Biomarker neo bề mặt xương — hậu kiểm
+## 2. Biomarker neo bề mặt xương — hậu kiểm
 
-### 1.1. Vì sao hai chỉ số cũ không đo được mất sụn
+### 2.1. Vì sao hai chỉ số cũ không đo được mất sụn
 
 Trong 15 biomarker cũ có hai chỉ số mang tên đo tổn thương sụn nhưng thực chất không đo được nó:
 
@@ -39,7 +33,7 @@ Trong 15 biomarker cũ có hai chỉ số mang tên đo tổn thương sụn nh�
 Phép đo mới đặt trên bề mặt xương dưới sụn, nên chỗ không còn sụn được tính là độ dày 0 thay vì bị
 loại khỏi phép tính.
 
-### 1.2. Kết quả chạy và đính chính
+### 2.2. Kết quả chạy và đính chính
 
 Chạy đủ 1.229/1.229 ca, không lỗi, khoảng 15,7 giây mỗi ca, ra 88 biến cho mỗi ca. 15 biomarker cũ
 được tính lại khớp bảng cũ tới sai số 10⁻¹⁰, nên mọi kết quả cũ chạy lại đều ra đúng số cũ.
@@ -50,13 +44,13 @@ bỏ ra đều là biến mới — độ dày trung bình trên vùng nền s�
 cũ yếu", mà là **đo diện tích mất sụn thì bắt được bệnh, đo độ dày trung bình thì không**. Tương quan
 với KL mới được tính cho 11 trên 88 biến.
 
-### 1.3. Đọc thêm đường mất sụn theo KL (Hình 2b của báo cáo 13/9)
+### 2.3. Đọc thêm đường mất sụn theo KL (Hình 2b của báo cáo 13/9)
 
 - **KL0 và KL1 gần như phẳng** (sụn đùi 1,11% → 1,07%), đúng với định nghĩa lâm sàng: hai mức này
   chưa có hẹp khe khớp rõ. Mức 0,7–1,1% ở KL0 là sàn nhiễu của phép đo ở rìa mảng sụn, không phải bệnh.
 - **Mức tăng dồn vào chặng KL3 → KL4**, chiếm 56–78% toàn bộ mức tăng của cả thang, tùy khoang.
 
-### 1.4. Phép kiểm an toàn
+### 2.4. Phép kiểm an toàn
 
 Vùng nền sụn là vùng xương đáng lẽ phải có sụn phủ. Nếu vùng này bị co lại ở nhóm KL4 thì tỷ lệ mất
 sụn ở nhóm đó không còn tin được. Kết quả ngược lại: vùng nền **nở ra** theo KL.
@@ -75,9 +69,9 @@ sụn ở nhóm đó không còn tin được. Kết quả ngược lại: vùng
 > làm đặc trưng, đang mang cả tín hiệu gai xương — hợp lệ để dự đoán KL, nhưng không được gọi là
 > biomarker sụn thuần.
 
-## 2. Đánh giá chéo 15 fold theo bệnh nhân
+## 3. Đánh giá chéo 15 fold theo bệnh nhân
 
-### 2.1. Thiết kế
+### 3.1. Thiết kế
 
 Dữ liệu được chia 5 fold, phân tầng theo KL, mọi ca của cùng một bệnh nhân nằm trong cùng một fold;
 lặp lại với 3 cách chia khác nhau thành 15 fold. Mọi mô hình và mọi bộ đặc trưng dùng chung các fold
@@ -96,7 +90,7 @@ Sáu mô hình khác nhau đúng một chỗ: cách xử lý thứ tự của th
 
 *Bảng 2. Sáu mô hình được so sánh.*
 
-### 2.2. Kết quả chính
+### 3.2. Kết quả chính
 
 ![Hình 1](figs/fig2_s7_qwk.png)
 
@@ -121,7 +115,7 @@ cáo 13/9 (mô hình gốc: 0,554 so với 0,532).*
   kappa 0,763 → 0,776 và MAE 0,555 → 0,533. Giá trị của nhóm này là tập biến gọn và đọc được: "2,3% diện
   tích mâm chày trong bị trơ" có nghĩa lâm sàng, một hệ số wavelet thì không.
 
-### 2.3. Kiến trúc hay hàm loss?
+### 3.3. Kiến trúc hay hàm loss?
 
 | Bộ đặc trưng | Đổi cây sang mạng | Thêm loss ordinal |
 |---|---|---|
@@ -138,7 +132,7 @@ Lợi thế của mạng so với cây giảm dần rồi đảo dấu khi đặ
 giữ ở mức +0,02 đến +0,05 trên mọi bộ đặc trưng. **Phần đáng đầu tư là hàm loss thứ tự, không phải chọn
 cây hay mạng.**
 
-### 2.4. Ma trận nhầm lẫn
+### 3.4. Ma trận nhầm lẫn
 
 ![Hình 2](figs/fig3_s7_confusion.png)
 
@@ -148,7 +142,7 @@ tốt hơn ở KL4 (63/106 so với 52/106).*
 
 Sai số tập trung ở các ô sát đường chéo, gần như không còn ca lệch từ 3 bậc trở lên.
 
-### 2.5. Theo từng lớp KL
+### 3.5. Theo từng lớp KL
 
 ![Hình 3](figs/fig4_s7_f1.png)
 
@@ -169,7 +163,7 @@ KL1 chỉ đạt F1 34–43%, khớp thực tế lâm sàng: KL1 là "nghi ngờ
 phim cũng đồng thuận với nhau kém nhất. Lỗi đi cả hai chiều: với Frank & Hall, trong 233 ca KL1 có 47
 ca bị đoán xuống KL0 và 67 ca bị đoán lên KL2.
 
-### 2.6. Điểm yếu còn lại: ngưỡng cuối cùng
+### 3.6. Điểm yếu còn lại: ngưỡng cuối cùng
 
 Xác suất trung bình mà Frank & Hall gán cho "KL > k", theo lớp thật:
 
@@ -187,16 +181,16 @@ Xác suất trung bình mà Frank & Hall gán cho "KL > k", theo lớp thật:
 Ca KL4 thật chỉ đạt trung bình 0,46 ở ngưỡng cuối, tức trung bình một ca KL4 không vượt được mốc 0,5 để
 được gọi là KL4. Tuy vậy, AUC của bốn ngưỡng lần lượt là 0,872 / 0,902 / 0,934 / 0,952 — ngưỡng cuối lại
 phân biệt **tốt nhất**. Mô hình xếp hạng đúng ca KL4, chỉ là xác suất bị kéo thấp vì KL4 chỉ chiếm
-8,6% số ca. Đây là vấn đề hiệu chỉnh xác suất, rẻ hơn nhiều để sửa, và là động cơ của mục 3.
+8,6% số ca. Đây là vấn đề hiệu chỉnh xác suất, rẻ hơn nhiều để sửa, và là động cơ của mục 4.
 
-## 3. Tập test cố định và cách đặt ngưỡng quyết định
+## 4. Tập test cố định và cách đặt ngưỡng quyết định
 
 Đánh giá chéo cho số liệu tin cậy nhất nhưng mỗi ca được dự đoán bởi một mô hình khác nhau. Mục này
 dùng đúng cách chia train/test của báo cáo 13/9 (246 ca test) để có một mô hình cố định; kết quả ở đây
 dùng để loại phương án, còn kết luận dựa vào đánh giá chéo. Lưu ý KL4 chỉ có 26 ca trong tập test, nên
 mỗi ca đúng hay sai làm recall KL4 đổi 3,8 điểm phần trăm.
 
-### 3.1. Kết quả với ngưỡng mặc định
+### 4.1. Kết quả với ngưỡng mặc định
 
 | Mô hình | Accuracy | QW-Kappa | MAE | Off-by ≥2 (%) |
 |---|---|---|---|---|
@@ -211,7 +205,7 @@ mỗi ca đúng hay sai làm recall KL4 đổi 3,8 điểm phần trăm.
 nhánh: một nhánh cho biomarker, một nhánh cho radiomics, trộn bằng trọng số học được. Báo cáo 13/9 có
 off-by ≥2 là 7,3% (Frank & Hall) và 6,5% (Regression); ở đây MLP ordinal hạ xuống 5,3%.*
 
-### 3.2. Đổi cách đặt điểm cắt, không huấn luyện lại
+### 4.2. Đổi cách đặt điểm cắt, không huấn luyện lại
 
 Mô hình hồi quy + điểm cắt có kappa cao nhất nhưng recall KL3 thấp nhất (48,3%) và recall KL4 cao nhất
 (80,8%): nó đoán thừa hai lớp ngoài cùng và ép hai lớp giữa. Nguyên nhân nằm ở mục tiêu đặt điểm cắt.
@@ -223,7 +217,7 @@ bình, nên cách rẻ nhất để tăng kappa là nới rộng hai lớp ngoà
 *Hình 4. Cùng một mô hình hồi quy đã huấn luyện, chỉ khác cách đặt 4 điểm cắt. Điểm cắt phân vị (tỷ lệ
 dự đoán mỗi lớp bằng tỷ lệ thật, không có tham số nào để fit) đưa KL3 lên 32 ca đúng, đổi lại KL4 còn 18.*
 
-### 3.3. Dò ngưỡng cho KL4: hiệu ứng lặp lại được
+### 4.3. Dò ngưỡng cho KL4: hiệu ứng lặp lại được
 
 ![Hình 5](figs/fig6_s8_threshold.png)
 
@@ -237,7 +231,7 @@ tăng ở cả 6 cặp, precision KL4 giảm ở cả 6 cặp.*
 
 *Bảng 8. Trung bình 6 cặp. Dò ngưỡng đổi precision KL4 lấy recall KL4, đúng như thiết kế.*
 
-### 3.4. Nhưng mức lợi tổng không lặp lại
+### 4.4. Nhưng mức lợi tổng không lặp lại
 
 Trên bộ đặc trưng đầy đủ, MLP ordinal đa nhiệm với ngưỡng dò được đạt QW-Kappa 0,814 và macro-recall
 0,614 — cao nhất toàn bộ thí nghiệm. Nhưng trên bộ "cũ + radiomics", cùng quy tắc đó chỉ đạt 0,783 và
@@ -246,7 +240,7 @@ trên bộ "cũ + radiomics", trượt trên bộ đầy đủ. Hai mô hình, h
 phía — đây là dấu hiệu của nhiễu. Theo quy tắc đặt ra trước khi chạy, **chưa quy tắc dò ngưỡng nào được
 đưa vào kết luận**.
 
-## 4. Biomarker bề mặt xương có được mô hình dùng không
+## 5. Biomarker bề mặt xương có được mô hình dùng không
 
 Khi đã có radiomics, thêm biomarker bề mặt xương chỉ tăng kappa +0,004 đến +0,026, nằm trong mức nhiễu.
 Nhưng con số đó chưa cho biết các biến này bị loại vì trùng lặp, hay được giữ mà không được dùng.
@@ -270,7 +264,7 @@ hình dùng.*
   là 51,3 mm² nhưng ổ lớn nhất chỉ 5,8 mm², tức khoảng 89% con số thô là đốm rìa.
 - Tính theo từng biến, **biomarker bề mặt xương hữu ích hơn radiomics** (1,19% so với 0,88%).
 
-## 5. Các hướng đã thử và bị loại
+## 6. Các hướng đã thử và bị loại
 
 | Hướng | Kết quả | Nguyên nhân |
 |---|---|---|
@@ -281,13 +275,13 @@ hình dùng.*
 
 *Bảng 10. Bốn hướng đã loại. Ghi lại vì thất bại có giải thích cũng là kết quả nghiên cứu.*
 
-## 6. Đang thử nghiệm, chưa có kết quả
+## 7. Đang thử nghiệm, chưa có kết quả
 
 Hai thí nghiệm dưới đây đã xong phần chuẩn bị nhưng chưa có con số để kết luận. Mục này chỉ nêu câu
 hỏi, thiết kế và tiến độ. Hiệu năng của M3T trên cohort cố ý chưa được báo cáo, vì phép so chính đã
 được chốt trước và chưa chạy.
 
-### 6.1. Mô hình ảnh M3T làm nền: biomarker có cải thiện được không
+### 7.1. Mô hình ảnh M3T làm nền: biomarker có cải thiện được không
 
 Đây là bước triển khai đề xuất cuối của báo cáo 13/9: dùng mô hình phân loại ảnh M3T (CNN 3D + CNN 2D
 + transformer, CLS token 128 chiều). Mục tiêu được điều chỉnh ngày 25/9: không còn là "thay radiomics
@@ -323,7 +317,7 @@ dưới ngưỡng, làm tệ hơn, hoặc chưa đủ bằng chứng.
 - Chỉ thử ghép biomarker dạng bảng với đặc trưng M3T đã đóng băng. Kết quả âm sẽ không loại trừ các
   cách dùng phân đoạn khác (mask làm kênh ảnh, cắt vùng khớp) vì chưa thử.
 
-### 6.2. Tập holdout OAI-ZIB
+### 7.2. Tập holdout OAI-ZIB
 
 Câu hỏi: mô hình cuối có giữ được chiều của kết quả trên những ca chưa từng thấy không.
 
@@ -344,9 +338,9 @@ cùng nguồn OAI-ZIB**, không phải dữ liệu ngoài độc lập, nên k�
 **Còn lại:** phân đoạn 93 ca → tính biomarker → ghép CLS token → huấn luyện mô hình cuối trên 1.229 ca
 → đánh giá holdout một lần duy nhất. Không dùng holdout để chọn mô hình hay ngưỡng.
 
-## 7. Kết luận và khuyến nghị
+## 8. Kết luận và khuyến nghị
 
-### 7.1. Kết quả chính
+### 8.1. Kết quả chính
 
 - Biomarker neo bề mặt xương qua hậu kiểm: chạy đủ 1.229 ca, phép kiểm an toàn đạt. Đo diện tích mất
   sụn thì bắt được bệnh, đo độ dày trung bình thì không.
@@ -357,13 +351,13 @@ cùng nguồn OAI-ZIB**, không phải dữ liệu ngoài độc lập, nên k�
   không phân biệt được.
 - Dò ngưỡng tăng recall KL4 ổn định, nhưng chưa chứng minh được lợi trên chỉ số tổng.
 
-### 7.2. Hạn chế
+### 8.2. Hạn chế
 
 - **Độ tin cậy của phép đo mất sụn trên mask AI chưa được đo** — đây là điều kiện bắt buộc trước khi
   công bố bất kỳ con số mất sụn nào.
 - Phép đo mất sụn là cận dưới: không đếm được mất sụn ở rìa mảng hay cả khoang trơ trụi. Phép đo tính
   trên cả mảng sụn, chưa chia vùng con như y văn OAI, và chưa đo được sụn bánh chè.
-- Nghi vấn gai xương làm nở vùng nền sụn (mục 1.4) chưa được kiểm.
+- Nghi vấn gai xương làm nở vùng nền sụn (mục 2.4) chưa được kiểm.
 - Phép so trên 447 ca có nhãn tin cậy cao chưa tách được ảnh hưởng của chất lượng nhãn khỏi việc giảm
   cỡ mẫu; cần thêm nhánh đối chứng 447 ca chọn ngẫu nhiên.
 - Trọng số trộn của MLP hai nhánh chỉ dịch từ 0,5 tới khoảng 0,40, chưa loại trừ được khả năng nó gần
@@ -371,7 +365,7 @@ cùng nguồn OAI-ZIB**, không phải dữ liệu ngoài độc lập, nên k�
 - Số đánh giá chéo cũ trên iMorphics bị thổi phồng (51/70 gối có hai lần khám nằm ở hai fold khác
   nhau); đánh giá chéo mới chia theo bệnh nhân nên không bị ảnh hưởng.
 
-### 7.3. Việc tiếp theo
+### 8.3. Việc tiếp theo
 
 1. Chạy phép so chính của M3T và báo kết quả theo 4 mức đã chốt.
 2. Tập holdout: xác định đúng bộ trọng số của mô hình phân đoạn đã sinh mask cho cohort, rồi phân đoạn
