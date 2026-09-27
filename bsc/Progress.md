@@ -13,20 +13,33 @@ Ghi theo ngày, chỉ giữ thông tin cần để tiếp tục công việc. Qu
 - Chẩn đoán chuyển đổi trượt: npz M3T là vùng crop sát quanh khớp (`docs/figs/s9_npz_crop_vs_nifti.png`, không commit).
 - `bsc/oaizib.py` + test; `exposure_table` nhận `mr_barcode`; S9 mục 13 (CLS v2 có OAI-ZIB); S10 tải ảnh holdout
   từ HuggingFace, kiểm subject theo splits, kết luận `sach_theo_id`. Harness S10: 4 biến thể đúng.
+- S10 chạy trên Colab: mục 1 chốt 93 ca; mục 2 ra `thieu_provenance` vì mô hình d020 trên Drive chỉ có dạng 14 zip
+  "Download" chưa giải nén, còn notebook tìm thư mục giải nén của bản 250 epoch fold 0.
+- `bsc/seg_provenance.py` + test: đọc provenance thẳng từ central directory của zip. `splits/d020_150ep_provenance.json`
+  ghim 544 ca + fold val + CRC32/sha256 10 checkpoint (dựng từ bản zip local). S10 mục 2 viết lại cho ensemble 150 epoch
+  5 fold, loại ca phơi nhiễm → `holdout_manifest_eval_d020_150ep_ens5.*`. Harness S10: 5 kịch bản + chạy lại hai lần
+  (sửa `r_max` lệch bit khi đọc lại dấu vân tay từ CSV); mục 2.1 chạy trên 14 zip thật khớp bản ghim.
 
 ### Findings
 - Hai nguồn nhãn KL trùng 1203/1203; head M3T rò rỉ: QWK 0,851 (subject đã train) vs 0,779.
 - OAIZIB-CM `MRBarCode` khớp barcode npz 507/507, cả 507 gối phải, baseline.
 - Ảnh `OAI_DESS_Right_NIfTI` (766 ca) và ảnh OAI-ZIB không còn trên Drive.
 
+- Mô hình seg của mask 09_09 = d020 150 epoch ensemble 5 fold (người dùng xác nhận) ⇒ cả 544 ca d020 là train.
+  Kiểm cục bộ: 2 subject holdout (9602703, 9745458) có chính gối phải V00 trong d020 (ca iMorphics).
+
 ### Failures / Risks
 - Kiểm trùng ảnh (S9 mục 6) không chạy được ca nào (không có ảnh + chuyển đổi không làm được).
 - Pilot: nửa độ rộng CI ≈ 0,03 > δ = 0,02 (1 seed, 1229 ca).
+- S10 không kiểm được trùng nội dung ảnh (imagesTr d020 không trên Drive) → tối đa `sach_theo_id`.
+- `segmentation_audit.*` (không hậu tố) trên Drive là lần chạy sai cấu hình (thieu_provenance) — giữ làm hồ sơ.
+
+### Decisions
+- Loại 3 ca holdout trùng subject cohort phát triển (96 → 93); loại ca holdout phơi nhiễm với mô hình seg. Xem `Event.md`.
 
 ### Next
-1. Colab: S9 `Run all` (tới mục 13, ~15 phút sau khi chép zip) → gửi output mục 13.
-2. S10 mục 0–2 → gửi kết luận audit.
-3. Sửa S8 → S7 với `m3t_cls_v2.csv`.
+1. Colab: S10 `Run all` → gửi output mục 2 (dự kiến tập đánh giá 91 ca, `sach_theo_id`).
+2. Sửa S8 → S7 với `m3t_cls_v2.csv`.
 
 ---
 

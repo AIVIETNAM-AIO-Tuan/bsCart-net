@@ -435,3 +435,10 @@ trên Drive nên lần đầu chỉ có CLS cho 846 ca. Metadata chính thức O
 **Holdout (27/09/2026):** 3 subject của 96 ca holdout có một ca khác trong cohort phát triển → theo quyết định người
 dùng, loại 3 ca đó khỏi holdout (còn 93); S7/S8 và mô hình cuối giữ nguyên. Xem `Event.md` 2026-09-27.
 
+**Mô hình segmentation của mask 09_09 (27/09/2026, người dùng xác nhận):** d020 ResEnc-L 150 epoch, **ensemble 5 fold**
+⇒ cả 544 ca d020 là dữ liệu train. Theo quyết định người dùng, ca holdout **trùng ảnh hoặc trùng subject** với dữ liệu
+đó bị **loại khỏi holdout**; S10 mục 2 ghi tập còn lại `holdout_manifest_eval_d020_150ep_ens5.*` — tập dùng cho các
+bước 2–6 của mục 5b (segmentation tập đánh giá cũng bằng đúng ensemble đó). Kiểm cục bộ trên cùng bộ zip: subject
+9602703 và 9745458 (OAI-ZIB test, gối phải V00) có chính gối phải V00 + V01 trong d020 dưới dạng ca iMorphics ⇒ dự
+kiến còn 91 ca (chờ Colab xác nhận). Ảnh `imagesTr` của d020 không còn trên Drive nên kết luận tối đa `sach_theo_id`.
+
