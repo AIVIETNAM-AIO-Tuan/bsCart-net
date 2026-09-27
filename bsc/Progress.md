@@ -25,6 +25,9 @@ Ghi theo ngày, chỉ giữ thông tin cần để tiếp tục công việc. Qu
   mục 7 (S9/S10 đang chạy, không báo số hiệu năng M3T) và việc tiếp theo; xuất `docs/report/27_09_2026.pdf`.
   Công cụ: `docs/md_blocks.py` (bộ tách Markdown dùng chung, `md_to_docx.py` ra `document.xml` y hệt byte),
   `docs/md_to_pdf.py` (Chrome headless). Tiêu đề hình S7/S8 bỏ số "Hình N" gắn cứng.
+  Viết lại theo văn phong PDF 09_09 theo yêu cầu người dùng: **không tên biến, tên notebook, mã bước (S6–S10)
+  hay dòng trích nguồn notebook** trong báo cáo lẫn trên hình; mô hình gọi bằng tên phương pháp
+  (`make_figs.MODEL_LABEL` / `FEATURE_LABEL`), không dùng chữ A–E.
 
 ### Findings
 - Hai nguồn nhãn KL trùng 1203/1203; head M3T rò rỉ: QWK 0,851 (subject đã train) vs 0,779.
@@ -36,6 +39,9 @@ Ghi theo ngày, chỉ giữ thông tin cần để tiếp tục công việc. Qu
   9905156, 9993833 (gối trái). Không ai trong số này thuộc 93 ca holdout (2 người đầu không nằm trong 96 ứng viên,
   2 người sau đã loại ở bước 96 → 93). Hệ quả phụ: số test "ZIB Ts 103" của B0 không hoàn toàn sạch (xem `Event.md`).
 - `make_splits.py` đã khôi phục cùng fold d020 vào `splits/splits_zib_v1.json`; bản ghim mới trùng khít (có test).
+- S8/S7 bản M3T (`bsc/m3t_eval.py` + test; notebook sửa tại chỗ, OUT mới `s8_holdout_m3t/`, `s7_ordinal_m3t/`): harness
+  tổng hợp chạy cả bản cũ (sinh "v2") lẫn bản mới — pha R trùng khít, kết luận + độ nhạy checkpoint chạy, chặn chạy lại
+  đúng, S7 cho kết quả trùng khít giữa 1 và 2 worker. **Chưa chạy trên dữ liệu thật.**
 
 ### Failures / Risks
 - Kiểm trùng ảnh (S9 mục 6) không chạy được ca nào (không có ảnh + chuyển đổi không làm được).
@@ -47,7 +53,8 @@ Ghi theo ngày, chỉ giữ thông tin cần để tiếp tục công việc. Qu
 - Loại 3 ca holdout trùng subject cohort phát triển (96 → 93); loại ca holdout phơi nhiễm với mô hình seg. Xem `Event.md`.
 
 ### Next
-1. Sửa S8 → S7 với `m3t_cls_v2.csv` (phép so chính B `__nosel`).
+1. Colab: chạy S8 (`Run all`, ~10–15 phút CPU) rồi S7 (runtime nhiều lõi càng nhanh; 2 lõi ≈ 2–2,5 giờ) → gửi output
+   pha R và mục 6b/6c của S7.
 2. S10 bước 2: segmentation 93 ca bằng ensemble d020 150ep (nạp thẳng từ zip), xác định checkpoint final/best bằng cách
    tái lập nhãn 6–8 của vài ca OAI-ZIB phát triển.
 

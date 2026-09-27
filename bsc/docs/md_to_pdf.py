@@ -33,10 +33,11 @@ CSS = """
   @bottom-left  { content: "%(footer)s"; font: 7.5pt "Segoe UI", Arial, sans-serif; color: #9b9a97; }
   @bottom-right { content: counter(page); font: 7.5pt "Segoe UI", Arial, sans-serif; color: #9b9a97; }
 }
-:root { --ink: #1f1f1d; --muted: #6b6a66; --line: #e4e2dc; --head: #f5f4f0; --accent: #1f4d66; }
+:root { --ink: #1f1f1d; --muted: #6b6a66; --line: #e6e4df; --head: #f7f6f3; --accent: #1f4d66; }
 html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 body { font: 10.3pt/1.55 "Segoe UI", Inter, Arial, sans-serif; color: var(--ink); margin: 0; }
 h1 { font-size: 25pt; line-height: 1.2; margin: 0 0 8pt; font-weight: 700; }
+h1:not(:first-child) { font-size: 20pt; margin-top: 26pt; break-after: avoid; }   /* phu luc */
 h2 { font-size: 14.5pt; margin: 20pt 0 6pt; font-weight: 700; break-after: avoid; }
 h3 { font-size: 11.5pt; margin: 14pt 0 4pt; font-weight: 700; break-after: avoid; }
 p { margin: 0 0 7pt; }
@@ -54,10 +55,10 @@ thead { display: table-header-group; }
 tr { break-inside: avoid; }
 th, td { border: 0.75pt solid var(--line); padding: 4pt 7pt; text-align: left; vertical-align: top; }
 th { background: var(--head); font-weight: 600; }
+.nw { white-space: nowrap; }
 figure { margin: 10pt 0 8pt; break-inside: avoid; }
 figure img { display: block; max-width: 100%%; margin: 0 auto 5pt; }
-.caption { font-size: 9pt; line-height: 1.5; color: var(--muted); margin: 0 0 11pt; }
-.caption b { color: #4a4945; }
+.caption { font-size: 9.6pt; line-height: 1.5; font-style: italic; color: var(--ink); margin: 0 0 11pt; }
 blockquote { margin: 6pt 0 10pt; padding: 6pt 10pt; background: #f2f5f7;
              border-left: 3pt solid var(--accent); break-inside: avoid; }
 hr { border: 0; border-top: 0.75pt solid var(--line); margin: 14pt 0; }
@@ -100,11 +101,15 @@ class Renderer:
             return f'<p class="missing">[THIEU HINH: {html.escape(path.name)}]</p>'
         return f'<img src="{path.as_uri()}">'
 
+    def cell(self, tag, text):
+        # o ngan (so + don vi) khong duoc xuong dong kieu "8,0 / mm"
+        cls = ' class="nw"' if len(text) <= 12 else ""
+        return f"<{tag}{cls}>{self.inline(text)}</{tag}>"
+
     def table(self, rows):
         head, body = rows[0], rows[1:]
-        th = "".join(f"<th>{self.inline(c)}</th>" for c in head)
-        trs = "".join("<tr>" + "".join(f"<td>{self.inline(c)}</td>" for c in r) + "</tr>"
-                      for r in body)
+        th = "".join(self.cell("th", c) for c in head)
+        trs = "".join("<tr>" + "".join(self.cell("td", c) for c in r) + "</tr>" for r in body)
         return f"<table><thead><tr>{th}</tr></thead><tbody>{trs}</tbody></table>"
 
     def lists(self, items):

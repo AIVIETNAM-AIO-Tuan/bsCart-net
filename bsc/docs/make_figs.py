@@ -42,6 +42,25 @@ plt.rcParams.update({
 })
 KL = [f"KL{c}" for c in D.CLASSES]
 
+# Nhan hien thi cho NGUOI DOC bao cao: khong ten bien, ten notebook hay ma buoc (S7, S8...).
+MODEL_LABEL = {
+    "A_xgb_softmax": "XGBoost softmax\n(gốc)", "A2_mlp_softmax": "MLP softmax\n(đối chứng)",
+    "B_xgb_frankhall": "Frank & Hall", "C_xgb_reg_cutpoints": "Hồi quy +\nđiểm cắt",
+    "D_mlp_ordinal_only": "MLP ordinal", "E_mlp_slide_multitask": "MLP ordinal\nđa nhiệm",
+}
+FS_LABEL = {"legacy_s3": "15 biomarker cũ", "s6_all": "cũ + bề mặt xương (70 biến)",
+            "s6_all_plus_radiomics": "tất cả, có radiomics (926 biến)"}
+FAMILY_LABEL = {"Bề mặt S6": "Bề mặt xương", "Bảng cũ": "15 biomarker cũ", "Radiomics": "Radiomics"}
+FEATURE_LABEL = {
+    "fcl_fem_maxdef_mm2": "Ổ mất sụn lớn nhất — sụn đùi",
+    "fcl_mt_ndef": "Số ổ mất sụn — mâm chày trong",
+    "fcl_lt_mm2": "Diện tích mất sụn — mâm chày ngoài",
+    "thin_le05_mt_pct": "% sụn mỏng < 0,5 mm — mâm chày trong",
+    "thc_tab_fem_med_mm": "Độ dày TB tính cả chỗ mất — đùi trong",
+    "tab_fem_med_mm2": "Diện tích vùng nền sụn — đùi trong",
+    "thickp05_fem_lat_mm": "Độ dày phân vị 5% — đùi ngoài",
+}
+
 
 def vn(x, nd=2, sign=False):
     """Số theo cách viết tiếng Việt: dấu phẩy thập phân. Dùng cho MỌI số vẽ lên hình."""
@@ -123,13 +142,13 @@ def fig2_s7_qwk():
     for j, (fs, c) in enumerate(zip(fs_show, SERIES)):
         vals = [D.S7_QWK[fs][k] for k in keys]
         off = (j - 1) * (w + 0.015)
-        ax.bar(x + off, vals, w, color=c, label=D.S7_FS_LABEL[fs], zorder=3)
+        ax.bar(x + off, vals, w, color=c, label=FS_LABEL[fs], zorder=3)
         for xi, v in zip(x + off, vals):
             ax.text(xi, v + 0.008, vn(v, 3), ha="center", fontsize=6.8, color=INK2,
                     rotation=90, va="bottom")
-    ax.set_xticks(x, [D.S7_MODEL_SHORT[m] for m in models], fontsize=8)
+    ax.set_xticks(x, [MODEL_LABEL[m] for m in models], fontsize=8)
     ax.set_ylim(0.5, 0.85)
-    ax.set_ylabel("QWK (out-of-fold, n = 1229)")
+    ax.set_ylabel("QW-Kappa (đánh giá chéo, n = 1.229)")
     ax.yaxis.grid(True, zorder=0)
     ax.set_axisbelow(True)
     # Legend RA NGOAI truc: dat trong se de len hai nhan nhom ben duoi
@@ -138,11 +157,11 @@ def fig2_s7_qwk():
     ax.axvspan(-0.5, 1.5, color="#f0efec", zorder=0)
     ax.text(0.5, 0.822, "danh định\n(không dùng thứ tự)", ha="center", fontsize=7.5, color=MUTED)
     ax.text(3.5, 0.822, "có dùng thứ tự (ordinal)", ha="center", fontsize=7.5, color=MUTED)
-    fig.suptitle("S7: xử lý KL như thang thứ tự hơn coi là năm lớp rời rạc",
+    fig.suptitle("Coi KL là thang thứ tự thì tốt hơn coi là năm lớp rời rạc",
                  fontsize=11, fontweight="bold", x=0.008, ha="left", y=1.09)
     _finish(fig, "fig2_s7_qwk.png",
-            "Nguồn: biomarker_s7_ordinal.ipynb mục 4. Trung bình 3 seed, 15 fold chia theo subject. "
-            "Độ lệch chuẩn qua seed 0,002–0,015.")
+            "Trung bình 3 lần lặp đánh giá chéo 5 fold, chia theo bệnh nhân. "
+            "Độ lệch chuẩn giữa các lần lặp 0,002–0,015.")
 
 
 def _confusion(ax, cm, title, sub=None):
@@ -176,21 +195,21 @@ def _confusion(ax, cm, title, sub=None):
 def fig3_s7_confusion():
     """S7: ma tran nham lan cua hai model ordinal tot nhat, n=1229."""
     fig, axes = plt.subplots(1, 2, figsize=(9.4, 4.3))
-    _confusion(axes[0], D.S7_CONFUSION["B_xgb_frankhall"], "B — Frank-Hall",
-               "QWK 0,776  ·  MAE 0,533  ·  macro F1 54,5%")
-    _confusion(axes[1], D.S7_CONFUSION["D_mlp_ordinal_only"], "D — MLP loss ngưỡng",
-               "QWK 0,774  ·  MAE 0,547  ·  macro F1 54,3%")
-    fig.suptitle("S7: ma trận nhầm lẫn, out-of-fold trên cả 1229 ca",
+    _confusion(axes[0], D.S7_CONFUSION["B_xgb_frankhall"], "Frank & Hall",
+               "QW-Kappa 0,776  ·  MAE 0,533  ·  macro F1 54,5%")
+    _confusion(axes[1], D.S7_CONFUSION["D_mlp_ordinal_only"], "MLP ordinal",
+               "QW-Kappa 0,774  ·  MAE 0,547  ·  macro F1 54,3%")
+    fig.suptitle("Ma trận nhầm lẫn, đánh giá chéo trên cả 1.229 ca",
                  fontsize=11, fontweight="bold", x=0.008, ha="left", y=1.10)
     _finish(fig, "fig3_s7_confusion.png",
-            "Nguồn: biomarker_s7_ordinal.ipynb mục 5, bộ đặc trưng đầy đủ (926 cột), seed 0. "
-            "Ô tô đậm theo tỉ lệ trong hàng; số là đếm ca. Viền xanh là đoán đúng.")
+            "Bộ đặc trưng đầy đủ (926 biến). Ô tô đậm theo tỉ lệ trong hàng; số là số ca. "
+            "Viền xanh là đoán đúng.")
 
 
 def fig4_s7_f1():
     """S7: F1 theo lop - lo ra KL1 la lop yeu o moi model."""
     models = ["A_xgb_softmax", "B_xgb_frankhall", "D_mlp_ordinal_only"]
-    lab = ["A — XGB softmax (nền)", "B — Frank-Hall", "D — MLP loss ngưỡng"]
+    lab = ["XGBoost softmax (gốc)", "Frank & Hall", "MLP ordinal"]
     x = np.arange(5)
     w = 0.26
     fig, ax = plt.subplots(figsize=(8.4, 3.6))
@@ -209,13 +228,13 @@ def fig4_s7_f1():
     ax.legend(frameon=False, fontsize=7.8, ncol=3, labelcolor=INK2,
               loc="lower left", bbox_to_anchor=(0, 1.0))
     # Nhan gon NGAY TREN nhom KL1, khong dung mui ten cat ngang bieu do
-    ax.text(1, 52, "lớp yếu nhất\nở MỌI model", ha="center", va="bottom", fontsize=7.6,
+    ax.text(1, 52, "lớp yếu nhất\nở MỌI mô hình", ha="center", va="bottom", fontsize=7.6,
             color=CRIT, fontweight="bold", linespacing=1.4)
     ax.plot([1], [50], marker="v", ms=7, color=CRIT)
-    fig.suptitle("S7: F1 theo từng độ KL, bộ đặc trưng đầy đủ",
+    fig.suptitle("F1 theo từng độ KL, bộ đặc trưng đầy đủ",
                  fontsize=11, fontweight="bold", x=0.008, ha="left", y=1.10)
     _finish(fig, "fig4_s7_f1.png",
-            "Nguồn: biomarker_s7_ordinal.ipynb mục 5b, seed 0, out-of-fold n = 1229. KL1 nghĩa là "
+            "Đánh giá chéo, n = 1.229. KL1 nghĩa là "
             "“nghi ngờ hẹp khe khớp” — chính bác sĩ đọc phim cũng đồng thuận kém nhất ở mức này.")
 
 
@@ -252,31 +271,31 @@ def fig5_s8_threshold():
             color=GOOD, fontweight="bold")
     a2.text(0.5, 0.335, f"trung bình  {vn(mp0, 3)} → {vn(mp1, 3)}", ha="center", fontsize=8,
             color=CRIT, fontweight="bold")
-    fig.suptitle("S8: dò ngưỡng đổi precision KL4 lấy recall KL4, tái lập ở mọi cặp",
+    fig.suptitle("Dò ngưỡng: đổi precision KL4 lấy recall KL4, tái lập ở cả 6 cặp",
                  fontsize=11, fontweight="bold", x=0.008, ha="left", y=1.02)
     _finish(fig, "fig6_s8_threshold.png",
-            "Nguồn: biomarker_s8_holdout.ipynb mục 4b, n_test = 246. Sáu cặp = 3 model (B, D, E) × 2 bộ "
-            "đặc trưng có radiomics. Cơ chế tái lập 6/6; mức lợi trên QWK gộp thì KHÔNG.")
+            "Tập test cố định, n = 246. Sáu cặp = 3 mô hình (Frank & Hall, MLP ordinal, MLP ordinal đa nhiệm) "
+            "× 2 bộ đặc trưng có radiomics. Cơ chế tái lập 6/6; mức lợi trên QW-Kappa tổng thì KHÔNG.")
 
 
 def fig6_s8_confusion():
     """S8: model co QWK cao nhat, va tac dong cua doi quy tac quyet dinh."""
     fig, axes = plt.subplots(1, 2, figsize=(9.4, 4.3))
-    _confusion(axes[0], D.S8_CONFUSION["C_xgb_reg_cutpoints"], "C — điểm cắt tối ưu QWK",
-               "QWK 0,803  ·  recall KL3 48,3%  ·  recall KL4 80,8%")
-    _confusion(axes[1], D.S8_CONFUSION["C_xgb_reg_cutpoints@quantile"], "C — điểm cắt phân vị",
-               "QWK 0,790  ·  recall KL3 55,2%  ·  recall KL4 69,2%")
-    fig.suptitle("S8: cùng một bộ hồi quy, chỉ đổi quy tắc đặt điểm cắt",
+    _confusion(axes[0], D.S8_CONFUSION["C_xgb_reg_cutpoints"], "Điểm cắt tối ưu QW-Kappa",
+               "QW-Kappa 0,803  ·  recall KL3 48,3%  ·  recall KL4 80,8%")
+    _confusion(axes[1], D.S8_CONFUSION["C_xgb_reg_cutpoints@quantile"], "Điểm cắt phân vị",
+               "QW-Kappa 0,790  ·  recall KL3 55,2%  ·  recall KL4 69,2%")
+    fig.suptitle("Cùng một mô hình hồi quy, chỉ đổi cách đặt điểm cắt",
                  fontsize=11, fontweight="bold", x=0.008, ha="left", y=1.10)
     _finish(fig, "fig5_s8_confusion.png",
-            "Nguồn: biomarker_s8_holdout.ipynb mục 6, tập test cố định n = 246. Điểm cắt tối ưu QWK nới "
-            "rộng hai bin ngoài cùng, bóp KL3 còn 48,3% để đẩy KL4 lên 80,8%; điểm cắt phân vị trả lại cân bằng.")
+            "Tập test cố định, n = 246. Điểm cắt tối ưu QW-Kappa nới rộng hai lớp ngoài cùng, ép recall KL3 "
+            "còn 48,3% để đẩy KL4 lên 80,8%; điểm cắt phân vị trả lại cân bằng.")
 
 
 def fig7_s6_usage():
     """S8 muc 4d: cot S6 co thuc su duoc classifier dung khong."""
     fig, (a1, a2) = plt.subplots(1, 2, figsize=(10.6, 3.4),
-                                 gridspec_kw=dict(width_ratios=[1, 1.2], wspace=0.42))
+                                 gridspec_kw=dict(width_ratios=[1, 1.1], wspace=0.95))
     hos = list(D.S8_S6_USAGE)
     y = np.arange(len(hos))[::-1]
     kept = [D.S8_S6_USAGE[h][2] for h in hos]
@@ -285,12 +304,12 @@ def fig7_s6_usage():
     a1.barh(y, gain, height=0.5, color=[BLUE, AQUA, ORANGE], zorder=3)
     for yi, g, k, p in zip(y, gain, kept, per):
         # MOT text hai dong, khong phai hai text canh nhau: hai text se de len bar ben canh
-        a1.text(g + 2.0, yi, f"{vn(g, 1)}%\n{k} cột · {vn(p)}%/cột", va="center", ha="left",
+        a1.text(g + 2.0, yi, f"{vn(g, 1)}%\n{k} biến · {vn(p)}%/biến", va="center", ha="left",
                 fontsize=7.4, color=INK2, linespacing=1.5)
-    a1.set_yticks(y, hos, fontsize=8.5)
+    a1.set_yticks(y, [FAMILY_LABEL[h] for h in hos], fontsize=8.5)
     a1.set_xlim(0, 122)
-    a1.set_xlabel("Tỉ trọng gain của XGB (%)")
-    a1.set_title("a. Cột S6 chiếm 15,5% gain với 12% số cột", loc="left")
+    a1.set_xlabel("Tỉ trọng đóng góp (gain) trong mô hình (%)")
+    a1.set_title("a. Bề mặt xương: 15,5% đóng góp, 12% số biến", loc="left")
     a1.xaxis.grid(True, zorder=0)
     a1.set_axisbelow(True)
 
@@ -300,20 +319,20 @@ def fig7_s6_usage():
     a2.barh(yy, vals, height=0.6, color=BLUE, zorder=3)
     for i, v in enumerate(vals):
         a2.text(v + 0.05, i, vn(v) + "%", va="center", fontsize=7.5, color=INK2)
-    a2.set_yticks(yy, names, fontsize=7.6)
+    a2.set_yticks(yy, [FEATURE_LABEL[n] for n in names], fontsize=7.6)
     a2.set_xlim(0, 3.1)
-    a2.set_xlabel("Tỉ trọng gain (%)")
-    a2.set_title(f"b. Cột S6 mạnh nhất đứng HẠNG {D.S8_S6_TOP_RANK} trên 926 cột", loc="left")
+    a2.set_xlabel("Tỉ trọng đóng góp (%)")
+    a2.set_title(f"b. Biến bề mặt xương mạnh nhất: HẠNG {D.S8_S6_TOP_RANK} trên 926", loc="left")
     a2.xaxis.grid(True, zorder=0)
     a2.set_axisbelow(True)
     a2.get_yticklabels()[-1].set_color(BLUE)
     a2.get_yticklabels()[-1].set_fontweight("bold")
 
-    fig.suptitle("Cột S6 có thực sự được dùng không: có, và dùng nhiều",
+    fig.suptitle("Biomarker bề mặt xương có được mô hình dùng không: có, và dùng nhiều",
                  fontsize=11, fontweight="bold", x=0.008, ha="left", y=1.04)
     _finish(fig, "fig7_s6_usage.png",
-            "Nguồn: biomarker_s8_holdout.ipynb mục 4d, bộ 926 cột. Không cột S6 nào rơi vào trạng thái "
-            "“sống sót LASSO nhưng gain 0” — cả 13 cột sống sót đều được cây tách trên chúng.")
+            "Bộ đặc trưng đầy đủ (926 biến). Cả 13 biến bề mặt xương còn lại sau LASSO "
+            "đều được mô hình thực sự dùng để tách.")
 
 
 if __name__ == "__main__":
