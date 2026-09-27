@@ -51,6 +51,7 @@ thứ ROI cascade đã không có:
 | `m3t.py` | M3T (port nguyên văn `knee_testing_v3.ipynb`), trích CLS, chặn trọng số rò rỉ, chuyển đổi NIfTI → M3T, dấu vân tay ảnh | `test_m3t.py` |
 | `m3t_train.py` | Huấn luyện lại M3T không rò rỉ: pool loại subject cohort, đọc npz trong zip, `fit` chạy tiếp nhiều phiên, chọn epoch trailing | `test_m3t_train.py` |
 | `oaizib.py` | OAIZIB-CM trên HuggingFace: subInfo (barcode, bên gối, lần khám), tải **từng file** ảnh lên Drive | `test_oaizib.py` |
+| `m3t_eval.py` | Đánh giá downstream CLS M3T + biomarker (S7/S8): nạp/kiểm CLS, giao ca theo npz, feature set `m3t_`, lọc fold đã ghim, head M3T, phép so đăng ký trước, chạy song song không phụ thuộc số worker | `test_m3t_eval.py` |
 | `seg_provenance.py` | Provenance mô hình nnU-Net đọc **thẳng từ zip "Download" của Drive** (central directory): ca val từng fold, vai trò train/val của ensemble, CRC32/sha256 checkpoint, tên ca → subject | `test_seg_provenance.py` |
 | `configs/m3t_s9.json` | Cấu hình đăng ký trước của S9 (công thức train, đầu vào đã ghim, ngưỡng cổng, giao thức đánh giá) | `test_m3t_train.py` |
 | `make_splits.py` | Khôi phục + ghim splits, sửa rò rỉ V00/V01 | — |
@@ -64,8 +65,8 @@ Chạy test local: `python -m pytest bsc/tests -v` (không cần data, không c�
 |---|---|---|
 | `biomarker_s1..s5` | cohort, inference d20, biomarker voxel, XGB, radiomics (bản gốc) | `knee_biomarkers/` |
 | `biomarker_s6_fcl` | biomarker bề mặt + **FCL**, superset bảng S3, QC + sanity theo KL | `masks/` → `s6_fcl/biomarker_table_v2.csv` |
-| `biomarker_s7_ordinal` | nominal (S4) vs 4 cách ordinal, CV theo subject × 3 seed, chẩn đoán head ngưỡng | `s6_fcl/…v2.csv` → `s7_ordinal/` |
-| `biomarker_s8_holdout` | holdout một lần như báo cáo, tầng quyết định | `s6_fcl/…v2.csv` → `s8_holdout_v2/` |
+| `biomarker_s7_ordinal` | nominal (S4) vs 4 cách ordinal, CV theo subject × 3 seed, chẩn đoán head ngưỡng; **bản M3T**: tái lập `s7_ordinal`, 14 set trên giao 1.221 ca có CLS, kết luận đăng ký trước + độ nhạy checkpoint | `s6_fcl/…v2.csv` + `m3t_cls_v2.csv` → `s7_ordinal_m3t/` |
+| `biomarker_s8_holdout` | holdout một lần như báo cáo, tầng quyết định; **bản M3T**: tái lập v2, set `m3t_` trên giao có CLS, phép so đăng ký trước chỉ để sàng lọc | `s6_fcl/…v2.csv` + `m3t_cls_v2.csv` → `s8_holdout_m3t/` |
 | `biomarker_s9_m3t` | M3T train lại không rò rỉ (trừ mọi subject cohort), trích CLS 128 chiều; mục 13 thêm OAI-ZIB qua barcode OAIZIB-CM | zip M3T + manifest → `s9_m3t/run_<cfg>/m3t_cls_v2.csv` |
 | `biomarker_s10_oaizib_holdout` | 96 ca holdout OAI-ZIB: ghim manifest (loại ca trùng subject cohort → 93), audit mô hình seg d020 150ep ensemble 5 fold từ zip trên Drive, loại ca phơi nhiễm → tập đánh giá (các bước sau chưa làm) | manifest + zip model → `s10_oaizib_holdout/holdout_manifest_eval_d020_150ep_ens5.csv` |
 

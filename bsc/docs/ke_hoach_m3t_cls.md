@@ -387,6 +387,22 @@ bốn mức kết luận và độ nhạy checkpoint → (8) khóa mô hình, ch
 
 Fine-tune M3T trong từng fold; Curia-2 / DINOv2; nhánh ảnh end-to-end; sửa Hình 1 đang dở ở `bsc/docs/make_figs.py` và `bsc/docs/report_data.py`.
 
+## Ghi chú triển khai S8/S7 bản M3T (27/09/2026)
+
+Không đổi phép so, δ, bootstrap, fold hay model. Chi tiết hóa:
+
+- **Giao ca:** mọi set chạy trên 1.221 ca có CLS v2 (luật `npz_intersection`); split S8 và fold S7 **ghim trên 1.229 ca
+  rồi lọc** (`m3t_eval.subset_folds`), không chia lại. Vì vậy "tái lập v2 / `s7_ordinal`" chạy ở một **pha R** riêng
+  (6 set cũ × A/B/C trên đủ 1.229 ca, assert trùng khít), còn số của set cũ ở pha M lệch nhẹ so với bản cũ.
+- **Một định nghĩa** cho feature set mới, mặt nạ nhánh ảnh (`rad_` và `m3t_`), luật `__nosel`, head M3T và phép so:
+  `bsc/m3t_eval.py`; hai notebook chỉ gọi. Danh sách cặp đọc từ `configs/m3t_s9.json["evaluation"]`.
+- **S7 chạy song song theo fold** (`N_JOBS` = nửa số lõi, tối đa 16). torch chạy 1 luồng ở mọi chế độ nên kết quả không
+  phụ thuộc số worker (harness: OOF/QWK/kết luận trùng khít giữa 1 và 2 worker); số MLP (A2/D/E) có thể lệch nhẹ so với
+  lần chạy cũ — không nằm trong phép so chính, pha R chỉ khóa A/B/C.
+- `m3t_head` không phụ thuộc fold nên lặp qua 3 seed trong mảng `[N, 3]` (hiệu tính từng seed, không hẹp CI giả).
+- S8 cũng chạy các cặp đã đăng ký trên ~243 ca test nhưng chỉ ghi `muc_sang_loc`; kết luận duy nhất là `verdict.json`
+  của S7. Hai notebook dừng nếu thư mục ra đã có `run_config.json` (không ghi đè).
+
 ## Ghi chú triển khai (25/09/2026) — chỗ code khác chữ trong kế hoạch
 
 Không chỗ nào đổi phép so chính, δ, bootstrap hay quy tắc chọn checkpoint. Các chỗ chi tiết hóa:
