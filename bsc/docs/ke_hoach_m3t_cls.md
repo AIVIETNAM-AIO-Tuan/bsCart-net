@@ -432,3 +432,6 @@ trên Drive nên lần đầu chỉ có CLS cho 846 ca. Metadata chính thức O
 507/507, gối phải, baseline → S9 mục 13 đưa OAI-ZIB vào lại bằng **khớp barcode** (luật đã đăng ký, nguồn barcode mới)
 → `m3t_cls_v2.csv` (~1.320 ca, có holdout). **S8/S7 dùng bản v2.** Ảnh holdout tải lại từ HuggingFace cho S10.
 
+**Holdout (27/09/2026):** 3 subject của 96 ca holdout có một ca khác trong cohort phát triển → theo quyết định người
+dùng, loại 3 ca đó khỏi holdout (còn 93); S7/S8 và mô hình cuối giữ nguyên. Xem `Event.md` 2026-09-27.
+
