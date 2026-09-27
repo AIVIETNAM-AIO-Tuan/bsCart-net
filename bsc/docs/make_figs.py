@@ -138,7 +138,7 @@ def fig2_s7_qwk():
     ax.axvspan(-0.5, 1.5, color="#f0efec", zorder=0)
     ax.text(0.5, 0.822, "danh định\n(không dùng thứ tự)", ha="center", fontsize=7.5, color=MUTED)
     ax.text(3.5, 0.822, "có dùng thứ tự (ordinal)", ha="center", fontsize=7.5, color=MUTED)
-    fig.suptitle("Hình 2 — S7: xử lý KL như thang thứ tự hơn coi là năm lớp rời rạc",
+    fig.suptitle("S7: xử lý KL như thang thứ tự hơn coi là năm lớp rời rạc",
                  fontsize=11, fontweight="bold", x=0.008, ha="left", y=1.09)
     _finish(fig, "fig2_s7_qwk.png",
             "Nguồn: biomarker_s7_ordinal.ipynb mục 4. Trung bình 3 seed, 15 fold chia theo subject. "
@@ -180,7 +180,7 @@ def fig3_s7_confusion():
                "QWK 0,776  ·  MAE 0,533  ·  macro F1 54,5%")
     _confusion(axes[1], D.S7_CONFUSION["D_mlp_ordinal_only"], "D — MLP loss ngưỡng",
                "QWK 0,774  ·  MAE 0,547  ·  macro F1 54,3%")
-    fig.suptitle("Hình 3 — S7: ma trận nhầm lẫn, out-of-fold trên cả 1229 ca",
+    fig.suptitle("S7: ma trận nhầm lẫn, out-of-fold trên cả 1229 ca",
                  fontsize=11, fontweight="bold", x=0.008, ha="left", y=1.10)
     _finish(fig, "fig3_s7_confusion.png",
             "Nguồn: biomarker_s7_ordinal.ipynb mục 5, bộ đặc trưng đầy đủ (926 cột), seed 0. "
@@ -212,7 +212,7 @@ def fig4_s7_f1():
     ax.text(1, 52, "lớp yếu nhất\nở MỌI model", ha="center", va="bottom", fontsize=7.6,
             color=CRIT, fontweight="bold", linespacing=1.4)
     ax.plot([1], [50], marker="v", ms=7, color=CRIT)
-    fig.suptitle("Hình 4 — S7: F1 theo từng độ KL, bộ đặc trưng đầy đủ",
+    fig.suptitle("S7: F1 theo từng độ KL, bộ đặc trưng đầy đủ",
                  fontsize=11, fontweight="bold", x=0.008, ha="left", y=1.10)
     _finish(fig, "fig4_s7_f1.png",
             "Nguồn: biomarker_s7_ordinal.ipynb mục 5b, seed 0, out-of-fold n = 1229. KL1 nghĩa là "
@@ -252,7 +252,7 @@ def fig5_s8_threshold():
             color=GOOD, fontweight="bold")
     a2.text(0.5, 0.335, f"trung bình  {vn(mp0, 3)} → {vn(mp1, 3)}", ha="center", fontsize=8,
             color=CRIT, fontweight="bold")
-    fig.suptitle("Hình 6 — S8: dò ngưỡng đổi precision KL4 lấy recall KL4, tái lập ở mọi cặp",
+    fig.suptitle("S8: dò ngưỡng đổi precision KL4 lấy recall KL4, tái lập ở mọi cặp",
                  fontsize=11, fontweight="bold", x=0.008, ha="left", y=1.02)
     _finish(fig, "fig6_s8_threshold.png",
             "Nguồn: biomarker_s8_holdout.ipynb mục 4b, n_test = 246. Sáu cặp = 3 model (B, D, E) × 2 bộ "
@@ -266,7 +266,7 @@ def fig6_s8_confusion():
                "QWK 0,803  ·  recall KL3 48,3%  ·  recall KL4 80,8%")
     _confusion(axes[1], D.S8_CONFUSION["C_xgb_reg_cutpoints@quantile"], "C — điểm cắt phân vị",
                "QWK 0,790  ·  recall KL3 55,2%  ·  recall KL4 69,2%")
-    fig.suptitle("Hình 5 — S8: cùng một bộ hồi quy, chỉ đổi quy tắc đặt điểm cắt",
+    fig.suptitle("S8: cùng một bộ hồi quy, chỉ đổi quy tắc đặt điểm cắt",
                  fontsize=11, fontweight="bold", x=0.008, ha="left", y=1.10)
     _finish(fig, "fig5_s8_confusion.png",
             "Nguồn: biomarker_s8_holdout.ipynb mục 6, tập test cố định n = 246. Điểm cắt tối ưu QWK nới "
@@ -309,7 +309,7 @@ def fig7_s6_usage():
     a2.get_yticklabels()[-1].set_color(BLUE)
     a2.get_yticklabels()[-1].set_fontweight("bold")
 
-    fig.suptitle("Hình 7 — Cột S6 có thực sự được dùng không: có, và dùng nhiều",
+    fig.suptitle("Cột S6 có thực sự được dùng không: có, và dùng nhiều",
                  fontsize=11, fontweight="bold", x=0.008, ha="left", y=1.04)
     _finish(fig, "fig7_s6_usage.png",
             "Nguồn: biomarker_s8_holdout.ipynb mục 4d, bộ 926 cột. Không cột S6 nào rơi vào trạng thái "

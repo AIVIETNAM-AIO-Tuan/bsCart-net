@@ -10,7 +10,6 @@ Ho tro dung nhung gi bao cao dang dung: tieu de 1-3, doan van, danh sach gach da
 danh sach danh so, bang co duong ke, anh kem chu thich in nghieng, trich dan (`>`), duong ke
 ngang, va dinh dang trong dong **dam** / *nghieng* / `ma`.
 """
-import re
 import sys
 from pathlib import Path
 
@@ -20,6 +19,9 @@ from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 from docx.shared import Inches, Pt, RGBColor
+
+sys.path.insert(0, str(Path(__file__).parent))
+from md_blocks import blocks, spans                                     # noqa: E402
 
 BODY_FONT, MONO_FONT = "Calibri", "Consolas"
 INK = RGBColor(0x1A, 0x1A, 0x1A)
@@ -53,15 +55,6 @@ def _left_bar(par, hexcolor="1F4D66"):
 
 
 # ------------------------------------------------------------------ dinh dang trong dong
-CODE_RE = re.compile(r"`([^`]+?)`", re.S)
-#: `(?!\*)` o dau dong la BAT BUOC. Voi `**dam chua *nghieng***`, cum dong la ba dau sao
-#: lien nhau: mot dau dong cua nghieng roi hai dau dong cua dam. Khong co chan nay thi regex
-#: an hai dau SAM NHAT, cat mat dau dong cua nghieng va de lai mot dau sao thua.
-BOLD_RE = re.compile(r"\*\*(.+?)\*\*(?!\*)", re.S)
-ITAL_RE = re.compile(r"(?<!\*)\*([^*]+?)\*(?!\*)", re.S)
-_PATS = (("code", CODE_RE), ("bold", BOLD_RE), ("ital", ITAL_RE))
-
-
 def _run(par, txt, size, italic, bold, color, code=False):
     if not txt:
         return
@@ -78,32 +71,14 @@ def _run(par, txt, size, italic, bold, color, code=False):
 
 
 def add_runs(par, text, *, size=None, italic=False, bold=False, color=None):
-    """Tach **dam** / *nghieng* / `ma`, DE QUY nen long nhau van dung.
-
-    Ban truoc dung mot regex tach phang nen `**dam chua *nghieng* ben trong**` bi vo:
-    `.+?\\*\\*` an mat mot dau sao cua cum `***` o cuoi, de lai dau sao thua trong file .docx.
-    O day lay cum khop SOM NHAT trong ba mau roi de quy vao ruot no.
-    """
-    while text:
-        found = [(m.start(), i, kind, m)
-                 for i, (kind, pat) in enumerate(_PATS) if (m := pat.search(text))]
-        if not found:
-            _run(par, text, size, italic, bold, color)
-            return
-        pos, _, kind, m = min(found, key=lambda t: (t[0], t[1]))
-        _run(par, text[:pos], size, italic, bold, color)
-        if kind == "code":
-            _run(par, m.group(1), size, italic, bold, color, code=True)
-        elif kind == "bold":
-            add_runs(par, m.group(1), size=size, italic=italic, bold=True, color=color)
-        else:
-            add_runs(par, m.group(1), size=size, italic=True, bold=bold, color=color)
-        text = text[m.end():]
+    """Them van ban co **dam** / *nghieng* / `ma` (long nhau van dung) - xem md_blocks.spans."""
+    for txt, b, it, code in spans(text, bold, italic):
+        _run(par, txt, size, it, b, color, code=code)
 
 
 # ------------------------------------------------------------------ khoi
 def add_table(doc, rows):
-    head, body = rows[0], rows[2:]          # rows[1] la dong `---|---`
+    head, body = rows[0], rows[1:]          # md_blocks da bo dong `---|---`
     t = doc.add_table(rows=1, cols=len(head))
     t.style = "Table Grid"
     t.alignment = WD_TABLE_ALIGNMENT.LEFT
@@ -152,17 +127,8 @@ def convert(md_path: Path, docx_path: Path):
     st.paragraph_format.space_after = Pt(7)
     st.paragraph_format.line_spacing = 1.12
 
-    i, n = 0, len(lines)
-    while i < n:
-        raw = lines[i]
-        s = raw.strip()
-
-        if not s:
-            i += 1
-            continue
-
-        # --- duong ke ngang -> ngat trang mem
-        if re.fullmatch(r"-{3,}", s):
+    for kind, data in blocks(lines):
+        if kind == "hr":                    # duong ke ngang
             p = doc.add_paragraph()
             p.paragraph_format.space_before = Pt(2)
             p.paragraph_format.space_after = Pt(2)
@@ -175,99 +141,38 @@ def convert(md_path: Path, docx_path: Path):
             bt.set(qn("w:color"), "C3C2B7")
             bd.append(bt)
             pPr.append(bd)
-            i += 1
-            continue
-
-        # --- bang: gom cac dong lien tiep bat dau bang |
-        if s.startswith("|"):
-            rows = []
-            while i < n and lines[i].strip().startswith("|"):
-                cells = [c.strip() for c in lines[i].strip().strip("|").split("|")]
-                rows.append(cells)
-                i += 1
-            if len(rows) >= 2:
-                add_table(doc, rows)
-            continue
-
-        # --- anh
-        m = re.fullmatch(r"!\[[^\]]*\]\(([^)]+)\)", s)
-        if m:
-            add_image(doc, (md_path.parent / m.group(1)).resolve())
-            i += 1
-            continue
-
-        # --- tieu de
-        m = re.match(r"^(#{1,3})\s+(.*)$", s)
-        if m:
-            lv, txt = len(m.group(1)), m.group(2)
+        elif kind == "table":
+            add_table(doc, data)
+        elif kind == "image":
+            add_image(doc, (md_path.parent / data).resolve())
+        elif kind == "heading":
+            lv, txt = data
             p = doc.add_paragraph()
             p.paragraph_format.space_before = Pt({1: 0, 2: 16, 3: 11}[lv])
             p.paragraph_format.space_after = Pt({1: 6, 2: 5, 3: 4}[lv])
             p.paragraph_format.keep_with_next = True
             add_runs(p, f"**{txt}**", size={1: 20, 2: 14, 3: 11.5}[lv],
                      color=INK if lv == 1 else ACCENT)
-            i += 1
-            continue
-
-        # --- trich dan (co the nhieu dong)
-        if s.startswith(">"):
-            buf = []
-            while i < n and lines[i].strip().startswith(">"):
-                buf.append(lines[i].strip().lstrip(">").strip())
-                i += 1
+        elif kind == "quote":
             p = doc.add_paragraph()
             p.paragraph_format.left_indent = Inches(0.16)
             p.paragraph_format.space_before = Pt(6)
             p.paragraph_format.space_after = Pt(8)
             _left_bar(p)
             _shade(p, QUOTE_FILL)
-            add_runs(p, " ".join(buf), size=10)
-            continue
-
-        # --- chu thich hinh/bang: ca khoi nam trong *...*, CO THE NHIEU DONG
-        # Ban truoc doi dong DAU vua mo vua dong bang dau sao, nen chu thich dai nhieu dong
-        # roi thang xuong nhanh doan van thuong va de lo dau sao trong file .docx.
-        if s.startswith("*") and not s.startswith("**"):
-            buf, closed = [], False
-            while i < n and lines[i].strip():
-                cur = lines[i].strip()
-                buf.append(cur)
-                i += 1
-                if cur.endswith("*") and not cur.endswith("**"):
-                    closed = True
-                    break
-            txt = " ".join(buf)[1:]                 # bo dau sao MO
-            if closed:
-                txt = txt[:-1]                      # bo dau sao DONG
+            add_runs(p, data, size=10)
+        elif kind == "caption":
             p = doc.add_paragraph()
             p.paragraph_format.space_after = Pt(11)
-            add_runs(p, txt, size=9, italic=True, color=MUTED)
-            continue
-
-        # --- danh sach gach dau dong / danh so
-        m = re.match(r"^(\s*)([-*]|\d+\.)\s+(.*)$", raw)
-        if m:
-            indent, marker, txt = m.group(1), m.group(2), m.group(3)
-            while i + 1 < n and lines[i + 1].strip() and not re.match(
-                    r"^(\s*)([-*]|\d+\.)\s|^[#>|]|^!\[", lines[i + 1]) and lines[i + 1].startswith(" "):
-                i += 1
-                txt += " " + lines[i].strip()
-            style = "List Number" if marker[0].isdigit() else "List Bullet"
-            p = doc.add_paragraph(style=style)
-            p.paragraph_format.left_indent = Inches(0.28 + 0.22 * (len(indent) // 2))
+            add_runs(p, data, size=9, italic=True, color=MUTED)
+        elif kind == "list":
+            numbered, level, txt = data
+            p = doc.add_paragraph(style="List Number" if numbered else "List Bullet")
+            p.paragraph_format.left_indent = Inches(0.28 + 0.22 * level)
             p.paragraph_format.space_after = Pt(4)
             add_runs(p, txt)
-            i += 1
-            continue
-
-        # --- doan van thuong: gom cac dong tiep theo cho den dong trong
-        buf = [s]
-        while i + 1 < n and lines[i + 1].strip() and not re.match(
-                r"^([#>|]|!\[|\s*([-*]|\d+\.)\s|-{3,})", lines[i + 1].strip()):
-            i += 1
-            buf.append(lines[i].strip())
-        add_runs(doc.add_paragraph(), " ".join(buf))
-        i += 1
+        else:                               # "para"
+            add_runs(doc.add_paragraph(), data)
 
     # chan trang
     ftr = sec.footer.paragraphs[0]

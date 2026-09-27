@@ -21,6 +21,10 @@ Ghi theo ngày, chỉ giữ thông tin cần để tiếp tục công việc. Qu
   (sửa `r_max` lệch bit khi đọc lại dấu vân tay từ CSV); mục 2.1 chạy trên 14 zip thật khớp bản ghim.
 - S10 chạy lại trên Colab (git `bdaca3b`): 14 zip trên Drive trùng bản ghim, 544 ca, checkpoint khớp CRC; 93 ca
   holdout không trùng subject với dữ liệu train seg ⇒ **tập đánh giá 93 ca**, `sach_theo_id`, không loại thêm ca nào.
+- Báo cáo tuần 27/9 (`docs/bao_cao_14_09.md`, bản 14/9 nằm trong git): bỏ phần đã có trong PDF báo cáo 13/9, thêm
+  mục 7 (S9/S10 đang chạy, không báo số hiệu năng M3T) và việc tiếp theo; xuất `docs/report/27_09_2026.pdf`.
+  Công cụ: `docs/md_blocks.py` (bộ tách Markdown dùng chung, `md_to_docx.py` ra `document.xml` y hệt byte),
+  `docs/md_to_pdf.py` (Chrome headless). Tiêu đề hình S7/S8 bỏ số "Hình N" gắn cứng.
 
 ### Findings
 - Hai nguồn nhãn KL trùng 1203/1203; head M3T rò rỉ: QWK 0,851 (subject đã train) vs 0,779.
