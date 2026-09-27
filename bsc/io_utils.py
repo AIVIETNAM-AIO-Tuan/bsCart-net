@@ -24,9 +24,12 @@ khang dinh nguoc lai va da SAI.
 from __future__ import annotations
 
 import glob
+import json
 import os
+import pickle
 import posixpath
 import zipfile
+from pathlib import Path
 
 import numpy as np
 
@@ -115,6 +118,82 @@ def assert_drive_first(path):
             f"Ghi vao /content/drive/MyDrive/bsc/. Day la loi da lam mat 544 prediction."
         )
     return path
+
+
+
+def _json_default(o):
+    if isinstance(o, np.generic):
+        return o.item()
+    if isinstance(o, np.ndarray):
+        return o.tolist()
+    raise TypeError(f"khong ghi JSON duoc kieu {type(o)}")
+
+
+class OutDir:
+    """Thu muc SAN PHAM tren Drive, chiu duoc viec Drive FUSE lam mat thu muc vua tao.
+
+    Gap 27/09/2026 (S8 ban M3T): thu muc moi tao duoi thu muc CHIA SE (duong that qua
+    `.shortcut-targets-by-id`) bien mat sau vai phut trong khi Drive van doc duoc; pandas ghi
+    file tiep theo thi loi "non-existent directory". Moi file ghi qua OutDir (`csv/json/pickle/fig/put`):
+    truoc moi lan ghi, thu muc mat thi TAO LAI, in CANH BAO va GHI LAI moi file da ghi truoc do tu
+    doi tuong con trong bo nho. `verify()` kiem moi file da ghi con tren Drive (thieu thi ghi lai
+    mot lan, van thieu thi loi) - goi truoc khi ghi file danh dau hoan tat (run_config.json).
+    Doi tuong duoc giu THAM CHIEU tai thoi diem ghi: dung sua tai cho mot DataFrame da ghi.
+    """
+
+    def __init__(self, path, log=print):
+        self.path = Path(assert_drive_first(path))
+        self.path.mkdir(parents=True, exist_ok=True)
+        self._writers = {}
+        self.recreated = 0
+        self._log = log
+
+    def _ensure(self):
+        if self.path.is_dir():
+            return
+        self.path.mkdir(parents=True, exist_ok=True)
+        self.recreated += 1
+        self._log(f"CANH BAO: {self.path} bien mat khoi Drive -> tao lai (lan {self.recreated}), "
+                  f"ghi lai {len(self._writers)} file da ghi truoc do")
+        for name, writer in self._writers.items():
+            writer(self.path / name)
+
+    def put(self, name, writer):
+        """Ghi `name` bang writer(path); nho writer de ghi lai neu thu muc mat. Tra duong file."""
+        self._ensure()
+        writer(self.path / name)
+        self._writers[name] = writer
+        return self.path / name
+
+    def csv(self, df, name, **kw):
+        return self.put(name, lambda p, d=df, k=kw: d.to_csv(p, **k))
+
+    def json(self, obj, name, **kw):
+        def w(p, o=obj, k=kw):
+            with open(p, "w", encoding="utf-8") as f:
+                json.dump(o, f, default=_json_default, **k)
+        return self.put(name, w)
+
+    def pickle(self, obj, name):
+        def w(p, o=obj):
+            with open(p, "wb") as f:
+                pickle.dump(o, f)
+        return self.put(name, w)
+
+    def fig(self, fig, name, **kw):
+        return self.put(name, lambda p, f=fig, k=kw: f.savefig(p, **k))
+
+    def verify(self) -> list:
+        """Moi file da ghi phai con tren Drive; thieu thi ghi lai mot lan, van thieu -> FileNotFoundError."""
+        self._ensure()
+        missing = [n for n in self._writers if not (self.path / n).exists()]
+        for n in missing:
+            self._log(f"CANH BAO: {self.path / n} bien mat -> ghi lai")
+            self._writers[n](self.path / n)
+        still = [n for n in self._writers if not (self.path / n).exists()]
+        if still:
+            raise FileNotFoundError(f"{len(still)} file khong ghi duoc vao {self.path}: {still}")
+        return list(self._writers)
 
 
 def resolve_path(p, remaps=(), must_exist: bool = True):

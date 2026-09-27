@@ -45,7 +45,7 @@ thứ ROI cascade đã không có:
 | `metrics.py` | Dice/ASSD/HD95/**Surface Dice**/**boundary MAE** + bootstrap CI | `test_metrics.py` (20) |
 | `headroom.py` | **M0** — phân rã error mass, counterfactual, Gate 1 | `test_headroom.py` (4) |
 | `track.py` | exp_id, git sha, config, metric per-case (§7) | — |
-| `io_utils.py` | I/O Colab (nibabel), giải nén baseline | — (chạy trên Colab) |
+| `io_utils.py` | I/O Colab (nibabel), giải nén baseline; `OutDir` — thư mục sản phẩm trên Drive tự tạo lại + ghi lại khi Drive làm mất thư mục vừa tạo | `test_io_utils.py` (phần OutDir) |
 | `biomarkers.py` | Biomarker từ mask 8-class: legacy S3 (vol/thickness proxy/denuded/extrusion) + **bề mặt xương: độ dày theo pháp tuyến, footprint closing trắc địa, FCL/dAB, ThC.tAB** | `test_biomarkers.py` (14) |
 | `ordinal.py` | KL ordinal: Frank & Hall, điểm cắt QWK, MLP với loss slide (ngưỡng + mono + softmax + OA), giải mã + chẩn đoán p_k; `bootstrap_delta` theo subject × seed, `classify_delta` bốn mức | `test_ordinal.py` |
 | `m3t.py` | M3T (port nguyên văn `knee_testing_v3.ipynb`), trích CLS, chặn trọng số rò rỉ, chuyển đổi NIfTI → M3T, dấu vân tay ảnh | `test_m3t.py` |

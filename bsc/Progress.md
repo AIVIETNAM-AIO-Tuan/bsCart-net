@@ -42,6 +42,9 @@ Ghi theo ngày, chỉ giữ thông tin cần để tiếp tục công việc. Qu
 - S8/S7 bản M3T (`bsc/m3t_eval.py` + test; notebook sửa tại chỗ, OUT mới `s8_holdout_m3t/`, `s7_ordinal_m3t/`): harness
   tổng hợp chạy cả bản cũ (sinh "v2") lẫn bản mới — pha R trùng khít, kết luận + độ nhạy checkpoint chạy, chặn chạy lại
   đúng, S7 cho kết quả trùng khít giữa 1 và 2 worker. **Chưa chạy trên dữ liệu thật.**
+- Chạy S8 lần đầu trên Colab: pha R trùng khít v2 (lệch 0,0) nhưng thư mục `s8_holdout_m3t` (mới tạo dưới thư mục chia
+  sẻ) biến mất khỏi Drive giữa chừng → lỗi ghi file. Thêm `io_utils.OutDir` (tạo lại + ghi lại từ bộ nhớ, kiểm đủ file
+  cuối) cho mọi lần ghi của S8/S7; harness xóa thư mục giữa chừng: đủ file, nội dung trùng khít lần chạy không lỗi.
 
 ### Failures / Risks
 - Kiểm trùng ảnh (S9 mục 6) không chạy được ca nào (không có ảnh + chuyển đổi không làm được).

@@ -400,6 +400,11 @@ Không đổi phép so, δ, bootstrap, fold hay model. Chi tiết hóa:
   phụ thuộc số worker (harness: OOF/QWK/kết luận trùng khít giữa 1 và 2 worker); số MLP (A2/D/E) có thể lệch nhẹ so với
   lần chạy cũ — không nằm trong phép so chính, pha R chỉ khóa A/B/C.
 - `m3t_head` không phụ thuộc fold nên lặp qua 3 seed trong mảng `[N, 3]` (hiệu tính từng seed, không hẹp CI giả).
+- **Ghi file qua `io_utils.OutDir`** (27/09/2026): lần chạy S8 đầu, thư mục `s8_holdout_m3t` mới tạo dưới thư mục
+  chia sẻ (đường thật qua `.shortcut-targets-by-id`) biến mất sau vài phút dù Drive vẫn đọc được. Mọi file giờ ghi qua
+  `OutDir`: thư mục mất thì tạo lại, in cảnh báo và ghi lại mọi file trước đó từ bộ nhớ; `verify()` kiểm đủ file trước
+  khi ghi `run_config.json`. Số lần tạo lại ghi vào `run_config.json` (`out_dir_recreated`). Pha R của lần chạy lỗi đã
+  cho lệch 0,0 so với v2.
 - S8 cũng chạy các cặp đã đăng ký trên ~243 ca test nhưng chỉ ghi `muc_sang_loc`; kết luận duy nhất là `verdict.json`
   của S7. Hai notebook dừng nếu thư mục ra đã có `run_config.json` (không ghi đè).
 
