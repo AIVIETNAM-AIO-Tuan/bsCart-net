@@ -19,6 +19,8 @@ Ghi theo ngày, chỉ giữ thông tin cần để tiếp tục công việc. Qu
   ghim 544 ca + fold val + CRC32/sha256 10 checkpoint (dựng từ bản zip local). S10 mục 2 viết lại cho ensemble 150 epoch
   5 fold, loại ca phơi nhiễm → `holdout_manifest_eval_d020_150ep_ens5.*`. Harness S10: 5 kịch bản + chạy lại hai lần
   (sửa `r_max` lệch bit khi đọc lại dấu vân tay từ CSV); mục 2.1 chạy trên 14 zip thật khớp bản ghim.
+- S10 chạy lại trên Colab (git `bdaca3b`): 14 zip trên Drive trùng bản ghim, 544 ca, checkpoint khớp CRC; 93 ca
+  holdout không trùng subject với dữ liệu train seg ⇒ **tập đánh giá 93 ca**, `sach_theo_id`, không loại thêm ca nào.
 
 ### Findings
 - Hai nguồn nhãn KL trùng 1203/1203; head M3T rò rỉ: QWK 0,851 (subject đã train) vs 0,779.
@@ -26,7 +28,10 @@ Ghi theo ngày, chỉ giữ thông tin cần để tiếp tục công việc. Qu
 - Ảnh `OAI_DESS_Right_NIfTI` (766 ca) và ảnh OAI-ZIB không còn trên Drive.
 
 - Mô hình seg của mask 09_09 = d020 150 epoch ensemble 5 fold (người dùng xác nhận) ⇒ cả 544 ca d020 là train.
-  Kiểm cục bộ: 2 subject holdout (9602703, 9745458) có chính gối phải V00 trong d020 (ca iMorphics).
+- 4/103 subject của OAIZIB-CM test có ca iMorphics trong d020: 9602703, 9745458 (chính gối phải, V00 + V01) và
+  9905156, 9993833 (gối trái). Không ai trong số này thuộc 93 ca holdout (2 người đầu không nằm trong 96 ứng viên,
+  2 người sau đã loại ở bước 96 → 93). Hệ quả phụ: số test "ZIB Ts 103" của B0 không hoàn toàn sạch (xem `Event.md`).
+- `make_splits.py` đã khôi phục cùng fold d020 vào `splits/splits_zib_v1.json`; bản ghim mới trùng khít (có test).
 
 ### Failures / Risks
 - Kiểm trùng ảnh (S9 mục 6) không chạy được ca nào (không có ảnh + chuyển đổi không làm được).
@@ -38,8 +43,9 @@ Ghi theo ngày, chỉ giữ thông tin cần để tiếp tục công việc. Qu
 - Loại 3 ca holdout trùng subject cohort phát triển (96 → 93); loại ca holdout phơi nhiễm với mô hình seg. Xem `Event.md`.
 
 ### Next
-1. Colab: S10 `Run all` → gửi output mục 2 (dự kiến tập đánh giá 91 ca, `sach_theo_id`).
-2. Sửa S8 → S7 với `m3t_cls_v2.csv`.
+1. Sửa S8 → S7 với `m3t_cls_v2.csv` (phép so chính B `__nosel`).
+2. S10 bước 2: segmentation 93 ca bằng ensemble d020 150ep (nạp thẳng từ zip), xác định checkpoint final/best bằng cách
+   tái lập nhãn 6–8 của vài ca OAI-ZIB phát triển.
 
 ---
 

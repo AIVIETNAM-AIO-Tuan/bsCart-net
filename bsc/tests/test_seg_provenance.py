@@ -119,3 +119,8 @@ def test_pinned_d020_provenance_is_consistent():
             rec = prov["checkpoints"][f"fold_{k}/{ck}"]
             assert len(rec["sha256"]) == 64 and len(rec["crc32"]) == 8 and rec["bytes"] > 10 ** 9
     assert len(prov["members_md5"]) == 32
+    # make_splits.py da khoi phuc cung fold tu cung thu muc validation/ -> hai ban ghim phai trung nhau
+    zib = json.load(open(os.path.join(os.path.dirname(PROV_JSON), "splits_zib_v1.json"), encoding="utf-8"))
+    assert zib["fold_of"] == vf
+    for name, rec in prov["oaizib_test_subjects_in_d020"]["cases"].items():
+        assert all(vf[c] == f and SP.case_subject(c, {}) == rec["subject"] for c, f in rec["d020_cases"].items())

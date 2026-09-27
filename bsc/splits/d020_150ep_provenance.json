@@ -669,5 +669,47 @@
    "fold_3": "004",
    "fold_4": "006"
   }
+ },
+ "val_fold_same_as": "splits/splits_zib_v1.json#fold_of (make_splits.py khoi phuc tu cung thu muc validation/ trong zip; test_seg_provenance kiem hai ban trung nhau)",
+ "oaizib_test_subjects_in_d020": {
+  "note": "subject cua OAIZIB-CM test (imagesTs, n=103) co ca iMorphics trong 544 ca train d020 (kiem 27/09/2026 bang subInfo chinh thuc). Gia tri = fold ma ca do la val; ensemble 5 fold => deu da train. Khong ai trong so nay nam trong 93 ca holdout S10.",
+  "cases": {
+   "oaizib_437": {
+    "subject": "9993833",
+    "side": "R",
+    "visit": "V00",
+    "d020_cases": {
+     "9993833_V00_L": 1,
+     "9993833_V01_L": 1
+    }
+   },
+   "oaizib_457": {
+    "subject": "9905156",
+    "side": "R",
+    "visit": "V00",
+    "d020_cases": {
+     "9905156_V00_L": 2,
+     "9905156_V01_L": 2
+    }
+   },
+   "oaizib_463": {
+    "subject": "9602703",
+    "side": "R",
+    "visit": "V00",
+    "d020_cases": {
+     "9602703_V00_R": 0,
+     "9602703_V01_R": 3
+    }
+   },
+   "oaizib_479": {
+    "subject": "9745458",
+    "side": "R",
+    "visit": "V00",
+    "d020_cases": {
+     "9745458_V00_R": 0,
+     "9745458_V01_R": 4
+    }
+   }
+  }
  }
 }

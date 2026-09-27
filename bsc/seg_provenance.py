@@ -6,6 +6,8 @@ Chi doc central directory: ten ca val cua tung fold (thu muc `fold_k/validation/
 
 Ten ca -> subject: so OAI 7 chu so (`9602703_V00_R`) hoac `oaizib_XXX` qua subInfo chinh thuc
 (`oaizib.load_subinfo`). Ban provenance cua d020 150 epoch da ghim o `splits/d020_150ep_provenance.json`.
+Phan khoi phuc fold trung y tuong voi `make_splits.py` (da ghim `splits/splits_zib_v1.json`, test kiem hai ban trung
+nhau); module nay them gop nhieu zip, CRC32/sha256 checkpoint va map subject de audit phoi nhiem.
 """
 
 from __future__ import annotations
